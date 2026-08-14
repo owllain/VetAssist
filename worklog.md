@@ -162,3 +162,26 @@ Stage Summary:
 - 15+ new CSS utility classes for richer visual design
 - All lint checks pass clean
 - No browser or server errors
+
+---
+Task ID: r2-feat1-4
+Agent: Main Agent
+Task: Add favorites system, dose reference table, and favorites panel to MedicationCalculator
+
+Work Log:
+- Created /src/lib/favorites.ts with localStorage-based favorites CRUD (getFavorites, addFavorite, removeFavorite, isFavorite)
+- Created /src/components/vet/DoseReferenceTable.tsx: compact table showing all medications in a category with dose range, unit, route badges, species badges using shadcn/ui Table
+- Created /src/components/vet/FavoritesPanel.tsx: Sheet-based favorites drawer with floating action button (bottom-right z-50), animated list with framer-motion, delete buttons, empty state, controlled/uncontrolled open state
+- Modified /src/components/vet/MedicationCalculator.tsx:
+  - Added star toggle buttons on medication list cards (left of chevron, with stopPropagation)
+  - Added star toggle button on result card header
+  - Added "Favoritos ★" button in step 3 area that opens FavoritesPanel
+  - Added collapsible DoseReferenceTable section between search bar and medication list
+  - Added imports: Star, ChevronDown, ClipboardList, Collapsible, medications, favorites helpers
+  - Used favTick state to trigger re-renders when favorite state changes
+
+Stage Summary:
+- Favorites system: localStorage persistence, star toggle on cards and results, FAB + Sheet panel
+- Dose reference table: collapsible table per category with all medications, species highlighting, route badges
+- All lint checks pass clean (exit 0)
+- Dev server compiles successfully

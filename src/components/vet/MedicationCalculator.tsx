@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   HeartPulse,
@@ -16,21 +16,30 @@ import {
   MedicalKit,
   Paw,
   ChevronRight,
+  ChevronDown,
   Search,
   Printer,
   Clock,
+  Star,
+  ClipboardList,
 } from 'reicon-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import {
   type Medication,
   type AnimalType,
   medicationCategories,
   getMedicationsByCategory,
+  medications,
 } from '@/lib/medications';
+import { addFavorite, removeFavorite, isFavorite } from '@/lib/favorites';
+import type { FavoriteMed } from '@/lib/favorites';
+import FavoritesPanel from './FavoritesPanel';
+import DoseReferenceTable from './DoseReferenceTable';
 
 interface CalcResult {
   medication: {
@@ -91,6 +100,34 @@ export default function MedicationCalculator() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
+  const [showFavorites, setShowFavorites] = useState(false);
+  const [showRefTable, setShowRefTable] = useState(false);
+  const [favTick, setFavTick] = useState(0);
+
+  const handleSelectFavorite = useCallback((fav: FavoriteMed) => {
+    setSelectedCategory(fav.category);
+    setSearchQuery('');
+    const med = medications.find((m) => m.id === fav.medicationId);
+    if (med) {
+      setSelectedMedication(med);
+      setResult(null);
+    }
+  }, []);
+
+  const toggleFav = useCallback((med: Medication) => {
+    if (isFavorite(med.id)) {
+      removeFavorite(med.id);
+    } else {
+      addFavorite({
+        medicationId: med.id,
+        name: med.name,
+        genericName: med.genericName,
+        category: med.categoryId,
+        species: med.species,
+      });
+    }
+    setFavTick((t) => t + 1);
+  }, []);
 
   const filteredMedications = useMemo(() => {
     if (!selectedCategory) return [];
@@ -105,7 +142,7 @@ export default function MedicationCalculator() {
       );
     }
     return meds;
-  }, [selectedCategory, searchQuery]);
+  }, [selectedCategory, searchQuery, favTick]);
 
   const canCalculate = selectedMedication && weight && parseFloat(weight) > 0;
 
@@ -236,7 +273,18 @@ export default function MedicationCalculator() {
 
       {/* Step 3: Category Selection */}
       <div>
-        <StepHeading num={3}>Categoría de Medicamento</StepHeading>
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <StepHeading num={3}>Categoría de Medicamento</StepHeading>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFavorites(true)}
+            className="flex-shrink-0 gap-1.5 text-xs no-print"
+          >
+            <Star size={14} weight="fill" className="text-amber-500" />
+            Favoritos
+          </Button>
+        </div>
         <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 no-print">
           {medicationCategories.map((cat) => (
             <button
@@ -283,10 +331,44 @@ export default function MedicationCalculator() {
                 />
               </div>
             </div>
+
+            {/* Dose Reference Table - collapsible */}
+            <Collapsible open={showRefTable} onOpenChange={setShowRefTable} className="mb-3 no-print">
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-between gap-2 text-xs text-muted-foreground hover:text-foreground h-8 px-2"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <ClipboardList size={14} weight="outline" />
+                    Ver tabla de referencia
+                  </span>
+                  <motion.span
+                    animate={{ rotate: showRefTable ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <ChevronDown size={14} weight="outline" />
+                  </motion.span>
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <DoseReferenceTable categoryId={selectedCategory} animalType={animalType} />
+                </motion.div>
+              </CollapsibleContent>
+            </Collapsible>
+
             <div className="grid gap-2.5 max-h-[400px] overflow-y-auto pr-1">
               {filteredMedications.map((med) => {
                 const isAvailable = med.species.includes(animalType);
                 const isSelected = selectedMedication?.id === med.id;
+                const medIsFav = isFavorite(med.id);
 
                 return (
                   <Card
@@ -329,10 +411,24 @@ export default function MedicationCalculator() {
                             ))}
                           </div>
                         </div>
-                        <ChevronRight
-                          size={18} weight="outline"
-                          className={`flex-shrink-0 mt-1 transition-all ${isSelected ? 'text-primary rotate-90' : 'text-muted-foreground/40'}`}
-                        />
+                        <div className="flex items-center gap-1 flex-shrink-0 mt-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFav(med);
+                            }}
+                            className={`p-1 rounded-md transition-all hover:bg-amber-100 dark:hover:bg-amber-900/30 ${
+                              medIsFav ? 'text-amber-500' : 'text-muted-foreground/30 hover:text-amber-400'
+                            }`}
+                            title={medIsFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                          >
+                            <Star size={16} weight={medIsFav ? 'fill' : 'outline'} />
+                          </button>
+                          <ChevronRight
+                            size={18} weight="outline"
+                            className={`transition-all ${isSelected ? 'text-primary rotate-90' : 'text-muted-foreground/40'}`}
+                          />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -415,15 +511,42 @@ export default function MedicationCalculator() {
                     </div>
                     Resultado del Cálculo
                   </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => window.print()}
-                    className="no-print h-8 w-8 text-muted-foreground hover:text-primary"
-                    title="Imprimir"
-                  >
-                    <Printer size={16} weight="outline" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    {result.medication.id && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => {
+                          const med = medications.find((m) => m.id === result.medication.id);
+                          if (med) toggleFav(med);
+                        }}
+                        className={`no-print h-8 w-8 ${
+                          isFavorite(result.medication.id)
+                            ? 'text-amber-500'
+                            : 'text-muted-foreground/40 hover:text-amber-400'
+                        }`}
+                        title={
+                          isFavorite(result.medication.id)
+                            ? 'Quitar de favoritos'
+                            : 'Agregar a favoritos'
+                        }
+                      >
+                        <Star
+                          size={16}
+                          weight={isFavorite(result.medication.id) ? 'fill' : 'outline'}
+                        />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => window.print()}
+                      className="no-print h-8 w-8 text-muted-foreground hover:text-primary"
+                      title="Imprimir"
+                    >
+                      <Printer size={16} weight="outline" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -544,6 +667,14 @@ export default function MedicationCalculator() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Favorites Panel */}
+      <FavoritesPanel
+        onSelectMedication={handleSelectFavorite}
+        currentMedicationId={selectedMedication?.id}
+        open={showFavorites}
+        onOpenChange={setShowFavorites}
+      />
     </div>
   );
 }
