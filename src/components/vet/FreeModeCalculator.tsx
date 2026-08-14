@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calculator,
@@ -10,6 +10,8 @@ import {
   CircleInfo,
   AlertTriangle,
   MedicalKit,
+  Printer,
+  Clock,
 } from 'reicon-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,6 +34,34 @@ const DOSE_UNITS = [
   { value: 'mL/kg', label: 'mL/kg' },
 ];
 
+interface HistoryEntry {
+  type: string;
+  timestamp: number;
+  summary: string;
+}
+
+const STORAGE_KEY = 'vetcalc-history';
+
+function loadHistory(): HistoryEntry[] {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+}
+
+function saveHistory(entry: HistoryEntry) {
+  const h = loadHistory();
+  h.unshift(entry);
+  if (h.length > 20) h.pop();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
+}
+
+function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
+  return (
+    <h3 className="text-base font-semibold mb-3 flex items-center gap-2.5">
+      <span className="step-number">{num}</span>
+      {children}
+    </h3>
+  );
+}
+
 export default function FreeModeCalculator() {
   const [animalType, setAnimalType] = useState<AnimalType>('perro');
   const [weight, setWeight] = useState('');
@@ -40,6 +70,7 @@ export default function FreeModeCalculator() {
   const [doseUnit, setDoseUnit] = useState('mg/kg');
   const [result, setResult] = useState<{ total: number; unit: string; weightKg: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
 
   const handleCalculate = () => {
     setError(null);
@@ -48,152 +79,107 @@ export default function FreeModeCalculator() {
     const w = parseFloat(weight);
     const d = parseFloat(dosePerKg);
 
-    if (!w || w <= 0) {
-      setError('Ingrese un peso válido mayor a 0');
-      return;
-    }
-    if (!d || d <= 0) {
-      setError('Ingrese una dosis por kg válida mayor a 0');
-      return;
-    }
+    if (!w || w <= 0) { setError('Ingrese un peso válido mayor a 0'); return; }
+    if (!d || d <= 0) { setError('Ingrese una dosis por kg válida mayor a 0'); return; }
 
     const weightKg = weightUnit === 'lb' ? w * 0.453592 : w;
     const total = Math.round(d * weightKg * 1000) / 1000;
     const displayUnit = doseUnit.split('/')[0] || doseUnit;
 
     setResult({ total, unit: displayUnit, weightKg: Math.round(weightKg * 100) / 100 });
+
+    saveHistory({
+      type: 'free',
+      timestamp: Date.now(),
+      summary: `Modo libre | ${animalType} ${weightKg.toFixed(1)}kg | ${d}${doseUnit} = ${total}${displayUnit}`,
+    });
+    setHistory(loadHistory());
   };
 
   return (
     <div className="space-y-6">
-      {/* Step 1: Animal Type */}
+      {/* Recent History */}
+      {history.filter(h => h.type === 'free').length > 0 && !result && (
+        <div className="no-print">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock size={16} weight="outline" className="text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {history.filter(h => h.type === 'free').slice(0, 4).map((h, i) => (
+              <div key={i} className="flex-shrink-0 bg-muted/60 rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/50">
+                {h.summary}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Step 1 */}
       <div>
-        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          <Paw size={20} color="oklch(0.55 0.15 165)" weight="outline" />
-          1. Tipo de Animal
-        </h3>
+        <StepHeading num={1}>Tipo de Animal</StepHeading>
         <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => {
-              setAnimalType('perro');
-              setResult(null);
-            }}
-            className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 vet-card-hover ${
-              animalType === 'perro'
-                ? 'border-primary bg-primary/5 shadow-md'
-                : 'border-border hover:border-primary/40'
-            }`}
-          >
-            <span className="text-4xl">🐕</span>
-            <span
-              className={`font-semibold ${
-                animalType === 'perro' ? 'text-primary' : 'text-muted-foreground'
+          {(['perro', 'gato'] as const).map((type) => (
+            <button
+              key={type}
+              onClick={() => { setAnimalType(type); setResult(null); }}
+              className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
+                animalType === type
+                  ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
+                  : 'border-border hover:border-primary/30'
               }`}
             >
-              Perro
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              setAnimalType('gato');
-              setResult(null);
-            }}
-            className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 vet-card-hover ${
-              animalType === 'gato'
-                ? 'border-primary bg-primary/5 shadow-md'
-                : 'border-border hover:border-primary/40'
-            }`}
-          >
-            <Cat size={36} weight="outline" color={animalType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
-            <span
-              className={`font-semibold ${
-                animalType === 'gato' ? 'text-primary' : 'text-muted-foreground'
-              }`}
-            >
-              Gato
-            </span>
-          </button>
+              {type === 'perro' ? (
+                <span className="text-4xl">🐕</span>
+              ) : (
+                <Cat size={36} weight="outline" color={animalType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
+              )}
+              <span className={`font-semibold ${animalType === type ? 'text-primary' : 'text-muted-foreground'}`}>
+                {type === 'perro' ? 'Perro' : 'Gato'}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Step 2: Weight */}
+      {/* Step 2 */}
       <div>
-        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          <Scale size={20} color="oklch(0.55 0.15 165)" weight="outline" />
-          2. Peso del Animal
-        </h3>
+        <StepHeading num={2}>Peso del Animal</StepHeading>
         <div className="flex gap-3 items-center">
           <Input
-            type="number"
-            placeholder="Ej: 5"
-            value={weight}
-            onChange={(e) => {
-              setWeight(e.target.value);
-              setResult(null);
-            }}
-            min="0.1"
-            step="0.1"
-            className="flex-1 h-12 text-lg"
+            type="number" placeholder="Ej: 5" value={weight}
+            onChange={(e) => { setWeight(e.target.value); setResult(null); }}
+            min="0.1" step="0.1" className="flex-1 h-12 text-lg"
           />
           <div className="flex rounded-lg border border-border overflow-hidden">
-            <button
-              onClick={() => setWeightUnit('kg')}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                weightUnit === 'kg'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-card hover:bg-muted'
-              }`}
-            >
-              kg
-            </button>
-            <button
-              onClick={() => setWeightUnit('lb')}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                weightUnit === 'lb'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-card hover:bg-muted'
-              }`}
-            >
-              lb
-            </button>
+            {(['kg', 'lb'] as const).map((u) => (
+              <button key={u} onClick={() => setWeightUnit(u)}
+                className={`px-4 py-3 text-sm font-semibold transition-colors ${
+                  weightUnit === u ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-muted'
+                }`}>
+                {u}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Step 3: Custom Dose */}
+      {/* Step 3 */}
       <div>
-        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          <MedicalKit size={20} color="oklch(0.55 0.15 165)" weight="outline" />
-          3. Dosis Personalizada
-        </h3>
+        <StepHeading num={3}>Dosis Personalizada</StepHeading>
         <div className="flex gap-3 items-center">
           <Input
-            type="number"
-            placeholder="Ej: 10"
-            value={dosePerKg}
-            onChange={(e) => {
-              setDosePerKg(e.target.value);
-              setResult(null);
-            }}
-            min="0.001"
-            step="0.1"
-            className="flex-1 h-12 text-lg"
+            type="number" placeholder="Ej: 10" value={dosePerKg}
+            onChange={(e) => { setDosePerKg(e.target.value); setResult(null); }}
+            min="0.001" step="0.1" className="flex-1 h-12 text-lg"
           />
-          <Select
-            value={doseUnit}
-            onValueChange={(val) => {
-              setDoseUnit(val);
-              setResult(null);
-            }}
-          >
+          <Select value={doseUnit} onValueChange={(val) => { setDoseUnit(val); setResult(null); }}>
             <SelectTrigger className="w-28 h-12">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {DOSE_UNITS.map((u) => (
-                <SelectItem key={u.value} value={u.value}>
-                  {u.label}
-                </SelectItem>
+                <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -201,12 +187,10 @@ export default function FreeModeCalculator() {
       </div>
 
       {/* Calculate Button */}
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-3 no-print">
         <Button
-          size="lg"
-          onClick={handleCalculate}
-          disabled={!weight || !dosePerKg}
-          className="vet-pulse text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl"
+          size="lg" onClick={handleCalculate} disabled={!weight || !dosePerKg}
+          className="vet-pulse text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg shadow-primary/20"
         >
           <span className="flex items-center gap-2">
             <Calculator size={22} weight="outline" />
@@ -218,11 +202,7 @@ export default function FreeModeCalculator() {
       {/* Error */}
       <AnimatePresence>
         {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Alert variant="destructive">
               <AlertTriangle size={18} weight="outline" />
               <AlertDescription>{error}</AlertDescription>
@@ -235,41 +215,47 @@ export default function FreeModeCalculator() {
       <AnimatePresence>
         {result && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }} transition={{ duration: 0.3 }}
           >
-            <Card className="glass-card border-primary/20 shadow-lg">
+            <Card className="result-card shadow-lg">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-primary">
-                  <Calculator size={22} weight="outline" />
-                  Resultado — Modo Libre
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-primary">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Calculator size={18} weight="outline" />
+                    </div>
+                    Resultado — Modo Libre
+                  </CardTitle>
+                  <Button variant="ghost" size="icon" onClick={() => window.print()}
+                    className="no-print h-8 w-8 text-muted-foreground hover:text-primary">
+                    <Printer size={16} weight="outline" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-primary/5 rounded-lg p-4 text-center">
-                    <p className="text-sm text-muted-foreground font-medium">Dosis Total</p>
-                    <p className="text-3xl font-bold text-primary mt-1">
-                      {result.total}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">{result.unit}</p>
-                  </div>
-                  <div className="bg-secondary rounded-lg p-4 text-center">
-                    <p className="text-sm text-muted-foreground font-medium">Fórmula</p>
-                    <p className="text-sm font-medium mt-2">
-                      {dosePerKg} {doseUnit} × {result.weightKg} kg
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      = {result.total} {result.unit}
-                    </p>
+                <div className="dose-highlight p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Dosis Total</p>
+                      <p className="text-4xl font-extrabold text-primary mt-1">{result.total}</p>
+                      <p className="text-sm text-muted-foreground font-medium">{result.unit}</p>
+                    </div>
+                    <div className="bg-white/60 rounded-lg p-3 flex flex-col justify-center">
+                      <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Fórmula</p>
+                      <p className="text-sm font-mono mt-2 font-medium">
+                        {dosePerKg} {doseUnit} × {result.weightKg} kg
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        = <strong className="text-foreground">{result.total} {result.unit}</strong>
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <p className="text-sm text-muted-foreground">
-                  <CircleInfo size={14} weight="outline" className="inline mr-1" />
-                  Peso utilizado: <strong>{result.weightKg} kg</strong>
+                <p className="text-xs text-muted-foreground bg-muted/30 rounded-md px-3 py-2 flex items-center gap-1.5">
+                  <CircleInfo size={13} weight="outline" />
+                  <span>Peso utilizado: <strong>{result.weightKg} kg</strong> ({animalType})</span>
                 </p>
 
                 <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-950/30">
@@ -280,13 +266,15 @@ export default function FreeModeCalculator() {
                   </AlertDescription>
                 </Alert>
 
-                <Button
-                  variant="outline"
-                  onClick={() => setResult(null)}
-                  className="w-full"
-                >
-                  Nueva Consulta
-                </Button>
+                <div className="flex gap-2 no-print">
+                  <Button variant="outline" onClick={() => setResult(null)} className="flex-1">
+                    Nueva Consulta
+                  </Button>
+                  <Button variant="outline" onClick={() => window.print()} className="px-4">
+                    <Printer size={16} weight="outline" className="mr-1.5" />
+                    Imprimir
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </motion.div>

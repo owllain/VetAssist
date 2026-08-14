@@ -16,6 +16,9 @@ import {
   MedicalKit,
   Paw,
   ChevronRight,
+  Search,
+  Printer,
+  Clock,
 } from 'reicon-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,6 +52,34 @@ interface CalcResult {
   notes: string;
 }
 
+interface HistoryEntry {
+  type: 'medication' | 'free' | 'food';
+  timestamp: number;
+  summary: string;
+}
+
+const STORAGE_KEY = 'vetcalc-history';
+
+function loadHistory(): HistoryEntry[] {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+}
+
+function saveHistory(entry: HistoryEntry) {
+  const history = loadHistory();
+  history.unshift(entry);
+  if (history.length > 20) history.pop();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+}
+
+function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
+  return (
+    <h3 className="text-base font-semibold mb-3 flex items-center gap-2.5">
+      <span className="step-number">{num}</span>
+      {children}
+    </h3>
+  );
+}
+
 export default function MedicationCalculator() {
   const [animalType, setAnimalType] = useState<AnimalType>('perro');
   const [weight, setWeight] = useState('');
@@ -58,14 +89,25 @@ export default function MedicationCalculator() {
   const [result, setResult] = useState<CalcResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
 
   const filteredMedications = useMemo(() => {
     if (!selectedCategory) return [];
-    return getMedicationsByCategory(selectedCategory);
-  }, [selectedCategory]);
+    let meds = getMedicationsByCategory(selectedCategory);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      meds = meds.filter(
+        (m) =>
+          m.name.toLowerCase().includes(q) ||
+          m.genericName.toLowerCase().includes(q) ||
+          (m.brandNames && m.brandNames.some((b) => b.toLowerCase().includes(q)))
+      );
+    }
+    return meds;
+  }, [selectedCategory, searchQuery]);
 
-  const canCalculate =
-    selectedMedication && weight && parseFloat(weight) > 0;
+  const canCalculate = selectedMedication && weight && parseFloat(weight) > 0;
 
   const handleCalculate = async () => {
     if (!selectedMedication || !weight) return;
@@ -93,6 +135,14 @@ export default function MedicationCalculator() {
       }
 
       setResult(data);
+      // Save to history
+      const unit = data.calculatedDose.unit.split('/')[0];
+      saveHistory({
+        type: 'medication',
+        timestamp: Date.now(),
+        summary: `${data.medication.name} | ${animalType} ${data.weightKg}kg | ${data.calculatedDose.recommended}${unit}`,
+      });
+      setHistory(loadHistory());
     } catch {
       setError('Error de conexión. Intente de nuevo.');
     } finally {
@@ -108,118 +158,86 @@ export default function MedicationCalculator() {
 
   return (
     <div className="space-y-6">
-      {/* Decorative medical image */}
-      <div className="relative flex justify-end">
-        <img
-          src="/images/image-nOUH6YKKp7g0jxLsV9hiwFszoZaMyR.png"
-          alt="Elementos médicos"
-          className="w-28 opacity-30 vet-float hidden md:block"
-        />
-      </div>
+      {/* Recent History */}
+      {history.length > 0 && !result && (
+        <div className="no-print">
+          <div className="flex items-center gap-2 mb-2">
+            <Clock size={16} weight="outline" className="text-muted-foreground" />
+            <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {history.slice(0, 5).map((h, i) => (
+              <div
+                key={i}
+                className="flex-shrink-0 bg-muted/60 rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/50"
+              >
+                {h.summary}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Step 1: Animal Type */}
       <div>
-        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          <Paw size={20} color="oklch(0.55 0.15 165)" weight="outline" />
-          1. Tipo de Animal
-        </h3>
+        <StepHeading num={1}>Tipo de Animal</StepHeading>
         <div className="grid grid-cols-2 gap-3">
-          <button
-            onClick={() => {
-              setAnimalType('perro');
-              setSelectedMedication(null);
-              setResult(null);
-            }}
-            className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 vet-card-hover ${
-              animalType === 'perro'
-                ? 'border-primary bg-primary/5 shadow-md'
-                : 'border-border hover:border-primary/40'
-            }`}
-          >
-            <span className="text-4xl">🐕</span>
-            <span
-              className={`font-semibold ${
-                animalType === 'perro' ? 'text-primary' : 'text-muted-foreground'
+          {(['perro', 'gato'] as const).map((type) => (
+            <button
+              key={type}
+              onClick={() => { setAnimalType(type); setSelectedMedication(null); setResult(null); }}
+              className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
+                animalType === type
+                  ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
+                  : 'border-border hover:border-primary/30'
               }`}
             >
-              Perro
-            </span>
-          </button>
-          <button
-            onClick={() => {
-              setAnimalType('gato');
-              setSelectedMedication(null);
-              setResult(null);
-            }}
-            className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 vet-card-hover ${
-              animalType === 'gato'
-                ? 'border-primary bg-primary/5 shadow-md'
-                : 'border-border hover:border-primary/40'
-            }`}
-          >
-            <Cat size={36} weight="outline" color={animalType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
-            <span
-              className={`font-semibold ${
-                animalType === 'gato' ? 'text-primary' : 'text-muted-foreground'
-              }`}
-            >
-              Gato
-            </span>
-          </button>
+              {type === 'perro' ? (
+                <span className="text-4xl">🐕</span>
+              ) : (
+                <Cat size={36} weight="outline" color={animalType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
+              )}
+              <span className={`font-semibold ${animalType === type ? 'text-primary' : 'text-muted-foreground'}`}>
+                {type === 'perro' ? 'Perro' : 'Gato'}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Step 2: Weight */}
       <div>
-        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          <Scale size={20} color="oklch(0.55 0.15 165)" weight="outline" />
-          2. Peso del Animal
-        </h3>
+        <StepHeading num={2}>Peso del Animal</StepHeading>
         <div className="flex gap-3 items-center">
           <Input
             type="number"
             placeholder="Ej: 5"
             value={weight}
-            onChange={(e) => {
-              setWeight(e.target.value);
-              setResult(null);
-            }}
+            onChange={(e) => { setWeight(e.target.value); setResult(null); }}
             min="0.1"
             step="0.1"
             className="flex-1 h-12 text-lg"
           />
           <div className="flex rounded-lg border border-border overflow-hidden">
-            <button
-              onClick={() => setWeightUnit('kg')}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                weightUnit === 'kg'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-card hover:bg-muted'
-              }`}
-            >
-              kg
-            </button>
-            <button
-              onClick={() => setWeightUnit('lb')}
-              className={`px-4 py-2 text-sm font-medium transition-colors ${
-                weightUnit === 'lb'
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-card hover:bg-muted'
-              }`}
-            >
-              lb
-            </button>
+            {(['kg', 'lb'] as const).map((u) => (
+              <button
+                key={u}
+                onClick={() => setWeightUnit(u)}
+                className={`px-4 py-3 text-sm font-semibold transition-colors ${
+                  weightUnit === u ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-muted'
+                }`}
+              >
+                {u}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
       {/* Step 3: Category Selection */}
       <div>
-        <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-          <MedicalKit size={20} color="oklch(0.55 0.15 165)" weight="outline" />
-          3. Categoría de Medicamento
-        </h3>
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+        <StepHeading num={3}>Categoría de Medicamento</StepHeading>
+        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 no-print">
           {medicationCategories.map((cat) => (
             <button
               key={cat.id}
@@ -227,11 +245,12 @@ export default function MedicationCalculator() {
                 setSelectedCategory(cat.id === selectedCategory ? null : cat.id);
                 setSelectedMedication(null);
                 setResult(null);
+                setSearchQuery('');
               }}
-              className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200 whitespace-nowrap ${
+              className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium border transition-all duration-200 whitespace-nowrap ${
                 selectedCategory === cat.id
-                  ? 'bg-primary text-primary-foreground border-primary shadow-md'
-                  : 'bg-card border-border hover:border-primary/40 hover:bg-primary/5'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
+                  : 'bg-card border-border hover:border-primary/30 hover:bg-primary/5'
               }`}
             >
               <span>{cat.icon}</span>
@@ -241,7 +260,7 @@ export default function MedicationCalculator() {
         </div>
       </div>
 
-      {/* Step 4: Medication List */}
+      {/* Step 4: Medication List with Search */}
       <AnimatePresence mode="wait">
         {selectedCategory && filteredMedications.length > 0 && (
           <motion.div
@@ -251,11 +270,20 @@ export default function MedicationCalculator() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-              <Pill size={20} color="oklch(0.55 0.15 165)" weight="outline" />
-              4. Seleccione un Medicamento
-            </h3>
-            <div className="grid gap-3 max-h-96 overflow-y-auto pr-1">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <StepHeading num={4}>Seleccione un Medicamento</StepHeading>
+              <div className="relative w-40 flex-shrink-0 no-print">
+                <Search size={14} weight="outline" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Buscar..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-8 text-sm pl-8"
+                />
+              </div>
+            </div>
+            <div className="grid gap-2.5 max-h-[400px] overflow-y-auto pr-1">
               {filteredMedications.map((med) => {
                 const isAvailable = med.species.includes(animalType);
                 const isSelected = selectedMedication?.id === med.id;
@@ -263,62 +291,47 @@ export default function MedicationCalculator() {
                 return (
                   <Card
                     key={med.id}
-                    className={`vet-card-hover cursor-pointer transition-all duration-200 ${
-                      isSelected
-                        ? 'ring-2 ring-primary shadow-md'
-                        : ''
-                    } ${
-                      !isAvailable ? 'opacity-50' : ''
+                    className={`med-card cursor-pointer ${isSelected ? 'selected' : ''} ${
+                      !isAvailable ? 'opacity-40 pointer-events-none' : ''
                     }`}
                     onClick={() => {
                       if (!isAvailable) return;
-                      setSelectedMedication(
-                        isSelected ? null : med
-                      );
+                      setSelectedMedication(isSelected ? null : med);
                       setResult(null);
                     }}
                   >
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-3">
+                    <CardContent className="p-3.5">
+                      <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-bold text-base">{med.name}</h4>
+                            <h4 className="font-bold text-sm">{med.name}</h4>
                             {med.species.map((s) => (
                               <Badge
                                 key={s}
-                                variant={
-                                  s === animalType
-                                    ? 'default'
-                                    : 'secondary'
-                                }
-                                className="text-xs"
+                                variant={s === animalType ? 'default' : 'secondary'}
+                                className="text-[10px] px-1.5 py-0"
                               >
                                 {s === 'perro' ? '🐕' : '🐈'} {s}
                               </Badge>
                             ))}
                           </div>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {med.genericName}
-                          </p>
-                          <div className="flex items-center gap-2 mt-2 flex-wrap">
-                            <Badge variant="outline" className="text-xs font-semibold text-primary border-primary/30">
+                          <p className="text-xs text-muted-foreground mt-0.5">{med.genericName}</p>
+                          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                            <Badge variant="outline" className="text-[10px] font-semibold text-primary border-primary/30">
                               {med.doseMin === med.doseMax
                                 ? `${med.doseMin} ${med.unit}`
-                                : `${med.doseMin}-${med.doseMax} ${med.unit}`}
+                                : `${med.doseMin}–${med.doseMax} ${med.unit}`}
                             </Badge>
                             {med.route.map((r) => (
-                              <Badge key={r} variant="secondary" className="text-xs">
+                              <Badge key={r} variant="secondary" className="text-[10px] px-1.5 py-0">
                                 {r}
                               </Badge>
                             ))}
                           </div>
                         </div>
                         <ChevronRight
-                          size={20}
-                          className={`flex-shrink-0 mt-1 transition-colors ${
-                            isSelected ? 'text-primary' : 'text-muted-foreground'
-                          }`}
-                          weight="outline"
+                          size={18} weight="outline"
+                          className={`flex-shrink-0 mt-1 transition-all ${isSelected ? 'text-primary rotate-90' : 'text-muted-foreground/40'}`}
                         />
                       </div>
                     </CardContent>
@@ -328,22 +341,30 @@ export default function MedicationCalculator() {
             </div>
           </motion.div>
         )}
+        {selectedCategory && filteredMedications.length === 0 && (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="text-center py-8 text-muted-foreground"
+          >
+            <Search size={32} weight="outline" className="mx-auto mb-2 opacity-30" />
+            <p className="text-sm">No se encontraron medicamentos</p>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Calculate Button */}
       <AnimatePresence>
         {selectedMedication && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col items-center gap-3"
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+            className="flex flex-col items-center gap-3 no-print"
           >
             <Button
               size="lg"
               onClick={handleCalculate}
               disabled={!canCalculate || loading}
-              className="vet-pulse text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl"
+              className="vet-pulse text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg shadow-primary/20"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
@@ -357,11 +378,9 @@ export default function MedicationCalculator() {
                 </span>
               )}
             </Button>
-            {selectedMedication && (
-              <p className="text-sm text-muted-foreground">
-                {selectedMedication.name} — {selectedMedication.genericName}
-              </p>
-            )}
+            <p className="text-sm text-muted-foreground">
+              {selectedMedication.name} — {selectedMedication.genericName}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -369,11 +388,7 @@ export default function MedicationCalculator() {
       {/* Error */}
       <AnimatePresence>
         {error && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-          >
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Alert variant="destructive">
               <AlertTriangle size={18} weight="outline" />
               <AlertDescription>{error}</AlertDescription>
@@ -391,51 +406,66 @@ export default function MedicationCalculator() {
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="glass-card border-primary/20 shadow-lg">
+            <Card className="result-card shadow-lg">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-primary">
-                  <Stethoscope size={22} weight="outline" />
-                  Resultado del Cálculo
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2 text-primary">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Stethoscope size={18} weight="outline" />
+                    </div>
+                    Resultado del Cálculo
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => window.print()}
+                    className="no-print h-8 w-8 text-muted-foreground hover:text-primary"
+                    title="Imprimir"
+                  >
+                    <Printer size={16} weight="outline" />
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Medication Info */}
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Pill size={20} color="oklch(0.55 0.15 165)" weight="outline" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg">{result.medication.name}</h4>
-                    <p className="text-sm text-muted-foreground">{result.medication.genericName}</p>
+                <div className="dose-highlight p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Pill size={24} color="oklch(0.55 0.15 165)" weight="outline" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-lg leading-tight">{result.medication.name}</h4>
+                      <p className="text-sm text-muted-foreground">{result.medication.genericName}</p>
+                    </div>
                   </div>
                 </div>
 
                 {/* Dose Results */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="bg-primary/5 rounded-lg p-3 text-center">
-                    <p className="text-xs text-muted-foreground font-medium">Dosis Mínima</p>
-                    <p className="text-2xl font-bold text-primary">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Mínima</p>
+                    <p className="text-2xl font-extrabold text-primary mt-1">
                       {result.calculatedDose.min}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground font-medium">
                       {result.calculatedDose.unit.split('/')[0]}
                     </p>
                   </div>
-                  <div className="bg-accent/10 rounded-lg p-3 text-center">
-                    <p className="text-xs text-muted-foreground font-medium">Dosis Recomendada</p>
-                    <p className="text-2xl font-bold text-accent">
+                  <div className="bg-accent/10 rounded-xl p-3 text-center border border-accent/20">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Recomendada</p>
+                    <p className="text-2xl font-extrabold text-accent mt-1">
                       {result.calculatedDose.recommended}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground font-medium">
                       {result.calculatedDose.unit.split('/')[0]}
                     </p>
                   </div>
-                  <div className="bg-primary/5 rounded-lg p-3 text-center">
-                    <p className="text-xs text-muted-foreground font-medium">Dosis Máxima</p>
-                    <p className="text-2xl font-bold text-primary">
+                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10">
+                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Máxima</p>
+                    <p className="text-2xl font-extrabold text-primary mt-1">
                       {result.calculatedDose.max}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground font-medium">
                       {result.calculatedDose.unit.split('/')[0]}
                     </p>
                   </div>
@@ -443,41 +473,41 @@ export default function MedicationCalculator() {
 
                 {/* Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-start gap-2">
-                    <Syringe size={16} color="oklch(0.55 0.15 165)" weight="outline" className="mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">Vía de Administración</p>
-                      <div className="flex gap-1 flex-wrap mt-1">
-                        {result.routes.map((r) => (
-                          <Badge key={r} variant="outline" className="text-xs">
-                            {r}
-                          </Badge>
-                        ))}
-                      </div>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Syringe size={14} color="oklch(0.55 0.15 165)" weight="outline" />
+                      <p className="font-semibold text-xs uppercase tracking-wider">Vía de Administración</p>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <HeartPulse size={16} color="oklch(0.55 0.15 165)" weight="outline" className="mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium">Frecuencia</p>
-                      {result.frequency.map((f) => (
-                        <p key={f} className="text-muted-foreground">{f}</p>
+                    <div className="flex gap-1 flex-wrap">
+                      {result.routes.map((r) => (
+                        <Badge key={r} variant="outline" className="text-xs font-medium">
+                          {r}
+                        </Badge>
                       ))}
                     </div>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <HeartPulse size={14} color="oklch(0.55 0.15 165)" weight="outline" />
+                      <p className="font-semibold text-xs uppercase tracking-wider">Frecuencia</p>
+                    </div>
+                    {result.frequency.map((f) => (
+                      <p key={f} className="text-muted-foreground text-xs">{f}</p>
+                    ))}
                   </div>
                 </div>
 
                 {/* Weight note */}
-                <p className="text-sm text-muted-foreground">
-                  <CircleInfo size={14} weight="outline" className="inline mr-1" />
-                  Peso utilizado: <strong>{result.weightKg} kg</strong>
+                <p className="text-xs text-muted-foreground bg-muted/30 rounded-md px-3 py-2 flex items-center gap-1.5">
+                  <CircleInfo size={13} weight="outline" />
+                  <span>Peso utilizado: <strong>{result.weightKg} kg</strong></span>
                 </p>
 
                 {/* Notes Warning */}
                 {result.notes && (
                   <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-950/30">
                     <AlertTriangle size={18} weight="outline" className="text-amber-600" />
-                    <AlertDescription className="text-amber-800 dark:text-amber-200 text-sm">
+                    <AlertDescription className="text-amber-800 dark:text-amber-200 text-sm leading-relaxed">
                       {result.notes}
                     </AlertDescription>
                   </Alert>
@@ -485,43 +515,35 @@ export default function MedicationCalculator() {
 
                 {/* Brand Names */}
                 {result.medication.brandNames && result.medication.brandNames.length > 0 && (
-                  <div className="flex items-start gap-2">
-                    <Shield size={16} color="oklch(0.55 0.15 165)" weight="outline" className="mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium">Nombres Comerciales en CR</p>
-                      <div className="flex gap-1 flex-wrap mt-1">
-                        {result.medication.brandNames.map((b) => (
-                          <Badge key={b} variant="secondary" className="text-xs">
-                            {b}
-                          </Badge>
-                        ))}
-                      </div>
+                  <div className="bg-muted/30 rounded-lg p-3">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Shield size={14} color="oklch(0.55 0.15 165)" weight="outline" />
+                      <p className="text-xs font-semibold uppercase tracking-wider">Nombres Comerciales en CR</p>
+                    </div>
+                    <div className="flex gap-1 flex-wrap">
+                      {result.medication.brandNames.map((b) => (
+                        <Badge key={b} variant="secondary" className="text-xs font-medium">
+                          {b}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
                 )}
 
-                <Button
-                  variant="outline"
-                  onClick={handleReset}
-                  className="w-full mt-2"
-                >
-                  Calcular Otro Medicamento
-                </Button>
+                <div className="flex gap-2 no-print">
+                  <Button variant="outline" onClick={handleReset} className="flex-1">
+                    Calcular Otro Medicamento
+                  </Button>
+                  <Button variant="outline" onClick={() => window.print()} className="px-4">
+                    <Printer size={16} weight="outline" className="mr-1.5" />
+                    Imprimir
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Decorative pill image */}
-      <div className="relative flex justify-start">
-        <img
-          src="/images/image-6YCD688sjOC1kmBZgegAoQNGOCBOuQ.png"
-          alt="Medicina"
-          className="w-24 opacity-20 vet-float hidden md:block"
-          style={{ animationDelay: '2s' }}
-        />
-      </div>
     </div>
   );
 }

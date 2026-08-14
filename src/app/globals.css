@@ -127,7 +127,7 @@ html {
   }
 }
 
-/* Custom scrollbar */
+/* ===== CUSTOM SCROLLBAR ===== */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -146,11 +146,69 @@ html {
   background: oklch(0.55 0.15 165);
 }
 
-/* Custom utility classes */
+/* ===== HERO & BACKGROUNDS ===== */
 .vet-gradient {
-  background: linear-gradient(135deg, oklch(0.98 0.02 155), oklch(0.97 0.02 170));
+  background: linear-gradient(135deg, oklch(0.97 0.025 155) 0%, oklch(0.95 0.035 170) 50%, oklch(0.97 0.02 160) 100%);
+  position: relative;
 }
 
+.vet-gradient::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, oklch(0.55 0.15 165 / 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, oklch(0.65 0.2 30 / 0.04) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.hospital-stripe {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    oklch(0.55 0.15 165 / 0.025) 10px,
+    oklch(0.55 0.15 165 / 0.025) 20px
+  );
+}
+
+/* Heartbeat ECG line decoration */
+.heartbeat-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.heartbeat-line::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    oklch(0.55 0.15 165 / 0.3) 10%,
+    oklch(0.55 0.15 165) 15%,
+    oklch(0.55 0.15 165) 16%,
+    transparent 18%,
+    transparent 30%,
+    oklch(0.55 0.15 165) 35%,
+    transparent 40%,
+    transparent 60%,
+    oklch(0.55 0.15 165) 65%,
+    transparent 70%,
+    oklch(0.55 0.15 165 / 0.3) 90%,
+    transparent 100%
+  );
+  animation: heartbeat-scroll 8s linear infinite;
+}
+
+@keyframes heartbeat-scroll {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ===== CARDS & HOVER ===== */
 .vet-card-hover {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -159,45 +217,193 @@ html {
   transform: translateY(-2px) scale(1.01);
 }
 
+.vet-card-selected {
+  border-left: 4px solid oklch(0.55 0.15 165);
+  background: linear-gradient(135deg, oklch(1 0 0) 0%, oklch(0.98 0.015 165) 100%);
+}
+
+/* Glassmorphism */
+.glass-card {
+  background: oklch(1 0 0 / 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid oklch(0.55 0.15 165 / 0.15);
+  box-shadow:
+    0 4px 6px -1px oklch(0 0 0 / 0.05),
+    0 10px 15px -3px oklch(0 0 0 / 0.05),
+    inset 0 1px 0 oklch(1 0 0 / 0.5);
+}
+
+/* ===== BUTTONS & PULSE ===== */
 .vet-pulse {
   animation: vet-pulse-anim 2.5s ease-in-out infinite;
+  position: relative;
+}
+
+.vet-pulse::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, oklch(0.55 0.15 165), oklch(0.6 0.12 145));
+  z-index: -1;
+  opacity: 0;
+  animation: vet-pulse-glow 2.5s ease-in-out infinite;
 }
 
 @keyframes vet-pulse-anim {
-  0%, 100% {
-    box-shadow: 0 0 0 0 oklch(0.55 0.15 165 / 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 12px oklch(0.55 0.15 165 / 0);
-  }
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.55 0.15 165 / 0.4); }
+  50% { box-shadow: 0 0 0 12px oklch(0.55 0.15 165 / 0); }
 }
 
+@keyframes vet-pulse-glow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.3; }
+}
+
+/* ===== FLOATING ANIMATION ===== */
 .vet-float {
   animation: vet-float-anim 4s ease-in-out infinite;
 }
 
 @keyframes vet-float-anim {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-12px);
-  }
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-8px) rotate(1deg); }
+  50% { transform: translateY(-14px) rotate(0deg); }
+  75% { transform: translateY(-6px) rotate(-1deg); }
 }
 
-.hospital-stripe {
-  background-image: repeating-linear-gradient(
-    -45deg,
-    transparent,
-    transparent 10px,
-    oklch(0.55 0.15 165 / 0.03) 10px,
-    oklch(0.55 0.15 165 / 0.03) 20px
-  );
+/* ===== STEP INDICATORS ===== */
+.step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, oklch(0.55 0.15 165), oklch(0.6 0.12 145));
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px oklch(0.55 0.15 165 / 0.3);
 }
 
-.glass-card {
-  background: oklch(1 0 0 / 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid oklch(1 0 0 / 0.3);
+/* ===== RESULT CARDS ===== */
+.result-card {
+  border-left: 4px solid oklch(0.55 0.15 165);
+  background: linear-gradient(135deg, oklch(0.995 0.005 165) 0%, oklch(1 0 0) 100%);
+  box-shadow:
+    0 1px 3px oklch(0 0 0 / 0.05),
+    0 10px 25px -5px oklch(0.55 0.15 165 / 0.1);
+}
+
+.dose-highlight {
+  background: linear-gradient(135deg, oklch(0.55 0.15 165 / 0.08), oklch(0.6 0.12 145 / 0.05));
+  border: 1px solid oklch(0.55 0.15 165 / 0.15);
+  border-radius: 12px;
+}
+
+/* ===== QUICK INFO BAR ===== */
+.quick-info-bar {
+  background: white;
+  border-top: 1px solid oklch(0.55 0.15 165 / 0.1);
+  border-bottom: 1px solid oklch(0.55 0.15 165 / 0.1);
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.03);
+}
+
+/* ===== FOOTER WAVE ===== */
+.footer-wave {
+  position: relative;
+}
+
+.footer-wave::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 40'%3E%3Cpath fill='%23115459' d='M0,20 C360,40 720,0 1080,20 C1260,30 1350,35 1440,30 L1440,40 L0,40 Z'/%3E%3C/svg%3E") no-repeat center;
+  background-size: cover;
+}
+
+/* ===== SECTION BACKGROUNDS ===== */
+.section-alt {
+  background: linear-gradient(180deg, oklch(0.98 0.01 165) 0%, oklch(1 0 0) 100%);
+  position: relative;
+}
+
+.section-alt::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(oklch(0.55 0.15 165 / 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+  pointer-events: none;
+}
+
+/* ===== CATEGORY PILL COLORS ===== */
+.cat-anestésicos { --cat-color: oklch(0.55 0.15 165); }
+.cat-aines { --cat-color: oklch(0.6 0.12 170); }
+.cat-corticosteroides { --cat-color: oklch(0.7 0.15 75); }
+.cat-desparasitantes-internos { --cat-color: oklch(0.55 0.18 145); }
+.cat-desparasitantes-externos { --cat-color: oklch(0.6 0.15 130); }
+.cat-antibióticos { --cat-color: oklch(0.6 0.18 15); }
+.cat-gastroprotección { --cat-color: oklch(0.65 0.15 55); }
+.cat-analgésicos { --cat-color: oklch(0.55 0.2 25); }
+
+.cat-pill {
+  position: relative;
+  overflow: hidden;
+}
+
+.cat-pill::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--cat-color, oklch(0.55 0.15 165));
+  border-radius: 0 2px 2px 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.cat-pill.active::before {
+  opacity: 1;
+}
+
+/* ===== MEDICATION CARD ENHANCED ===== */
+.med-card {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 3px solid transparent;
+}
+
+.med-card:hover {
+  border-left-color: oklch(0.55 0.15 165);
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.06);
+}
+
+.med-card.selected {
+  border-left-color: oklch(0.55 0.15 165);
+  background: linear-gradient(135deg, oklch(0.995 0.01 165) 0%, oklch(1 0 0) 100%);
+  box-shadow: 0 4px 12px oklch(0.55 0.15 165 / 0.12);
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  header, footer, .no-print, .vet-float, .hospital-stripe, .heartbeat-line::after {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  .glass-card, .result-card {
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+  body {
+    background: white !important;
+  }
 }
