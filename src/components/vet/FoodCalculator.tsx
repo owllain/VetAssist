@@ -170,15 +170,15 @@ export default function FoodCalculator() {
         </div>
         {convertedWeight && (
           <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-            <div className="bg-white rounded-lg p-2 border border-border/50">
+            <div className="bg-card rounded-lg p-2 border border-border/50">
               <p className="text-lg font-bold text-primary">{convertedWeight.kg}</p>
               <p className="text-[10px] text-muted-foreground font-semibold">kg</p>
             </div>
-            <div className="bg-white rounded-lg p-2 border border-border/50">
+            <div className="bg-card rounded-lg p-2 border border-border/50">
               <p className="text-lg font-bold text-primary">{convertedWeight.lb}</p>
               <p className="text-[10px] text-muted-foreground font-semibold">lb</p>
             </div>
-            <div className="bg-white rounded-lg p-2 border border-border/50">
+            <div className="bg-card rounded-lg p-2 border border-border/50">
               <p className="text-lg font-bold text-primary">{convertedWeight.oz}</p>
               <p className="text-[10px] text-muted-foreground font-semibold">oz</p>
             </div>

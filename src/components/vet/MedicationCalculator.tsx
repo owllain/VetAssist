@@ -38,10 +38,12 @@ import {
   getMedicationsByCategory,
   medications,
 } from '@/lib/medications';
-import { addFavorite, removeFavorite, isFavorite } from '@/lib/favorites';
 import type { FavoriteMed } from '@/lib/favorites';
+import { useToggleFavorite, useFavorites } from '@/lib/use-favorites-store';
 import FavoritesPanel from './FavoritesPanel';
 import DoseReferenceTable from './DoseReferenceTable';
+import ProtocolTemplates from './ProtocolTemplates';
+import DrugInteractionChecker from './DrugInteractionChecker';
 import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-store';
 
 interface CalcResult {
@@ -89,9 +91,11 @@ export default function MedicationCalculator() {
   const addHistory = useAddHistory();
   const [showFavorites, setShowFavorites] = useState(false);
   const [showRefTable, setShowRefTable] = useState(false);
-  const [favTick, setFavTick] = useState(0);
   const [copied, setCopied] = useState(false);
   const clearHistory = useClearHistory();
+  const toggleFav = useToggleFavorite();
+  const favorites = useFavorites();
+  const favIdSet = new Set(favorites.map(f => f.medicationId));
 
   const handleSelectFavorite = useCallback((fav: FavoriteMed) => {
     setSelectedCategory(fav.category);
@@ -103,20 +107,7 @@ export default function MedicationCalculator() {
     }
   }, []);
 
-  const toggleFav = useCallback((med: Medication) => {
-    if (isFavorite(med.id)) {
-      removeFavorite(med.id);
-    } else {
-      addFavorite({
-        medicationId: med.id,
-        name: med.name,
-        genericName: med.genericName,
-        category: med.categoryId,
-        species: med.species,
-      });
-    }
-    setFavTick((t) => t + 1);
-  }, []);
+
 
   const filteredMedications = useMemo(() => {
     if (!selectedCategory) return [];
@@ -131,7 +122,7 @@ export default function MedicationCalculator() {
       );
     }
     return meds;
-  }, [selectedCategory, searchQuery, favTick]);
+  }, [selectedCategory, searchQuery]);
 
   const canCalculate = selectedMedication && weight && parseFloat(weight) > 0;
 
@@ -270,6 +261,24 @@ export default function MedicationCalculator() {
         </div>
       </div>
 
+      {/* Protocol Quick Templates */}
+      {!selectedCategory && !result && (
+        <div>
+          <ProtocolTemplates
+            animalType={animalType}
+            onSelectProtocol={(protocol) => {
+              if (protocol.drugs.length > 0) {
+                const firstDrug = medications.find((m) => m.id === protocol.drugs[0].medicationId);
+                if (firstDrug) {
+                  setSelectedCategory(firstDrug.categoryId);
+                  setSelectedMedication(firstDrug);
+                }
+              }
+            }}
+          />
+        </div>
+      )}
+
       {/* Step 3: Category Selection */}
       <div>
         <div className="flex items-center justify-between gap-3 mb-3">
@@ -367,7 +376,7 @@ export default function MedicationCalculator() {
               {filteredMedications.map((med) => {
                 const isAvailable = med.species.includes(animalType);
                 const isSelected = selectedMedication?.id === med.id;
-                const medIsFav = isFavorite(med.id);
+                const medIsFav = favIdSet.has(med.id);
 
                 return (
                   <Card
@@ -480,6 +489,11 @@ export default function MedicationCalculator() {
         )}
       </AnimatePresence>
 
+      {/* Drug Interaction Checker */}
+      {selectedMedication && !result && (
+        <DrugInteractionChecker selectedMedicationId={selectedMedication.id} />
+      )}
+
       {/* Error */}
       <AnimatePresence>
         {error && (
@@ -520,19 +534,19 @@ export default function MedicationCalculator() {
                           if (med) toggleFav(med);
                         }}
                         className={`no-print h-8 w-8 ${
-                          isFavorite(result.medication.id)
+                          favIdSet.has(result.medication.id)
                             ? 'text-amber-500'
                             : 'text-muted-foreground/40 hover:text-amber-400'
                         }`}
                         title={
-                          isFavorite(result.medication.id)
+                          favIdSet.has(result.medication.id)
                             ? 'Quitar de favoritos'
                             : 'Agregar a favoritos'
                         }
                       >
                         <Star
                           size={16}
-                          weight={isFavorite(result.medication.id) ? 'fill' : 'outline'}
+                          weight={favIdSet.has(result.medication.id) ? 'fill' : 'outline'}
                         />
                       </Button>
                     )}

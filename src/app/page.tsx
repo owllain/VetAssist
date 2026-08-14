@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from 'next-themes';
 
 import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { useKeyboardShortcuts } from '@/lib/use-keyboard-shortcuts';
 import { SlotText } from 'slot-text/react';
 import {
   HeartPulse,
@@ -107,8 +108,8 @@ function AnimatedCounter({ target, suffix = '' }: { target: number; suffix?: str
 
 function StatCard({ icon, value, suffix, label }: { icon: React.ReactNode; value: number; suffix: string; label: string }) {
   return (
-    <div className="flex items-center gap-3 bg-white/70 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/50 shadow-sm">
-      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+    <div className="group flex items-center gap-3 bg-card/70 backdrop-blur-sm rounded-xl px-4 py-3 border border-border/50 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300">
+      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
         {icon}
       </div>
       <div>
@@ -136,10 +137,21 @@ export default function Home() {
     window.print();
   }, []);
 
+  // Keyboard shortcuts
+  const shortcuts = useMemo(() => ({
+    'ctrl+1': () => handleTabChange('medicamentos'),
+    'ctrl+2': () => handleTabChange('modo-libre'),
+    'ctrl+3': () => handleTabChange('alimentos'),
+    'ctrl+4': () => handleTabChange('acerca'),
+    'ctrl+p': handlePrint,
+    'ctrl+d': () => setTheme(theme === 'dark' ? 'light' : 'dark'),
+  }), [handleTabChange, handlePrint, theme, setTheme]);
+  useKeyboardShortcuts(shortcuts);
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* ========== HEADER ========== */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/85 border-b border-primary/10 shadow-sm">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-background/85 border-b border-primary/10 shadow-sm">
         <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
           <button
             onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setActiveTab('medicamentos'); }}
@@ -155,7 +167,7 @@ export default function Home() {
           </button>
 
           {/* Desktop nav tabs */}
-          <div className="hidden md:flex gap-1 bg-muted/50 rounded-xl p-1">
+          <div className="hidden md:flex gap-1 bg-muted/50 rounded-xl p-1 border border-border/30">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -163,11 +175,14 @@ export default function Home() {
                 className={`relative flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   activeTab === tab.id
                     ? 'text-primary-foreground bg-primary shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-white/60'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-card/60'
                 }`}
               >
                 {tab.icon}
-                {tab.label}
+                <span className="hidden xl:inline">{tab.label}</span>
+                <kbd className="hidden lg:inline text-[9px] ml-1 px-1 py-0.5 rounded bg-foreground/5 text-muted-foreground font-mono">
+                  Ctrl+{TABS.indexOf(tab) + 1}
+                </kbd>
               </button>
             ))}
           </div>
@@ -317,16 +332,16 @@ export default function Home() {
                 value={27} suffix="" label="Medicamentos"
               />
               <StatCard
-                icon={<Shield size={20} color="oklch(0.6 0.12 145)" weight="outline" />}
-                value={8} suffix="" label="Categorías terapéuticas"
+                icon={<ClipboardText size={20} color="oklch(0.6 0.12 145)" weight="outline" />}
+                value={6} suffix="" label="Protocolos rápidos"
               />
               <StatCard
                 icon={<Paw size={20} color="oklch(0.65 0.2 30)" weight="outline" />}
                 value={2} suffix="" label="Especies (perros y gatos)"
               />
               <StatCard
-                icon={<Clock size={20} color="oklch(0.7 0.15 75)" weight="outline" />}
-                value={3} suffix="" label="Calculadoras disponibles"
+                icon={<Shield size={20} color="oklch(0.7 0.15 75)" weight="outline" />}
+                value={7} suffix="" label="Interacciones registradas"
               />
             </div>
           </div>
@@ -464,8 +479,8 @@ export default function Home() {
                   </p>
 
                   {/* Feature cards */}
-                  <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <Card className="vet-card-hover overflow-hidden">
+                  <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <Card className="vet-card-hover-enhanced overflow-hidden glow-ring">
                       <div className="h-1.5 bg-gradient-to-r from-primary to-primary/40" />
                       <CardContent className="p-5 text-center">
                         <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
@@ -477,7 +492,7 @@ export default function Home() {
                         </p>
                       </CardContent>
                     </Card>
-                    <Card className="vet-card-hover overflow-hidden">
+                    <Card className="vet-card-hover-enhanced overflow-hidden glow-ring">
                       <div className="h-1.5 bg-gradient-to-r from-chart-3 to-chart-3/40" />
                       <CardContent className="p-5 text-center">
                         <div className="w-12 h-12 rounded-xl bg-chart-3/10 flex items-center justify-center mx-auto mb-3">
@@ -489,7 +504,7 @@ export default function Home() {
                         </p>
                       </CardContent>
                     </Card>
-                    <Card className="vet-card-hover overflow-hidden">
+                    <Card className="vet-card-hover-enhanced overflow-hidden glow-ring">
                       <div className="h-1.5 bg-gradient-to-r from-chart-2 to-chart-2/40" />
                       <CardContent className="p-5 text-center">
                         <div className="w-12 h-12 rounded-xl bg-chart-2/10 flex items-center justify-center mx-auto mb-3">
@@ -498,6 +513,42 @@ export default function Home() {
                         <h3 className="font-bold">Alimentación RER/DER</h3>
                         <p className="text-sm text-muted-foreground mt-1">
                           Cálculo basado en estándares veterinarios con soporte para onzas y tazas
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card className="vet-card-hover-enhanced overflow-hidden glow-ring">
+                      <div className="h-1.5 bg-gradient-to-r from-amber-400 to-amber-400/40" />
+                      <CardContent className="p-5 text-center">
+                        <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center mx-auto mb-3">
+                          <ClipboardText size={24} color="oklch(0.7 0.18 75)" weight="outline" />
+                        </div>
+                        <h3 className="font-bold">6 Protocolos Rápidos</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Pre-quirúrgicos, desparasitación, analgesia post-op y más — listos para usar
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card className="vet-card-hover-enhanced overflow-hidden glow-ring">
+                      <div className="h-1.5 bg-gradient-to-r from-red-400 to-red-400/40" />
+                      <CardContent className="p-5 text-center">
+                        <div className="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center mx-auto mb-3">
+                          <Syringe size={24} color="oklch(0.6 0.2 25)" weight="outline" />
+                        </div>
+                        <h3 className="font-bold">Verificador de Interacciones</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Detecte interacciones medicamentosas peligrosas antes de prescribir
+                        </p>
+                      </CardContent>
+                    </Card>
+                    <Card className="vet-card-hover-enhanced overflow-hidden glow-ring">
+                      <div className="h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-400/40" />
+                      <CardContent className="p-5 text-center">
+                        <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center mx-auto mb-3">
+                          <HeartPulse size={24} color="oklch(0.65 0.2 145)" weight="outline" />
+                        </div>
+                        <h3 className="font-bold">BCS + Herramientas</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Condición corporal, conversor de peso, historial y atajos de teclado
                         </p>
                       </CardContent>
                     </Card>

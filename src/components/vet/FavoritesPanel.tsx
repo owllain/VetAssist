@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { FavoriteMed } from '@/lib/favorites';
-import { getFavorites, removeFavorite } from '@/lib/favorites';
+import { useFavorites, useRemoveFavorite } from '@/lib/use-favorites-store';
 
 interface FavoritesPanelProps {
   onSelectMedication: (med: FavoriteMed) => void;
@@ -32,21 +32,13 @@ export default function FavoritesPanel({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
-  const [, setRefreshKey] = useState(0);
-  const refresh = () => setRefreshKey((k) => k + 1);
-
-  const handleRemove = (medicationId: string) => {
-    removeFavorite(medicationId);
-    refresh();
-  };
+  const favorites = useFavorites();
+  const removeFav = useRemoveFavorite();
 
   const handleSelect = (med: FavoriteMed) => {
     onSelectMedication(med);
     setOpen(false);
   };
-
-  // Read favorites from localStorage on each render (only shown when sheet is open)
-  const favorites = getFavorites();
 
   return (
     <>
@@ -151,7 +143,7 @@ export default function FavoritesPanel({
                           className="h-8 w-8 flex-shrink-0 opacity-50 hover:opacity-100 hover:text-destructive"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleRemove(fav.medicationId);
+                            removeFav(fav.medicationId);
                           }}
                         >
                           <Trash size={14} weight="outline" />

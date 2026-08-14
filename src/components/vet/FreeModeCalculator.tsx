@@ -260,7 +260,7 @@ export default function FreeModeCalculator() {
                       <p className="text-4xl font-extrabold text-primary mt-1">{result.total}</p>
                       <p className="text-sm text-muted-foreground font-medium">{result.unit}</p>
                     </div>
-                    <div className="bg-white/60 rounded-lg p-3 flex flex-col justify-center">
+                    <div className="bg-card/60 rounded-lg p-3 flex flex-col justify-center">
                       <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Fórmula</p>
                       <p className="text-sm font-mono mt-2 font-medium">
                         {dosePerKg} {doseUnit} × {result.weightKg} kg

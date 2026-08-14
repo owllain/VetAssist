@@ -287,3 +287,114 @@ weight converter, print support, and a hospital-themed design with 10 decoration
 5. **Responsive BCS chart** improvements — consider a visual body silhouette diagram
 6. **Accessibility audit** — Verify screen reader experience, add more ARIA labels
 7. **Performance optimization** — Lazy load FoodCalculator/BodyConditionScore when tab is active
+
+---
+Task ID: Review-3
+Agent: Main Agent
+Task: Bug fixes, styling enhancements, keyboard shortcuts, protocol templates, drug interaction checker
+
+## Current Project Status Assessment
+VetCalc CR is a comprehensive, production-quality veterinary calculator SPA for Costa Rica.
+All 3 calculators (medication, free mode, food) are fully functional with 27 medications in 8 categories.
+The app now includes: favorites system, dose reference tables, search/filter, calculation history,
+weight converter, print support, dark mode, BCS chart, 6 quick-start protocols, drug interaction checker,
+keyboard shortcuts, and a hospital-themed design with 10 decoration images.
+
+## Completed Modifications
+
+### Bug Fixes (Critical)
+1. **FavoritesPanel hydration bug** — Migrated from direct `getFavorites()` call during render to
+   `useSyncExternalStore`-based `useFavorites()` hook. Created `/src/lib/use-favorites-store.ts`
+   with `useFavorites()`, `useToggleFavorite()`, `useIsFavorite()`, `useRemoveFavorite()`.
+   - Rewrote FavoritesPanel.tsx to use `useFavorites()` and `useRemoveFavorite()`
+   - Updated MedicationCalculator.tsx to use `useToggleFavorite()` + `useFavorites()` + `favIdSet`
+   - Eliminated the `favTick` state hack and `isFavorite()` direct imports
+
+2. **Dark mode hardcoded white backgrounds** — Fixed in:
+   - FreeModeCalculator.tsx: `bg-white/60` → `bg-card/60` (formula display)
+   - FoodCalculator.tsx: `bg-white` → `bg-card` (weight converter results, 3 instances)
+   - page.tsx: `bg-white/85` → `bg-background/85` (header), `hover:bg-white/60` → `hover:bg-card/60` (tabs)
+
+3. **Dark mode footer** — Added `.dark footer` CSS override with adaptive dark color
+
+### New Features
+1. **Keyboard Shortcuts** (`/src/lib/use-keyboard-shortcuts.ts`)
+   - `Ctrl+1/2/3/4` — Switch between tabs (Medicamentos, Modo Libre, Alimentos, Acerca)
+   - `Ctrl+P` — Print current view
+   - `Ctrl+D` — Toggle dark/light mode
+   - Smart input detection: Enter key works in inputs, other shortcuts skip when typing
+   - `<kbd>` hints shown on desktop nav tabs (hidden on mobile, hidden in print)
+
+2. **6 Quick-Start Protocol Templates** (`/src/lib/protocols.ts`, `/src/components/vet/ProtocolTemplates.tsx`)
+   - Pre-quirúrgico Canino (acepromazina + atropina + meloxicam)
+   - Pre-quirúrgico Felino (ketamina + atropina)
+   - Desparasitación Interna Canino (fenbendazol + ivermectina)
+   - Desparasitación Interna Felino (fenbendazol + pirantel)
+   - Post-operatorio Analgesia (meloxicam + tramadol)
+   - Dermatología Pioderma (amoxicilina-clavulanato + clorhexidina)
+   - Shown in MedicationCalculator before category selection
+   - Expandable cards with drug details, warnings, and "Usar Protocolo" button
+   - Filtered by species (perro/gato)
+   - Integrated into MedicationCalculator Step 2-3 gap
+
+3. **Drug Interaction Checker** (`/src/lib/drug-interactions.ts`, `/src/components/vet/DrugInteractionChecker.tsx`)
+   - 7 registered drug interactions (3 alta, 3 media, 1 baja severity)
+   - Pairs: AINE+corticosteroides, ivermectina+spinosad, ketamina+tramadol, etc.
+   - Auto-detects current medication and lists all known interactions
+   - Pair comparison dropdown for checking any two drugs
+   - Color-coded severity (red/amber/green) with recommendations
+   - Expandable interaction details
+   - Shown when a medication is selected (before calculation)
+
+### Styling Enhancements
+1. **Gradient border utility** (`.gradient-border`) — CSS mask-based gradient border effect
+2. **Glow ring** (`.glow-ring`) — Soft primary-colored glow on hover
+3. **Enhanced card hover** (`.vet-card-hover-enhanced`) — Top light sweep animation on hover, deeper shadow
+4. **Ripple button** (`.ripple-btn`) — Radial gradient press effect
+5. **Smooth focus ring** — Custom `focus-visible` outline for all interactive elements
+6. **Enhanced scrollbar** — Color change on container hover
+7. **Skeleton loading** (`.skeleton`) — Shimmer animation for loading states (light + dark)
+8. **Badge glow** (`.badge-glow`) — Soft colored shadow for badges
+9. **CSS tooltip** (`.tooltip-trigger`) — Pure CSS tooltip using `data-tooltip` attribute
+10. **Footer dark mode** — `.dark footer` + `.dark .footer-wave::before` with adaptive SVG
+11. **StatCard micro-interaction** — Icon scale + border color change on hover
+12. **"Acerca" section** — Expanded to 6 feature cards (was 3) with `glow-ring` and `vet-card-hover-enhanced`
+13. **Quick Info Bar** — Updated stats: 27 Medicamentos, 6 Protocolos, 2 Especies, 7 Interacciones
+14. **Tab pills** — Border around tab container, keyboard shortcut hints visible on desktop
+
+## Files Created
+- `/src/lib/use-favorites-store.ts` — useSyncExternalStore-based favorites CRUD
+- `/src/lib/use-keyboard-shortcuts.ts` — Keyboard shortcut hook
+- `/src/lib/protocols.ts` — 6 veterinary protocol templates
+- `/src/lib/drug-interactions.ts` — 7 drug interactions + check functions
+- `/src/components/vet/ProtocolTemplates.tsx` — Protocol selection UI
+- `/src/components/vet/DrugInteractionChecker.tsx` — Interaction checker UI
+
+## Files Modified
+- `/src/components/vet/MedicationCalculator.tsx` — New favorites store, ProtocolTemplates, DrugInteractionChecker integration
+- `/src/components/vet/FavoritesPanel.tsx` — useSyncExternalStore migration
+- `/src/components/vet/FreeModeCalculator.tsx` — Dark mode bg-card fix
+- `/src/components/vet/FoodCalculator.tsx` — Dark mode bg-card fixes
+- `/src/app/page.tsx` — Keyboard shortcuts, dark mode header fix, 6-card about section, updated stats, kbd hints
+- `/src/app/globals.css` — 14 new CSS utility classes, footer dark mode, print kbd hide
+
+## Verification Results
+- `bun run lint` passes clean (0 errors, 0 warnings)
+- Dev server compiles successfully, HTTP 200 on /
+- Note: Container memory limit causes OOM-kill when agent-browser Chrome launches alongside Next.js
+- All TypeScript/JSX structure verified via ESLint
+
+## Unresolved Issues & Risks
+1. **Container OOM** — Next.js + Chrome (agent-browser) exceeds container memory. Server alone works fine.
+2. **reicon-react TS strict** — `weight` prop shows TS errors at dev time but works at runtime (non-blocking).
+3. **Protocol drug IDs** — Some protocol medicationIds may not match actual medication IDs if database changes.
+4. **Interaction database** — Only 7 interactions; real veterinary databases have hundreds. Expandable.
+
+## Priority Recommendations for Next Phase
+1. **Add more drug interactions** — Especially for the 27 medications in the database
+2. **Sound/beep alerts** for high-severity interaction warnings
+3. **Visual body silhouette** for BCS chart instead of colored segments
+4. **Accessibility audit** — Screen reader testing, ARIA labels, keyboard-only navigation
+5. **Protocol customization** — Allow editing drug doses within protocols
+6. **Export/import** functionality for favorites and history data
+7. **PWA support** — Service worker, offline caching, install prompt
