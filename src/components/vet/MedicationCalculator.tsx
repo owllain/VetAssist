@@ -180,7 +180,7 @@ export default function MedicationCalculator() {
         <div className="no-print">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
-              <Clock size={16} weight="outline" className="text-muted-foreground" />
+              <Clock size={16} weight="Outline" className="text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
             </div>
             <button
@@ -188,7 +188,7 @@ export default function MedicationCalculator() {
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
               title="Limpiar historial"
             >
-              <Trash size={12} weight="outline" />
+              <Trash size={12} weight="Outline" />
               Limpiar
             </button>
           </div>
@@ -222,7 +222,7 @@ export default function MedicationCalculator() {
               {type === 'perro' ? (
                 <span className="text-4xl">🐕</span>
               ) : (
-                <Cat size={36} weight="outline" color={animalType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
+                <Cat size={36} weight="Outline" color={animalType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
               )}
               <span className={`font-semibold ${animalType === type ? 'text-primary' : 'text-muted-foreground'}`}>
                 {type === 'perro' ? 'Perro' : 'Gato'}
@@ -289,7 +289,7 @@ export default function MedicationCalculator() {
             onClick={() => setShowFavorites(true)}
             className="flex-shrink-0 gap-1.5 text-xs no-print"
           >
-            <Star size={14} weight="fill" className="text-amber-500" />
+            <Star size={14} weight="Fill" className="text-amber-500" />
             Favoritos
           </Button>
         </div>
@@ -329,7 +329,7 @@ export default function MedicationCalculator() {
             <div className="flex items-center justify-between gap-3 mb-3">
               <StepHeading num={4}>Seleccione un Medicamento</StepHeading>
               <div className="relative w-40 flex-shrink-0 no-print">
-                <Search size={14} weight="outline" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Search size={14} weight="Outline" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   type="text"
                   placeholder="Buscar..."
@@ -349,14 +349,14 @@ export default function MedicationCalculator() {
                   className="w-full justify-between gap-2 text-xs text-muted-foreground hover:text-foreground h-8 px-2"
                 >
                   <span className="flex items-center gap-1.5">
-                    <ClipboardList size={14} weight="outline" />
+                    <ClipboardList size={14} weight="Outline" />
                     Ver tabla de referencia
                   </span>
                   <motion.span
                     animate={{ rotate: showRefTable ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <ChevronDown size={14} weight="outline" />
+                    <ChevronDown size={14} weight="Outline" />
                   </motion.span>
                 </Button>
               </CollapsibleTrigger>
@@ -433,7 +433,7 @@ export default function MedicationCalculator() {
                             <Star size={16} weight={medIsFav ? 'fill' : 'outline'} />
                           </button>
                           <ChevronRight
-                            size={18} weight="outline"
+                            size={18} weight="Outline"
                             className={`transition-all ${isSelected ? 'text-primary rotate-90' : 'text-muted-foreground/40'}`}
                           />
                         </div>
@@ -451,7 +451,7 @@ export default function MedicationCalculator() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="text-center py-8 text-muted-foreground"
           >
-            <Search size={32} weight="outline" className="mx-auto mb-2 opacity-30" />
+            <Search size={32} weight="Outline" className="mx-auto mb-2 opacity-30" />
             <p className="text-sm">No se encontraron medicamentos</p>
           </motion.div>
         )}
@@ -477,7 +477,7 @@ export default function MedicationCalculator() {
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
-                  <Calculator size={22} weight="outline" />
+                  <Calculator size={22} weight="Outline" />
                   CALCULAR DOSIS
                 </span>
               )}
@@ -499,7 +499,7 @@ export default function MedicationCalculator() {
         {error && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Alert variant="destructive">
-              <AlertTriangle size={18} weight="outline" />
+              <AlertTriangle size={18} weight="Outline" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           </motion.div>
@@ -520,7 +520,7 @@ export default function MedicationCalculator() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-primary">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Stethoscope size={18} weight="outline" />
+                      <Stethoscope size={18} weight="Outline" />
                     </div>
                     Resultado del Cálculo
                   </CardTitle>
@@ -582,7 +582,7 @@ export default function MedicationCalculator() {
                       className="no-print h-8 w-8 text-muted-foreground hover:text-primary"
                       title="Imprimir"
                     >
-                      <Printer size={16} weight="outline" />
+                      <Printer size={16} weight="Outline" />
                     </Button>
                   </div>
                 </div>
@@ -592,7 +592,7 @@ export default function MedicationCalculator() {
                 <div className="dose-highlight p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Pill size={24} color="oklch(0.55 0.15 165)" weight="outline" />
+                      <Pill size={24} color="oklch(0.55 0.15 165)" weight="Outline" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-lg leading-tight">{result.medication.name}</h4>
@@ -636,7 +636,7 @@ export default function MedicationCalculator() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                   <div className="bg-muted/50 rounded-lg p-3">
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <Syringe size={14} color="oklch(0.55 0.15 165)" weight="outline" />
+                      <Syringe size={14} color="oklch(0.55 0.15 165)" weight="Outline" />
                       <p className="font-semibold text-xs uppercase tracking-wider">Vía de Administración</p>
                     </div>
                     <div className="flex gap-1 flex-wrap">
@@ -649,7 +649,7 @@ export default function MedicationCalculator() {
                   </div>
                   <div className="bg-muted/50 rounded-lg p-3">
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <HeartPulse size={14} color="oklch(0.55 0.15 165)" weight="outline" />
+                      <HeartPulse size={14} color="oklch(0.55 0.15 165)" weight="Outline" />
                       <p className="font-semibold text-xs uppercase tracking-wider">Frecuencia</p>
                     </div>
                     {result.frequency.map((f) => (
@@ -660,14 +660,14 @@ export default function MedicationCalculator() {
 
                 {/* Weight note */}
                 <p className="text-xs text-muted-foreground bg-muted/30 rounded-md px-3 py-2 flex items-center gap-1.5">
-                  <CircleInfo size={13} weight="outline" />
+                  <CircleInfo size={13} weight="Outline" />
                   <span>Peso utilizado: <strong>{result.weightKg} kg</strong></span>
                 </p>
 
                 {/* Notes Warning */}
                 {result.notes && (
                   <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-950/30">
-                    <AlertTriangle size={18} weight="outline" className="text-amber-600" />
+                    <AlertTriangle size={18} weight="Outline" className="text-amber-600" />
                     <AlertDescription className="text-amber-800 dark:text-amber-200 text-sm leading-relaxed">
                       {result.notes}
                     </AlertDescription>
@@ -678,7 +678,7 @@ export default function MedicationCalculator() {
                 {result.medication.brandNames && result.medication.brandNames.length > 0 && (
                   <div className="bg-muted/30 rounded-lg p-3">
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <Shield size={14} color="oklch(0.55 0.15 165)" weight="outline" />
+                      <Shield size={14} color="oklch(0.55 0.15 165)" weight="Outline" />
                       <p className="text-xs font-semibold uppercase tracking-wider">Nombres Comerciales en CR</p>
                     </div>
                     <div className="flex gap-1 flex-wrap">
@@ -696,7 +696,7 @@ export default function MedicationCalculator() {
                     Calcular Otro Medicamento
                   </Button>
                   <Button variant="outline" onClick={() => window.print()} className="px-4">
-                    <Printer size={16} weight="outline" className="mr-1.5" />
+                    <Printer size={16} weight="Outline" className="mr-1.5" />
                     Imprimir
                   </Button>
                 </div>

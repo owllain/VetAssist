@@ -23,7 +23,7 @@ export default function ProtocolTemplates({ animalType, onSelectProtocol }: Prot
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-1">
-        <ClipboardText size={16} weight="outline" color="oklch(0.55 0.15 165)" />
+        <ClipboardText size={16} weight="Outline" color="oklch(0.55 0.15 165)" />
         <span className="text-sm font-semibold">Protocolos Rápidos</span>
         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
           {filtered.length} disponibles
@@ -73,7 +73,7 @@ export default function ProtocolTemplates({ animalType, onSelectProtocol }: Prot
                         transition={{ duration: 0.2 }}
                         className="flex-shrink-0"
                       >
-                        <ChevronRight size={18} weight="outline" className="text-muted-foreground/50" />
+                        <ChevronRight size={18} weight="Outline" className="text-muted-foreground/50" />
                       </motion.div>
                     </div>
                   </CardContent>
@@ -92,7 +92,7 @@ export default function ProtocolTemplates({ animalType, onSelectProtocol }: Prot
                         {protocol.drugs.map((drug, di) => (
                           <div key={di} className="flex items-start gap-2">
                             <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                              <Pill size={10} weight="outline" color="oklch(0.55 0.15 165)" />
+                              <Pill size={10} weight="Outline" color="oklch(0.55 0.15 165)" />
                             </div>
                             <div>
                               <p className="text-sm font-semibold">{drug.name}</p>
@@ -102,13 +102,13 @@ export default function ProtocolTemplates({ animalType, onSelectProtocol }: Prot
                         ))}
                         {protocol.notes && (
                           <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/20 rounded-lg p-2.5 mt-1">
-                            <AlertTriangle size={13} weight="outline" className="text-amber-600 mt-0.5 flex-shrink-0" />
+                            <AlertTriangle size={13} weight="Outline" className="text-amber-600 mt-0.5 flex-shrink-0" />
                             <p className="text-[11px] text-amber-800 dark:text-amber-200 leading-relaxed">{protocol.notes}</p>
                           </div>
                         )}
                         <div className="flex items-center justify-between pt-1">
                           <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                            <InfoSquare size={10} weight="outline" />
+                            <InfoSquare size={10} weight="Outline" />
                             Presione el medicamento para calcular dosis
                           </div>
                           <Button

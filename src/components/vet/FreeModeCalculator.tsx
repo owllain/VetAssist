@@ -89,7 +89,7 @@ export default function FreeModeCalculator() {
         <div className="no-print">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
-              <Clock size={16} weight="outline" className="text-muted-foreground" />
+              <Clock size={16} weight="Outline" className="text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
             </div>
             <button
@@ -97,7 +97,7 @@ export default function FreeModeCalculator() {
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
               title="Limpiar historial"
             >
-              <Trash size={12} weight="outline" />
+              <Trash size={12} weight="Outline" />
               Limpiar
             </button>
           </div>
@@ -128,7 +128,7 @@ export default function FreeModeCalculator() {
               {type === 'perro' ? (
                 <span className="text-4xl">🐕</span>
               ) : (
-                <Cat size={36} weight="outline" color={animalType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
+                <Cat size={36} weight="Outline" color={animalType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
               )}
               <span className={`font-semibold ${animalType === type ? 'text-primary' : 'text-muted-foreground'}`}>
                 {type === 'perro' ? 'Perro' : 'Gato'}
@@ -189,7 +189,7 @@ export default function FreeModeCalculator() {
           className="vet-pulse text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg shadow-primary/20"
         >
           <span className="flex items-center gap-2">
-            <Calculator size={22} weight="outline" />
+            <Calculator size={22} weight="Outline" />
             CALCULAR DOSIS LIBRE
           </span>
         </Button>
@@ -200,7 +200,7 @@ export default function FreeModeCalculator() {
         {error && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Alert variant="destructive">
-              <AlertTriangle size={18} weight="outline" />
+              <AlertTriangle size={18} weight="Outline" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           </motion.div>
@@ -219,7 +219,7 @@ export default function FreeModeCalculator() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-primary">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Calculator size={18} weight="outline" />
+                      <Calculator size={18} weight="Outline" />
                     </div>
                     Resultado — Modo Libre
                   </CardTitle>
@@ -248,7 +248,7 @@ export default function FreeModeCalculator() {
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => window.print()}
                     className="no-print h-8 w-8 text-muted-foreground hover:text-primary">
-                    <Printer size={16} weight="outline" />
+                    <Printer size={16} weight="Outline" />
                   </Button>
                 </div>
               </CardHeader>
@@ -273,12 +273,12 @@ export default function FreeModeCalculator() {
                 </div>
 
                 <p className="text-xs text-muted-foreground bg-muted/30 rounded-md px-3 py-2 flex items-center gap-1.5">
-                  <CircleInfo size={13} weight="outline" />
+                  <CircleInfo size={13} weight="Outline" />
                   <span>Peso utilizado: <strong>{result.weightKg} kg</strong> ({animalType})</span>
                 </p>
 
                 <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-950/30">
-                  <AlertTriangle size={18} weight="outline" className="text-amber-600" />
+                  <AlertTriangle size={18} weight="Outline" className="text-amber-600" />
                   <AlertDescription className="text-amber-800 dark:text-amber-200 text-sm">
                     Este es un cálculo de referencia. Siempre verifique con las guías de dosificación
                     oficiales del medicamento y la condición clínica del paciente.
@@ -290,7 +290,7 @@ export default function FreeModeCalculator() {
                     Nueva Consulta
                   </Button>
                   <Button variant="outline" onClick={() => window.print()} className="px-4">
-                    <Printer size={16} weight="outline" className="mr-1.5" />
+                    <Printer size={16} weight="Outline" className="mr-1.5" />
                     Imprimir
                   </Button>
                 </div>

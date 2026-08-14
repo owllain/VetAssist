@@ -53,7 +53,7 @@ export default function FavoritesPanel({
           size="icon"
           className="h-14 w-14 rounded-full shadow-lg shadow-primary/30 bg-primary hover:bg-primary/90 text-primary-foreground"
         >
-          <Star size={24} weight="fill" />
+          <Star size={24} weight="Fill" />
           <span className="sr-only">Favoritos</span>
         </Button>
       </motion.div>
@@ -62,7 +62,7 @@ export default function FavoritesPanel({
         <SheetContent side="right" className="p-0">
           <SheetHeader className="p-4 pb-2">
             <SheetTitle className="flex items-center gap-2">
-              <Star size={20} weight="fill" className="text-amber-500" />
+              <Star size={20} weight="Fill" className="text-amber-500" />
               Medicamentos Favoritos
             </SheetTitle>
             <SheetDescription>
@@ -77,7 +77,7 @@ export default function FavoritesPanel({
                 animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center gap-3"
               >
-                <StarFall2 size={40} weight="outline" className="text-muted-foreground/30" />
+                <StarFall2 size={40} weight="Outline" className="text-muted-foreground/30" />
                 <p className="text-sm text-muted-foreground">
                   No hay medicamentos favoritos aún
                 </p>
@@ -146,7 +146,7 @@ export default function FavoritesPanel({
                             removeFav(fav.medicationId);
                           }}
                         >
-                          <Trash size={14} weight="outline" />
+                          <Trash size={14} weight="Outline" />
                           <span className="sr-only">Eliminar</span>
                         </Button>
                       </div>

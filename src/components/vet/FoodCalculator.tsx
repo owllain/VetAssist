@@ -123,7 +123,7 @@ export default function FoodCalculator() {
         <div className="no-print">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
-              <Clock size={16} weight="outline" className="text-muted-foreground" />
+              <Clock size={16} weight="Outline" className="text-muted-foreground" />
               <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
             </div>
             <button
@@ -131,7 +131,7 @@ export default function FoodCalculator() {
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
               title="Limpiar historial"
             >
-              <Trash size={12} weight="outline" />
+              <Trash size={12} weight="Outline" />
               Limpiar
             </button>
           </div>
@@ -148,7 +148,7 @@ export default function FoodCalculator() {
       {/* Weight Converter Widget */}
       <div className="bg-primary/5 border border-primary/10 rounded-xl p-4 no-print">
         <div className="flex items-center gap-2 mb-3">
-          <Repeat size={16} color="oklch(0.55 0.15 165)" weight="outline" />
+          <Repeat size={16} color="oklch(0.55 0.15 165)" weight="Outline" />
           <span className="text-sm font-semibold">Conversor de Peso Rápido</span>
         </div>
         <div className="flex gap-2 items-center">
@@ -201,7 +201,7 @@ export default function FoodCalculator() {
               {type === 'perro' ? (
                 <span className="text-4xl">🐕</span>
               ) : (
-                <Cat size={36} weight="outline" color={petType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
+                <Cat size={36} weight="Outline" color={petType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
               )}
               <span className={`font-semibold ${petType === type ? 'text-primary' : 'text-muted-foreground'}`}>
                 {type === 'perro' ? 'Perro' : 'Gato'}
@@ -281,7 +281,7 @@ export default function FoodCalculator() {
             animate={{ opacity: 1, y: 0 }}
             className="mt-2 flex items-start gap-2 text-xs text-muted-foreground bg-primary/5 border border-primary/10 rounded-lg px-3 py-2"
           >
-            <CircleInfo size={13} weight="outline" color="oklch(0.55 0.15 165)" className="mt-0.5 flex-shrink-0" />
+            <CircleInfo size={13} weight="Outline" color="oklch(0.55 0.15 165)" className="mt-0.5 flex-shrink-0" />
             <span>
               {bcs <= 3
                 ? `BCS ${bcs}/9 detectado: la actividad se ajustó automáticamente a «Bajo» para aumentar la ingesta calórica recomendada.`
@@ -298,7 +298,7 @@ export default function FoodCalculator() {
           {loading ? (
             <span className="flex items-center gap-2"><span className="animate-spin">⚙️</span>Calculando...</span>
           ) : (
-            <span className="flex items-center gap-2"><Calculator size={22} weight="outline" />CALCULAR ALIMENTACIÓN</span>
+            <span className="flex items-center gap-2"><Calculator size={22} weight="Outline" />CALCULAR ALIMENTACIÓN</span>
           )}
         </Button>
       </div>
@@ -308,7 +308,7 @@ export default function FoodCalculator() {
         {error && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Alert variant="destructive">
-              <AlertTriangle size={18} weight="outline" />
+              <AlertTriangle size={18} weight="Outline" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           </motion.div>
@@ -326,7 +326,7 @@ export default function FoodCalculator() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-primary">
                     <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Scale size={18} weight="outline" />
+                      <Scale size={18} weight="Outline" />
                     </div>
                     Alimentación Diaria
                   </CardTitle>
@@ -356,7 +356,7 @@ export default function FoodCalculator() {
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => window.print()}
                       className="no-print h-8 w-8 text-muted-foreground hover:text-primary">
-                      <Printer size={16} weight="outline" />
+                      <Printer size={16} weight="Outline" />
                     </Button>
                   </div>
                 </div>
@@ -407,13 +407,13 @@ export default function FoodCalculator() {
 
                 {/* Weight note */}
                 <p className="text-xs text-muted-foreground bg-muted/30 rounded-md px-3 py-2 flex items-center gap-1.5">
-                  <CircleInfo size={13} weight="outline" />
+                  <CircleInfo size={13} weight="Outline" />
                   <span>Peso utilizado: <strong>{result.weightKg} kg</strong> ({petType})</span>
                 </p>
 
                 {/* Info Note */}
                 <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-950/30">
-                  <AlertTriangle size={18} weight="outline" className="text-amber-600" />
+                  <AlertTriangle size={18} weight="Outline" className="text-amber-600" />
                   <AlertDescription className="text-amber-800 dark:text-amber-200 text-sm leading-relaxed">
                     Esta estimación se basa en alimento seco (croquetas) con ~3.5 kcal/g.
                     Ajuste según el alimento específico, la condición corporal y las necesidades
@@ -424,7 +424,7 @@ export default function FoodCalculator() {
                 <div className="flex gap-2 no-print">
                   <Button variant="outline" onClick={() => setResult(null)} className="flex-1">Nueva Consulta</Button>
                   <Button variant="outline" onClick={() => window.print()} className="px-4">
-                    <Printer size={16} weight="outline" className="mr-1.5" />Imprimir
+                    <Printer size={16} weight="Outline" className="mr-1.5" />Imprimir
                   </Button>
                 </div>
               </CardContent>

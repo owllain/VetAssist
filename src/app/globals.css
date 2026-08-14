@@ -742,9 +742,227 @@ kbd {
   background-size: cover;
 }
 
+/* ===== GRADIENT TEXT ===== */
+.gradient-text {
+  background: linear-gradient(135deg, oklch(0.55 0.15 165), oklch(0.5 0.18 250));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== FLOATING PARTICLES BACKGROUND ===== */
+.particles-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.particles-bg::before,
+.particles-bg::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: oklch(0.55 0.15 165 / 0.08);
+  pointer-events: none;
+}
+
+/* We use multiple box-shadows on ::before and ::after to simulate 5-6 particles */
+.particles-bg::before {
+  width: 6px;
+  height: 6px;
+  bottom: -10%;
+  left: 15%;
+  box-shadow:
+    80px 0 0 2px oklch(0.55 0.15 165 / 0.08),
+    200px 40px 0 3px oklch(0.55 0.15 165 / 0.06),
+    340px -20px 0 1px oklch(0.55 0.15 165 / 0.09);
+  animation: float-particle 10s ease-in-out infinite;
+}
+
+.particles-bg::after {
+  width: 4px;
+  height: 4px;
+  bottom: -10%;
+  left: 55%;
+  box-shadow:
+    -120px 30px 0 4px oklch(0.55 0.15 165 / 0.07),
+    160px -10px 0 2px oklch(0.55 0.15 165 / 0.08);
+  animation: float-particle 13s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+@keyframes float-particle {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-600px) scale(0.5);
+    opacity: 0;
+  }
+}
+
+/* ===== ANIMATED GRADIENT BORDER ===== */
+.animated-border {
+  position: relative;
+  border-radius: inherit;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.animated-border::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--border-angle, 0deg),
+    oklch(0.55 0.15 165),
+    oklch(0.6 0.12 145),
+    oklch(0.65 0.2 30),
+    oklch(0.55 0.15 165)
+  );
+  animation: rotate-gradient 4s linear infinite;
+  z-index: -2;
+}
+
+.animated-border::after {
+  content: '';
+  position: absolute;
+  inset: 1.5px;
+  border-radius: inherit;
+  background: var(--animated-border-bg, oklch(1 0 0));
+  z-index: -1;
+}
+
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes rotate-gradient {
+  0% { --border-angle: 0deg; }
+  100% { --border-angle: 360deg; }
+}
+
+/* ===== MORPHING BLOB ===== */
+.morph-blob {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  background: oklch(0.55 0.15 165);
+  opacity: 0.07;
+  filter: blur(60px);
+  pointer-events: none;
+  animation: morph 12s ease-in-out infinite;
+}
+
+@keyframes morph {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; transform: rotate(0deg) scale(1); }
+  25% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; transform: rotate(90deg) scale(1.05); }
+  50% { border-radius: 50% 60% 40% 60% / 30% 50% 70% 40%; transform: rotate(180deg) scale(0.95); }
+  75% { border-radius: 40% 30% 60% 50% / 70% 40% 50% 60%; transform: rotate(270deg) scale(1.02); }
+}
+
+/* ===== ENHANCED HOVER LIFT ===== */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -8px oklch(0.55 0.15 165 / 0.2);
+}
+
+/* ===== GLOW TEXT ===== */
+.glow-text {
+  text-shadow: 0 0 20px oklch(0.55 0.15 165 / 0.3), 0 0 40px oklch(0.55 0.15 165 / 0.1);
+}
+
+/* ===== DOT GRID PATTERN ===== */
+.dot-grid {
+  background-image: radial-gradient(oklch(0.55 0.15 165 / 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* ===== BREATHING ANIMATION ===== */
+.breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* ===== STAGGERED ENTRANCE ===== */
+.stagger-in > * {
+  opacity: 0;
+  animation: stagger-fade 0.5s ease-out forwards;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+
+@keyframes stagger-fade {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== DARK MODE VARIANTS FOR NEW CLASSES ===== */
+.dark .gradient-text {
+  background: linear-gradient(135deg, oklch(0.7 0.15 165), oklch(0.65 0.18 250));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dark .particles-bg::before,
+.dark .particles-bg::after {
+  background: oklch(0.65 0.15 165 / 0.12);
+}
+
+.dark .particles-bg::before {
+  box-shadow:
+    80px 0 0 2px oklch(0.65 0.15 165 / 0.12),
+    200px 40px 0 3px oklch(0.65 0.15 165 / 0.09),
+    340px -20px 0 1px oklch(0.65 0.15 165 / 0.14);
+}
+
+.dark .particles-bg::after {
+  box-shadow:
+    -120px 30px 0 4px oklch(0.65 0.15 165 / 0.1),
+    160px -10px 0 2px oklch(0.65 0.15 165 / 0.12);
+}
+
+.dark .animated-border::after {
+  background: var(--animated-border-bg, oklch(0.2 0.02 165));
+}
+
+.dark .morph-blob {
+  background: oklch(0.65 0.15 165);
+  opacity: 0.1;
+}
+
+.dark .hover-lift:hover {
+  box-shadow: 0 12px 24px -8px oklch(0.65 0.15 165 / 0.25);
+}
+
+.dark .glow-text {
+  text-shadow: 0 0 20px oklch(0.65 0.15 165 / 0.4), 0 0 40px oklch(0.65 0.15 165 / 0.15);
+}
+
+.dark .dot-grid {
+  background-image: radial-gradient(oklch(0.65 0.15 165 / 0.15) 1px, transparent 1px);
+}
+
 /* ===== PRINT STYLES ===== */
 @media print {
-  header, footer, .no-print, .vet-float, .hospital-stripe, .heartbeat-line::after {
+  header, footer, .no-print, .vet-float, .hospital-stripe, .heartbeat-line::after, .morph-blob, .particles-bg::before, .particles-bg::after, .hover-lift, .animated-border::before, .animated-border::after, .stagger-in > *, .scroll-progress-bar {
     display: none !important;
   }
   main {
