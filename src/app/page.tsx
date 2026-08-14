@@ -27,6 +27,8 @@ import {
   Database,
   ArrowUp,
   Notebook,
+  Drop,
+  CalendarCheck,
 } from 'reicon-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,10 +45,12 @@ import {
 import MedicationCalculator from '@/components/vet/MedicationCalculator';
 import FreeModeCalculator from '@/components/vet/FreeModeCalculator';
 import FoodCalculator from '@/components/vet/FoodCalculator';
+import IVFluidCalculator from '@/components/vet/IVFluidCalculator';
+import DoseSchedule from '@/components/vet/DoseSchedule';
 import DataManager from '@/components/vet/DataManager';
 import ClinicalNotes from '@/components/vet/ClinicalNotes';
 
-type TabId = 'medicamentos' | 'modo-libre' | 'alimentos' | 'acerca';
+type TabId = 'medicamentos' | 'modo-libre' | 'alimentos' | 'fluidos' | 'horarios' | 'acerca';
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode; desc: string }[] = [
   {
@@ -66,6 +70,18 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; desc: string }[] 
     label: 'Alimentos',
     icon: <Scale size={16} weight="Outline" />,
     desc: 'Ración diaria en gramos, onzas y tazas',
+  },
+  {
+    id: 'fluidos',
+    label: 'Fluidoterapia',
+    icon: <Drop size={16} weight="Outline" />,
+    desc: 'Tasa de infusión IV y gotas por minuto',
+  },
+  {
+    id: 'horarios',
+    label: 'Horarios',
+    icon: <CalendarCheck size={16} weight="Outline" />,
+    desc: 'Generador de horarios de medicación',
   },
   {
     id: 'acerca',
@@ -184,7 +200,9 @@ export default function Home() {
     'ctrl+1': () => handleTabChange('medicamentos'),
     'ctrl+2': () => handleTabChange('modo-libre'),
     'ctrl+3': () => handleTabChange('alimentos'),
-    'ctrl+4': () => handleTabChange('acerca'),
+    'ctrl+4': () => handleTabChange('fluidos'),
+    'ctrl+5': () => handleTabChange('horarios'),
+    'ctrl+6': () => handleTabChange('acerca'),
     'ctrl+p': handlePrint,
     'ctrl+d': () => setTheme(theme === 'dark' ? 'light' : 'dark'),
   }), [handleTabChange, handlePrint, theme, setTheme]);
@@ -218,7 +236,7 @@ export default function Home() {
               <HeartPulse size={20} color="white" weight="Outline" />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-bold text-foreground leading-tight">VetCalc CR</span>
+              <span className="text-lg font-bold text-foreground leading-tight text-gradient-animate">VetCalc CR</span>
               <span className="text-[10px] text-muted-foreground leading-tight tracking-wide uppercase">Veterinaria Costa Rica</span>
             </div>
           </button>
@@ -323,7 +341,7 @@ export default function Home() {
 
       <main className="flex-1">
         {/* ========== HERO SECTION ========== */}
-        <section className="vet-gradient heartbeat-line particles-bg hero-vignette relative overflow-hidden">
+        <section className="vet-gradient heartbeat-line particles-bg hero-vignette wave-bottom relative overflow-hidden">
           {/* Morph blobs */}
           <div className="morph-blob" style={{ top: '10%', left: '5%', background: 'oklch(0.55 0.15 165)' }} />
           <div className="morph-blob" style={{ top: '40%', right: '8%', background: 'oklch(0.6 0.12 145)', animationDelay: '-4s', width: '160px', height: '160px' }} />
@@ -397,7 +415,7 @@ export default function Home() {
         <div className="section-divider no-print" aria-hidden="true" />
 
         {/* ========== QUICK INFO BAR ========== */}
-        <div className="quick-info-bar no-print vet-texture">
+        <div className="quick-info-bar no-print vet-texture gradient-mesh">
           <div className="container mx-auto px-4 py-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <StatCard
@@ -414,7 +432,7 @@ export default function Home() {
               />
               <StatCard
                 icon={<Database size={20} color="oklch(0.55 0.2 290)" weight="Outline" />}
-                value={10} suffix="" label="Herramientas integradas"
+                value={12} suffix="" label="Herramientas integradas"
               />
             </div>
           </div>
@@ -524,6 +542,60 @@ export default function Home() {
             </motion.section>
           )}
 
+          {activeTab === 'fluidos' && (
+            <motion.section
+              key="fluidos"
+              id="fluidos"
+              className="py-10 md:py-14 relative gradient-mesh"
+              {...sectionVariants}
+            >
+              <div className="container mx-auto px-4">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                    <Drop size={28} color="oklch(0.55 0.15 165)" weight="Outline" />
+                    <SlotText
+                      text="Calculadora de Fluidoterapia IV"
+                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
+                    />
+                  </h2>
+                  <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
+                    Calcule la tasa de infusión, gotas por minuto y volumen diario de fluidos IV para pequeños animales.
+                  </p>
+                </div>
+                <div className="max-w-2xl mx-auto">
+                  <IVFluidCalculator />
+                </div>
+              </div>
+            </motion.section>
+          )}
+
+          {activeTab === 'horarios' && (
+            <motion.section
+              key="horarios"
+              id="horarios"
+              className="py-10 md:py-14 section-alt"
+              {...sectionVariants}
+            >
+              <div className="container mx-auto px-4">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                    <CalendarCheck size={28} color="oklch(0.55 0.15 165)" weight="Outline" />
+                    <SlotText
+                      text="Generador de Horarios"
+                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
+                    />
+                  </h2>
+                  <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
+                    Genere horarios de administración de medicamentos con seguimiento de dosis por día.
+                  </p>
+                </div>
+                <div className="max-w-4xl mx-auto">
+                  <DoseSchedule />
+                </div>
+              </div>
+            </motion.section>
+          )}
+
           {activeTab === 'acerca' && (
             <motion.section
               key="acerca"
@@ -554,7 +626,7 @@ export default function Home() {
                   {/* Feature cards */}
                   <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-in">
                     <div style={{ '--i': 0 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-primary to-primary/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-primary/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -569,7 +641,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 1 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-chart-3 to-chart-3/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-chart-3/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -584,7 +656,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 2 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-chart-2 to-chart-2/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-chart-2/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -599,7 +671,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 3 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-amber-400 to-amber-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-amber-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -614,7 +686,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 4 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-red-400 to-red-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-red-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -629,7 +701,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 5 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-emerald-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -644,7 +716,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 6 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-violet-400 to-violet-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-violet-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -664,6 +736,36 @@ export default function Home() {
                           <Database size={14} weight="Outline" />
                           Abrir Gestor
                         </Button>
+                      </CardContent>
+                    </Card>
+                    </div>
+                    <div style={{ '--i': 7 } as React.CSSProperties}>
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
+                      <div className="h-1.5 bg-gradient-to-r from-sky-400 to-sky-400/40" />
+                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-sky-400/5 to-transparent pointer-events-none" aria-hidden="true" />
+                      <CardContent className="p-5 text-center relative z-10">
+                        <div className="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-950/30 flex items-center justify-center mx-auto mb-3">
+                          <Drop size={24} color="oklch(0.55 0.15 230)" weight="Outline" />
+                        </div>
+                        <h3 className="font-bold">Fluidoterapia IV</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Tasa de infusión, gotas por minuto y corrección de deshidratación
+                        </p>
+                      </CardContent>
+                    </Card>
+                    </div>
+                    <div style={{ '--i': 8 } as React.CSSProperties}>
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
+                      <div className="h-1.5 bg-gradient-to-r from-orange-400 to-orange-400/40" />
+                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-orange-400/5 to-transparent pointer-events-none" aria-hidden="true" />
+                      <CardContent className="p-5 text-center relative z-10">
+                        <div className="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-950/30 flex items-center justify-center mx-auto mb-3">
+                          <CalendarCheck size={24} color="oklch(0.65 0.2 55)" weight="Outline" />
+                        </div>
+                        <h3 className="font-bold">Horarios de Medicación</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Generador de horarios con seguimiento diario y alertas sonoras
+                        </p>
                       </CardContent>
                     </Card>
                     </div>
@@ -738,7 +840,7 @@ export default function Home() {
       <div className="section-divider no-print" aria-hidden="true" />
 
       {/* ========== FOOTER ========== */}
-      <footer className="footer-wave bg-[#115459] text-white pt-12 pb-8 mt-auto no-print">
+      <footer className="footer-wave bg-[#115459] text-white pt-12 pb-8 mt-auto no-print inner-shadow-glow">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8 relative z-10">
             <div>
@@ -816,7 +918,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <p>© 2025 VetCalc CR — Herramienta de referencia para veterinarios en Costa Rica</p>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-teal-300 text-[10px] font-mono font-semibold tracking-wider">
-                v2.0
+                v2.1
               </span>
             </div>
             <p className="flex items-center gap-1.5">

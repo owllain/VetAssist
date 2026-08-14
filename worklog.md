@@ -901,3 +901,132 @@ calculator, clinical notes, toast notifications, and extensive hospital-themed a
 5. **Protocol customization** — Allow editing drug doses within protocol templates
 6. **Expand drug interactions** to comprehensively cover all 27 medications
 7. **Concentration calc in FreeMode** — Also offer concentration calculator in Free Mode tab
+---
+Task ID: Review-7
+Agent: Main Agent
+Task: QA, styling improvements (15 CSS utilities), IV Fluid Calculator, Dose Schedule Generator, sound alerts
+
+## Current Project Status Assessment
+VetCalc CR v2.1 is a comprehensive, production-quality veterinary calculator SPA for Costa Rica.
+All calculators fully functional: medication (27 meds/8 categories), free mode, food (RER/DER),
+IV fluid therapy, and dose schedule generation. Features include: favorites, dose reference tables,
+search/filter, history, weight converter, print, dark mode, BCS chart with dog silhouettes,
+6 protocol templates, 21 drug interactions with sound alerts, keyboard shortcuts (Ctrl+1-6),
+data export/import, patient profiles, dose range validation, concentration calculator,
+clinical notes, and an extensive hospital-themed design with 30+ CSS utility animations.
+
+## Completed Modifications
+
+### Styling Improvements
+1. **15 new CSS utility classes** with full dark mode + print support:
+   - `.hover-tap` — Mobile-friendly press feedback (scale down on active)
+   - `.tilt-3d` — Subtle 3D perspective tilt on hover (rotateX/Y)
+   - `.focus-ring-pulse` — Animated expanding focus ring for accessibility
+   - `.inner-shadow-glow` — Multi-layer inner/outer shadow for depth
+   - `.text-gradient-animate` — Animated color-shifting gradient text
+   - `.glassmorphism-elevated` — Higher blur/saturate glass effect
+   - `.neon-border` — Glowing neon border on hover (double box-shadow)
+   - `.micro-bounce` — Spring-bounce entrance animation
+   - `.crosshair-dots` — Fine dot pattern background
+   - `.depth-shadow` — 4-layer progressive shadow
+   - `.typing-cursor` — Blinking cursor effect
+   - `.liquid-btn` — Bottom-up fill effect on hover
+   - `.gradient-mesh` — Multi-point radial gradient mesh
+   - `.result-grid-enhanced` — Enhanced result grid with hover scale
+   - `.dose-accent-ring` — Pulsing glow behind dose displays
+   - `.smooth-underline` — Animated underline on text hover
+   - `.fade-up` — Fade-up entrance animation
+   - `.duration-badge` — Pulsing border on duration badges
+   - `.wave-bottom` — SVG wave section divider
+
+2. **Applied to page.tsx**:
+   - Hero: `wave-bottom` section divider, `text-gradient-animate` on logo
+   - Quick Info Bar: `gradient-mesh` overlay
+   - All 9 Acerca feature cards: `tilt-3d neon-border` (replaced `glow-ring`)
+   - Footer: `inner-shadow-glow` for depth
+   - Version badge: v2.0 → v2.1
+
+3. **Panel enhancements**:
+   - ClinicalNotes: `glassmorphism-elevated`, gradient header, enhanced empty state, hover lift on notes
+   - DataManager: `glassmorphism-elevated`, gradient header, `neon-border depth-shadow` stats card, `hover-tap` stat items
+
+### New Features
+
+1. **IV Fluid Rate Calculator** (Task ID 7-a)
+   - `/src/components/vet/IVFluidCalculator.tsx` — Full 4-step calculator
+   - Standard method: Weight-based table (5 weight ranges with min/max hourly rates)
+   - Simplified formula: (30 × kg) + 70 = mL/day
+   - Dehydration correction: % × weight × 1000 mL, distributed over 24h
+   - Ongoing losses: 0-10 mL/kg/hr for vomiting/diarrhea
+   - Perioperative rate: 2-5 mL/kg/hr
+   - Results: daily volume, hourly rate, drops/min (15/20/60 sets), infusion time for 250/500/1000mL bags
+   - Visual fluid bag fill indicator (framer-motion animated)
+   - Integrated as new "Fluidoterapia" tab (Ctrl+4)
+
+2. **Dose Schedule Generator** (Task ID 7-b)
+   - `/src/components/vet/DoseSchedule.tsx` — Full schedule management
+   - Frequency presets: SID, BID, TID, QID, q8h, q6h, q4h, custom hours
+   - 24-hour color-coded timeline bar (morning/afternoon/evening/night)
+   - Detailed table: time × days grid with medication names and dose tracking
+   - Checkbox tracking for each dose administration
+   - Progress bar showing checked/total doses
+   - Copy to clipboard (formatted text) and print support
+   - Current time indicator (red line) on timeline
+   - Integrated as new "Horarios" tab (Ctrl+5)
+
+3. **Sound Alert System** (Task ID 7-c)
+   - `/src/lib/sound-alert.ts` — Web Audio API sound generator
+   - 'alta' severity: 3 rapid beeps at 880Hz (warning pattern)
+   - 'media' severity: 2 medium beeps at 660Hz
+   - 'baja' severity: 1 soft beep at 440Hz
+   - Toggle on/off with `toggleSound()` / `isSoundEnabled()`
+   - Integrated into DrugInteractionChecker: plays once per drug selection via useRef
+   - Speaker/VolumeSlash toggle button with tooltip in checker header
+
+4. **Acerca Section Expanded**: 7 → 9 feature cards
+   - Added "Fluidoterapia IV" card (sky gradient, Drop icon)
+   - Added "Horarios de Medicación" card (orange gradient, CalendarCheck icon)
+
+5. **Quick Info Bar Updated**: 12 Herramientas integradas (was 10)
+
+6. **Keyboard Shortcuts Updated**: Ctrl+1-6 for 6 tabs
+
+### Bug Fixes
+1. **Droplet icon** — Doesn't exist in reicon-react. Fixed in IVFluidCalculator (Droplet → Drop)
+2. **Info icon** — Doesn't exist in reicon-react. Fixed in DoseSchedule (Info → CircleInfo)
+
+## Files Created
+- `/src/components/vet/IVFluidCalculator.tsx` — IV fluid rate calculator
+- `/src/components/vet/DoseSchedule.tsx` — Dose schedule generator
+- `/src/lib/sound-alert.ts` — Web Audio API sound alert system
+
+## Files Modified
+- `/src/app/globals.css` — 18 new CSS utility classes + dark mode + print
+- `/src/app/page.tsx` — 2 new tabs (fluidos, horarios), 2 new Acerca cards, styling classes, v2.1, updated shortcuts
+- `/src/components/vet/ClinicalNotes.tsx` — glassmorphism-elevated, gradient header, hover effects
+- `/src/components/vet/DataManager.tsx` — glassmorphism-elevated, neon-border, hover-tap, depth-shadow
+- `/src/components/vet/DrugInteractionChecker.tsx` — Sound alert integration with toggle button
+
+## Verification Results
+- `bun run lint` passes clean (0 errors, 0 warnings)
+- All reicon-react weight props verified capitalized (Outline/Fill)
+- No `Droplet` or `Info` icon imports remaining
+- 6 tabs confirmed in TabId type and TABS array
+- Keyboard shortcuts updated to Ctrl+1-6
+
+## Unresolved Issues & Risks
+1. **Container OOM** — Next.js Turbopack compilation uses ~2.7GB+ RSS. With 15 component
+   files now, compilation takes longer. Production build not affected.
+2. **DoseSchedule uses `toast` from `@/hooks/use-toast`** — Uses shadcn/ui toast, not
+   VetToast. This is consistent with the existing DataManager pattern.
+3. **Performance** — 15 vet components + page.tsx in a single route. Consider lazy loading
+   non-active tab content for better initial load.
+
+## Priority Recommendations for Next Phase
+1. **Lazy loading** — React.lazy + Suspense for IVFluidCalculator, DoseSchedule, BodyConditionScore
+2. **PWA manifest** — Service worker + manifest.json for offline field use
+3. **Accessibility audit** — Screen reader testing, ARIA label coverage for new components
+4. **Protocol customization** — Edit drug doses within protocol templates
+5. **Expand drug interactions** to cover all 27 medications comprehensively
+6. **Concentration Calculator in Free Mode** — Currently only in Medication tab
+7. **Sound alerts for dose validation warnings** — Extend beyond drug interactions

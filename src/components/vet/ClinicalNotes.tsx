@@ -73,8 +73,8 @@ export default function ClinicalNotes({ open, onOpenChange }: ClinicalNotesProps
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-80 sm:w-96 flex flex-col p-0 gap-0">
-        <SheetHeader className="px-5 pt-5 pb-3 border-b border-border/50">
+      <SheetContent side="right" className="w-80 sm:w-96 flex flex-col p-0 gap-0 glassmorphism-elevated">
+        <SheetHeader className="px-5 pt-5 pb-3 border-b border-primary/10 bg-gradient-to-r from-primary/5 to-transparent">
           <SheetTitle className="flex items-center gap-2 text-lg">
             <Notebook size={20} weight="Outline" color="oklch(0.55 0.15 165)" />
             Notas Clínicas
@@ -82,7 +82,7 @@ export default function ClinicalNotes({ open, onOpenChange }: ClinicalNotesProps
         </SheetHeader>
 
         {/* Input area */}
-        <div className="px-5 pt-4 pb-3 space-y-2 border-b border-border/50">
+        <div className="px-5 pt-4 pb-3 space-y-2 border-b border-primary/10">
           <Textarea
             value={noteText}
             onChange={(e) => {
@@ -113,7 +113,9 @@ export default function ClinicalNotes({ open, onOpenChange }: ClinicalNotesProps
         <div className="flex-1 overflow-y-auto px-5 py-3 custom-scrollbar">
           {sortedNotes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Notebook size={40} weight="Outline" className="text-muted-foreground/30 mb-3" />
+              <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center mb-3">
+                <Notebook size={32} weight="Outline" className="text-muted-foreground/30" />
+              </div>
               <p className="text-sm text-muted-foreground font-medium">Sin notas clínicas</p>
               <p className="text-xs text-muted-foreground/60 mt-1">
                 Agregue notas rápidas desde aquí
@@ -130,7 +132,7 @@ export default function ClinicalNotes({ open, onOpenChange }: ClinicalNotesProps
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className={`group relative rounded-lg bg-card border border-border/50 p-3 transition-colors hover:bg-accent/50 ${
+                    className={`group relative rounded-lg bg-card border border-border/50 p-3 transition-all hover:bg-accent/50 hover:shadow-md hover:-translate-y-0.5 ${
                       note.pinned ? 'border-l-[3px] border-l-primary' : 'border-l-[3px] border-l-transparent'
                     }`}
                   >

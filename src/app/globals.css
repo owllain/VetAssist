@@ -1354,9 +1354,327 @@ kbd {
   transform: scaleX(1);
 }
 
+/* ===== HOVER TAP FEEDBACK (MOBILE-FRIENDLY) ===== */
+.hover-tap {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease;
+}
+.hover-tap:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.08);
+}
+.hover-tap:active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.06);
+}
+
+/* ===== 3D TILT EFFECT ===== */
+.tilt-3d {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+  transform-style: preserve-3d;
+  perspective: 800px;
+}
+.tilt-3d:hover {
+  transform: translateY(-4px) rotateX(2deg) rotateY(-1deg);
+  box-shadow: 0 16px 32px -8px oklch(0.55 0.15 165 / 0.2);
+}
+
+/* ===== ANIMATED FOCUS RING ===== */
+.focus-ring-pulse {
+  position: relative;
+}
+.focus-ring-pulse:focus-visible {
+  outline: none;
+}
+.focus-ring-pulse:focus-visible::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid oklch(0.55 0.15 165 / 0.6);
+  animation: focus-ring-expand 1.5s ease-out infinite;
+}
+
+@keyframes focus-ring-expand {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.06); }
+}
+
+/* ===== INNER SHADOW GLOW ===== */
+.inner-shadow-glow {
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.8),
+    inset 0 -1px 0 oklch(0 0 0 / 0.04),
+    0 4px 12px oklch(0 0 0 / 0.04);
+}
+
+.dark .inner-shadow-glow {
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.08),
+    inset 0 -1px 0 oklch(0 0 0 / 0.2),
+    0 4px 12px oklch(0 0 0 / 0.15);
+}
+
+/* ===== ANIMATED GRADIENT TEXT ===== */
+.text-gradient-animate {
+  background: linear-gradient(270deg, oklch(0.55 0.15 165), oklch(0.6 0.12 145), oklch(0.65 0.2 30), oklch(0.55 0.15 165));
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: text-gradient-shift 4s ease-in-out infinite;
+}
+
+@keyframes text-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ===== GLASSMORPHISM ELEVATED ===== */
+.glassmorphism-elevated {
+  background: oklch(1 0 0 / 0.55);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border: 1px solid oklch(1 0 0 / 0.3);
+  box-shadow:
+    0 8px 32px oklch(0 0 0 / 0.06),
+    0 2px 8px oklch(0 0 0 / 0.03),
+    inset 0 1px 0 oklch(1 0 0 / 0.7);
+}
+
+.dark .glassmorphism-elevated {
+  background: oklch(0.2 0.02 165 / 0.65);
+  border-color: oklch(1 0 0 / 0.06);
+  box-shadow:
+    0 8px 32px oklch(0 0 0 / 0.2),
+    0 2px 8px oklch(0 0 0 / 0.1),
+    inset 0 1px 0 oklch(1 0 0 / 0.05);
+}
+
+/* ===== NEON BORDER EFFECT ===== */
+.neon-border {
+  border: 1px solid oklch(0.55 0.15 165 / 0.3);
+  box-shadow: 0 0 8px oklch(0.55 0.15 165 / 0.1), inset 0 0 8px oklch(0.55 0.15 165 / 0.03);
+  transition: all 0.3s ease;
+}
+.neon-border:hover {
+  border-color: oklch(0.55 0.15 165 / 0.6);
+  box-shadow: 0 0 16px oklch(0.55 0.15 165 / 0.2), 0 0 32px oklch(0.55 0.15 165 / 0.05), inset 0 0 12px oklch(0.55 0.15 165 / 0.05);
+}
+
+.dark .neon-border {
+  border-color: oklch(0.65 0.15 165 / 0.25);
+  box-shadow: 0 0 8px oklch(0.65 0.15 165 / 0.15), inset 0 0 8px oklch(0.65 0.15 165 / 0.05);
+}
+.dark .neon-border:hover {
+  border-color: oklch(0.65 0.15 165 / 0.5);
+  box-shadow: 0 0 16px oklch(0.65 0.15 165 / 0.25), 0 0 32px oklch(0.65 0.15 165 / 0.08), inset 0 0 12px oklch(0.65 0.15 165 / 0.08);
+}
+
+/* ===== MICRO BOUNCE ENTRANCE ===== */
+.micro-bounce {
+  animation: micro-bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes micro-bounce-in {
+  0% { transform: scale(0.9) translateY(8px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* ===== CROSSHAIR DOT PATTERN ===== */
+.crosshair-dots {
+  background-image:
+    radial-gradient(oklch(0.55 0.15 165 / 0.08) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+.dark .crosshair-dots {
+  background-image:
+    radial-gradient(oklch(0.65 0.15 165 / 0.12) 1px, transparent 1px);
+}
+
+/* ===== DEPTH SHADOW LAYERS ===== */
+.depth-shadow {
+  box-shadow:
+    0 1px 2px oklch(0 0 0 / 0.04),
+    0 2px 4px oklch(0 0 0 / 0.03),
+    0 4px 8px oklch(0 0 0 / 0.02),
+    0 8px 16px oklch(0 0 0 / 0.02);
+}
+
+.dark .depth-shadow {
+  box-shadow:
+    0 1px 2px oklch(0 0 0 / 0.12),
+    0 2px 4px oklch(0 0 0 / 0.1),
+    0 4px 8px oklch(0 0 0 / 0.08),
+    0 8px 16px oklch(0 0 0 / 0.06);
+}
+
+/* ===== BLINKING CURSOR ===== */
+.typing-cursor::after {
+  content: '|';
+  animation: blink-cursor 1s step-end infinite;
+  color: oklch(0.55 0.15 165);
+  font-weight: 300;
+  margin-left: 2px;
+}
+
+@keyframes blink-cursor {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* ===== LIQUID FILL BUTTON ===== */
+.liquid-btn {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+}
+.liquid-btn::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 0%;
+  background: oklch(1 0 0 / 0.12);
+  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+}
+.liquid-btn:hover::before {
+  height: 100%;
+}
+.liquid-btn > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== GRADIENT MESH BACKGROUND ===== */
+.gradient-mesh {
+  background:
+    radial-gradient(at 20% 30%, oklch(0.55 0.15 165 / 0.06) 0%, transparent 50%),
+    radial-gradient(at 80% 20%, oklch(0.6 0.12 145 / 0.05) 0%, transparent 40%),
+    radial-gradient(at 50% 80%, oklch(0.65 0.2 30 / 0.04) 0%, transparent 45%);
+}
+
+.dark .gradient-mesh {
+  background:
+    radial-gradient(at 20% 30%, oklch(0.65 0.15 165 / 0.1) 0%, transparent 50%),
+    radial-gradient(at 80% 20%, oklch(0.6 0.12 145 / 0.08) 0%, transparent 40%),
+    radial-gradient(at 50% 80%, oklch(0.65 0.2 30 / 0.06) 0%, transparent 45%);
+}
+
+/* ===== ENHANCED RESULT GRID ===== */
+.result-grid-enhanced > * {
+  position: relative;
+  border-radius: 12px;
+  padding: 16px;
+  background: oklch(1 0 0);
+  border: 1px solid oklch(0.92 0.015 165);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.result-grid-enhanced > *:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 20px oklch(0.55 0.15 165 / 0.1);
+  border-color: oklch(0.55 0.15 165 / 0.2);
+}
+
+.dark .result-grid-enhanced > * {
+  background: oklch(0.2 0.02 165);
+  border-color: oklch(1 0 0 / 0.06);
+}
+.dark .result-grid-enhanced > *:hover {
+  box-shadow: 0 8px 20px oklch(0.65 0.15 165 / 0.12);
+  border-color: oklch(0.65 0.15 165 / 0.2);
+}
+
+/* ===== HIGHLIGHTED DOSE ACCENT RING ===== */
+.dose-accent-ring {
+  position: relative;
+}
+.dose-accent-ring::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, oklch(0.55 0.15 165), oklch(0.6 0.12 145));
+  z-index: -1;
+  opacity: 0.3;
+  filter: blur(4px);
+  animation: accent-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes accent-pulse {
+  0%, 100% { opacity: 0.2; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.02); }
+}
+
+/* ===== SMOOTH UNDERLINE ACCENT ===== */
+.smooth-underline {
+  text-decoration: none;
+  background-image: linear-gradient(oklch(0.55 0.15 165 / 0.4), oklch(0.55 0.15 165 / 0.4));
+  background-size: 100% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 0.3s ease, background-image 0.3s ease;
+}
+.smooth-underline:hover {
+  background-size: 100% 2px;
+  background-image: linear-gradient(oklch(0.55 0.15 165 / 0.7), oklch(0.6 0.12 145 / 0.7));
+}
+
+/* ===== SUBTLE ENTRANCE FADE UP ===== */
+.fade-up {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: fade-up-anim 0.5s ease-out forwards;
+}
+
+@keyframes fade-up-anim {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== DURATION BADGE PULSE ===== */
+.duration-badge {
+  position: relative;
+}
+.duration-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 1px solid oklch(0.55 0.15 165 / 0.3);
+  animation: duration-pulse 2s ease-in-out infinite;
+}
+
+@keyframes duration-pulse {
+  0%, 100% { transform: scale(1); opacity: 0; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+/* ===== WAVE BOTTOM SECTION DIVIDER ===== */
+.wave-bottom {
+  position: relative;
+}
+.wave-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 24'%3E%3Cpath fill='oklch(0.98 0.01 165)' d='M0,12 C240,24 480,0 720,12 C960,24 1200,0 1440,12 L1440,24 L0,24 Z'/%3E%3C/svg%3E") no-repeat center;
+  background-size: cover;
+}
+
+.dark .wave-bottom::after {
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 24'%3E%3Cpath fill='oklch(0.16 0.02 165)' d='M0,12 C240,24 480,0 720,12 C960,24 1200,0 1440,12 L1440,24 L0,24 Z'/%3E%3C/svg%3E") no-repeat center;
+  background-size: cover;
+}
+
 /* ===== PRINT STYLES ===== */
 @media print {
-  header, footer, .no-print, .vet-float, .hospital-stripe, .heartbeat-line::after, .morph-blob, .particles-bg::before, .particles-bg::after, .hover-lift, .animated-border::before, .animated-border::after, .stagger-in > *, .scroll-progress-bar, .tab-indicator, .section-divider, .input-glow-wrapper::before, .toast-container {
+  header, footer, .no-print, .vet-float, .hospital-stripe, .heartbeat-line::after, .morph-blob, .particles-bg::before, .particles-bg::after, .hover-lift, .animated-border::before, .animated-border::after, .stagger-in > *, .scroll-progress-bar, .tab-indicator, .section-divider, .input-glow-wrapper::before, .toast-container, .neon-border, .tilt-3d, .hover-tap, .focus-ring-pulse::after, .dose-accent-ring::before, .duration-badge::after {
     display: none !important;
   }
   main {

@@ -1,15 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Warning, AlertTriangle, Information, ChevronDown, Shield, Check,
+  Speaker, VolumeSlash,
 } from 'reicon-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { medications } from '@/lib/medications';
 import { checkInteraction, getInteractionsForDrug, severityConfig } from '@/lib/drug-interactions';
 import type { DrugInteraction } from '@/lib/drug-interactions';
+import { playAlertSound, toggleSound, isSoundEnabled } from '@/lib/sound-alert';
 
 const severityIcon = {
   alta: Warning,
@@ -25,6 +28,33 @@ export default function DrugInteractionChecker({ selectedMedicationId }: DrugInt
   const [selectedDrug, setSelectedDrug] = useState<string>(selectedMedicationId || '');
   const [compareDrug, setCompareDrug] = useState<string>('');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [soundOn, setSoundOn] = useState<boolean>(isSoundEnabled());
+  const soundPlayedRef = useRef<string | null>(null);
+
+  const handleToggleSound = useCallback(() => {
+    const newState = toggleSound();
+    setSoundOn(newState);
+  }, []);
+
+  // Play alert sound once when high-severity interactions first appear
+  const currentDrug = selectedDrug || selectedMedicationId;
+  const drugInteractions = currentDrug ? getInteractionsForDrug(currentDrug) : [];
+  const hasAltaSeverity = drugInteractions.some((i) => i.severity === 'alta');
+  const interactionFingerprint = currentDrug;
+
+  useEffect(() => {
+    if (
+      hasAltaSeverity &&
+      soundPlayedRef.current !== interactionFingerprint
+    ) {
+      soundPlayedRef.current = interactionFingerprint;
+      playAlertSound('alta');
+    }
+    // Reset ref when drug changes (before playing)
+    if (!hasAltaSeverity && soundPlayedRef.current === interactionFingerprint) {
+      soundPlayedRef.current = null;
+    }
+  }, [hasAltaSeverity, interactionFingerprint]);
 
   const medOptions = medications.map((m) => ({
     value: m.id,
@@ -32,16 +62,35 @@ export default function DrugInteractionChecker({ selectedMedicationId }: DrugInt
     species: m.species,
   }));
 
-  const currentDrug = selectedDrug || selectedMedicationId;
-  const drugInteractions = currentDrug ? getInteractionsForDrug(currentDrug) : [];
-
   const pairResult = currentDrug && compareDrug ? checkInteraction(currentDrug, compareDrug) : null;
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 mb-1">
-        <Shield size={16} weight="Outline" color="oklch(0.6 0.2 25)" />
-        <span className="text-sm font-semibold">Verificador de Interacciones</span>
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-2">
+          <Shield size={16} weight="Outline" color="oklch(0.6 0.2 25)" />
+          <span className="text-sm font-semibold">Verificador de Interacciones</span>
+        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={handleToggleSound}
+              aria-label={soundOn ? 'Sonido activado' : 'Sonido desactivado'}
+            >
+              {soundOn ? (
+                <Speaker size={16} weight="Outline" className="text-muted-foreground" />
+              ) : (
+                <VolumeSlash size={16} weight="Outline" className="text-muted-foreground" />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {soundOn ? 'Sonido activado' : 'Sonido desactivado'}
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       <div className="bg-card border border-border rounded-xl p-4 space-y-3">

@@ -1,0 +1,997 @@
+   200→   699→
+   201→   700→/* ===== BADGE ENHANCEMENTS ===== */
+   202→   701→.badge-glow {
+   203→   702→  box-shadow: 0 0 8px -2px var(--badge-color, oklch(0.55 0.15 165));
+   204→   703→}
+   205→   704→
+   206→   705→/* ===== TOOLTIP ===== */
+   207→   706→.tooltip-trigger {
+   208→   707→  position: relative;
+   209→   708→}
+   210→   709→.tooltip-trigger::before {
+   211→   710→  content: attr(data-tooltip);
+   212→   711→  position: absolute;
+   213→   712→  bottom: calc(100% + 8px);
+   214→   713→  left: 50%;
+   215→   714→  transform: translateX(-50%) scale(0.9);
+   216→   715→  background: oklch(0.15 0.02 165);
+   217→   716→  color: oklch(0.985 0.005 165);
+   218→   717→  font-size: 11px;
+   219→   718→  padding: 4px 10px;
+   220→   719→  border-radius: 6px;
+   221→   720→  white-space: nowrap;
+   222→   721→  pointer-events: none;
+   223→   722→  opacity: 0;
+   224→   723→  transition: all 0.2s ease;
+   225→   724→  z-index: 100;
+   226→   725→}
+   227→   726→.tooltip-trigger:hover::before {
+   228→   727→  opacity: 1;
+   229→   728→  transform: translateX(-50%) scale(1);
+   230→   729→}
+   231→   730→
+   232→   731→/* ===== KBD STYLING ===== */
+   233→   732→kbd {
+   234→   733→  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+   235→   734→}
+   236→   735→
+   237→   736→/* ===== FOOTER DARK MODE ===== */
+   238→   737→.dark footer {
+   239→   738→  background: oklch(0.18 0.03 165) !important;
+   240→   739→}
+   241→   740→.dark .footer-wave::before {
+   242→   741→  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 40'%3E%3Cpath fill='oklch(0.18 0.03 165)' d='M0,20 C360,40 720,0 1080,20 C1260,30 1350,35 1440,30 L1440,40 L0,40 Z'/%3E%3C/svg%3E") no-repeat center;
+   243→   742→  background-size: cover;
+   244→   743→}
+   245→   744→
+   246→   745→/* ===== GRADIENT TEXT ===== */
+   247→   746→.gradient-text {
+   248→   747→  background: linear-gradient(135deg, oklch(0.55 0.15 165), oklch(0.5 0.18 250));
+   249→   748→  -webkit-background-clip: text;
+   250→   749→  -webkit-text-fill-color: transparent;
+   251→   750→  background-clip: text;
+   252→   751→}
+   253→   752→
+   254→   753→/* ===== FLOATING PARTICLES BACKGROUND ===== */
+   255→   754→.particles-bg {
+   256→   755→  position: relative;
+   257→   756→  overflow: hidden;
+   258→   757→}
+   259→   758→
+   260→   759→.particles-bg::before,
+   261→   760→.particles-bg::after {
+   262→   761→  content: '';
+   263→   762→  position: absolute;
+   264→   763→  border-radius: 50%;
+   265→   764→  background: oklch(0.55 0.15 165 / 0.08);
+   266→   765→  pointer-events: none;
+   267→   766→}
+   268→   767→
+   269→   768→/* We use multiple box-shadows on ::before and ::after to simulate 5-6 particles */
+   270→   769→.particles-bg::before {
+   271→   770→  width: 6px;
+   272→   771→  height: 6px;
+   273→   772→  bottom: -10%;
+   274→   773→  left: 15%;
+   275→   774→  box-shadow:
+   276→   775→    80px 0 0 2px oklch(0.55 0.15 165 / 0.08),
+   277→   776→    200px 40px 0 3px oklch(0.55 0.15 165 / 0.06),
+   278→   777→    340px -20px 0 1px oklch(0.55 0.15 165 / 0.09);
+   279→   778→  animation: float-particle 10s ease-in-out infinite;
+   280→   779→}
+   281→   780→
+   282→   781→.particles-bg::after {
+   283→   782→  width: 4px;
+   284→   783→  height: 4px;
+   285→   784→  bottom: -10%;
+   286→   785→  left: 55%;
+   287→   786→  box-shadow:
+   288→   787→    -120px 30px 0 4px oklch(0.55 0.15 165 / 0.07),
+   289→   788→    160px -10px 0 2px oklch(0.55 0.15 165 / 0.08);
+   290→   789→  animation: float-particle 13s ease-in-out infinite;
+   291→   790→  animation-delay: -4s;
+   292→   791→}
+   293→   792→
+   294→   793→@keyframes float-particle {
+   295→   794→  0% {
+   296→   795→    transform: translateY(0) scale(1);
+   297→   796→    opacity: 0;
+   298→   797→  }
+   299→   798→  10% {
+   300→   799→    opacity: 1;
+   301→   800→  }
+   302→   801→  90% {
+   303→   802→    opacity: 1;
+   304→   803→  }
+   305→   804→  100% {
+   306→   805→    transform: translateY(-600px) scale(0.5);
+   307→   806→    opacity: 0;
+   308→   807→  }
+   309→   808→}
+   310→   809→
+   311→   810→/* ===== ANIMATED GRADIENT BORDER ===== */
+   312→   811→.animated-border {
+   313→   812→  position: relative;
+   314→   813→  border-radius: inherit;
+   315→   814→  overflow: hidden;
+   316→   815→  z-index: 0;
+   317→   816→}
+   318→   817→
+   319→   818→.animated-border::before {
+   320→   819→  content: '';
+   321→   820→  position: absolute;
+   322→   821→  inset: -3px;
+   323→   822→  border-radius: inherit;
+   324→   823→  background: conic-gradient(
+   325→   824→    from var(--border-angle, 0deg),
+   326→   825→    oklch(0.55 0.15 165),
+   327→   826→    oklch(0.6 0.12 145),
+   328→   827→    oklch(0.65 0.2 30),
+   329→   828→    oklch(0.55 0.15 165)
+   330→   829→  );
+   331→   830→  animation: rotate-gradient 4s linear infinite;
+   332→   831→  z-index: -2;
+   333→   832→}
+   334→   833→
+   335→   834→.animated-border::after {
+   336→   835→  content: '';
+   337→   836→  position: absolute;
+   338→   837→  inset: 1.5px;
+   339→   838→  border-radius: inherit;
+   340→   839→  background: var(--animated-border-bg, oklch(1 0 0));
+   341→   840→  z-index: -1;
+   342→   841→}
+   343→   842→
+   344→   843→@property --border-angle {
+   345→   844→  syntax: '<angle>';
+   346→   845→  initial-value: 0deg;
+   347→   846→  inherits: false;
+   348→   847→}
+   349→   848→
+   350→   849→@keyframes rotate-gradient {
+   351→   850→  0% { --border-angle: 0deg; }
+   352→   851→  100% { --border-angle: 360deg; }
+   353→   852→}
+   354→   853→
+   355→   854→/* ===== MORPHING BLOB ===== */
+   356→   855→.morph-blob {
+   357→   856→  position: absolute;
+   358→   857→  width: 200px;
+   359→   858→  height: 200px;
+   360→   859→  border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+   361→   860→  background: oklch(0.55 0.15 165);
+   362→   861→  opacity: 0.07;
+   363→   862→  filter: blur(60px);
+   364→   863→  pointer-events: none;
+   365→   864→  animation: morph 12s ease-in-out infinite;
+   366→   865→}
+   367→   866→
+   368→   867→@keyframes morph {
+   369→   868→  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; transform: rotate(0deg) scale(1); }
+   370→   869→  25% { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; transform: rotate(90deg) scale(1.05); }
+   371→   870→  50% { border-radius: 50% 60% 40% 60% / 30% 50% 70% 40%; transform: rotate(180deg) scale(0.95); }
+   372→   871→  75% { border-radius: 40% 30% 60% 50% / 70% 40% 50% 60%; transform: rotate(270deg) scale(1.02); }
+   373→   872→}
+   374→   873→
+   375→   874→/* ===== ENHANCED HOVER LIFT ===== */
+   376→   875→.hover-lift {
+   377→   876→  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   378→   877→}
+   379→   878→.hover-lift:hover {
+   380→   879→  transform: translateY(-4px);
+   381→   880→  box-shadow: 0 12px 24px -8px oklch(0.55 0.15 165 / 0.2);
+   382→   881→}
+   383→   882→
+   384→   883→/* ===== GLOW TEXT ===== */
+   385→   884→.glow-text {
+   386→   885→  text-shadow: 0 0 20px oklch(0.55 0.15 165 / 0.3), 0 0 40px oklch(0.55 0.15 165 / 0.1);
+   387→   886→}
+   388→   887→
+   389→   888→/* ===== DOT GRID PATTERN ===== */
+   390→   889→.dot-grid {
+   391→   890→  background-image: radial-gradient(oklch(0.55 0.15 165 / 0.1) 1px, transparent 1px);
+   392→   891→  background-size: 20px 20px;
+   393→   892→}
+   394→   893→
+   395→   894→/* ===== BREATHING ANIMATION ===== */
+   396→   895→.breathe {
+   397→   896→  animation: breathe 4s ease-in-out infinite;
+   398→   897→}
+   399→   898→
+   400→   899→@keyframes breathe {
+   401→   900→  0%, 100% { transform: scale(1); }
+   402→   901→  50% { transform: scale(1.02); }
+   403→   902→}
+   404→   903→
+   405→   904→/* ===== STAGGERED ENTRANCE ===== */
+   406→   905→.stagger-in > * {
+   407→   906→  opacity: 0;
+   408→   907→  animation: stagger-fade 0.5s ease-out forwards;
+   409→   908→  animation-delay: calc(var(--i, 0) * 80ms);
+   410→   909→}
+   411→   910→
+   412→   911→@keyframes stagger-fade {
+   413→   912→  0% { opacity: 0; transform: translateY(12px); }
+   414→   913→  100% { opacity: 1; transform: translateY(0); }
+   415→   914→}
+   416→   915→
+   417→   916→/* ===== DARK MODE VARIANTS FOR NEW CLASSES ===== */
+   418→   917→.dark .gradient-text {
+   419→   918→  background: linear-gradient(135deg, oklch(0.7 0.15 165), oklch(0.65 0.18 250));
+   420→   919→  -webkit-background-clip: text;
+   421→   920→  -webkit-text-fill-color: transparent;
+   422→   921→  background-clip: text;
+   423→   922→}
+   424→   923→
+   425→   924→.dark .particles-bg::before,
+   426→   925→.dark .particles-bg::after {
+   427→   926→  background: oklch(0.65 0.15 165 / 0.12);
+   428→   927→}
+   429→   928→
+   430→   929→.dark .particles-bg::before {
+   431→   930→  box-shadow:
+   432→   931→    80px 0 0 2px oklch(0.65 0.15 165 / 0.12),
+   433→   932→    200px 40px 0 3px oklch(0.65 0.15 165 / 0.09),
+   434→   933→    340px -20px 0 1px oklch(0.65 0.15 165 / 0.14);
+   435→   934→}
+   436→   935→
+   437→   936→.dark .particles-bg::after {
+   438→   937→  box-shadow:
+   439→   938→    -120px 30px 0 4px oklch(0.65 0.15 165 / 0.1),
+   440→   939→    160px -10px 0 2px oklch(0.65 0.15 165 / 0.12);
+   441→   940→}
+   442→   941→
+   443→   942→.dark .animated-border::after {
+   444→   943→  background: var(--animated-border-bg, oklch(0.2 0.02 165));
+   445→   944→}
+   446→   945→
+   447→   946→.dark .morph-blob {
+   448→   947→  background: oklch(0.65 0.15 165);
+   449→   948→  opacity: 0.1;
+   450→   949→}
+   451→   950→
+   452→   951→.dark .hover-lift:hover {
+   453→   952→  box-shadow: 0 12px 24px -8px oklch(0.65 0.15 165 / 0.25);
+   454→   953→}
+   455→   954→
+   456→   955→.dark .glow-text {
+   457→   956→  text-shadow: 0 0 20px oklch(0.65 0.15 165 / 0.4), 0 0 40px oklch(0.65 0.15 165 / 0.15);
+   458→   957→}
+   459→   958→
+   460→   959→.dark .dot-grid {
+   461→   960→  background-image: radial-gradient(oklch(0.65 0.15 165 / 0.15) 1px, transparent 1px);
+   462→   961→}
+   463→   962→
+   464→   963→/* ===== ANIMATED TAB INDICATOR ===== */
+   465→   964→.tab-indicator-track {
+   466→   965→  position: relative;
+   467→   966→}
+   468→   967→.tab-indicator {
+   469→   968→  position: absolute;
+   470→   969→  bottom: 4px;
+   471→   970→  left: 0;
+   472→   971→  height: calc(100% - 8px);
+   473→   972→  background: oklch(0.55 0.15 165);
+   474→   973→  border-radius: 8px;
+   475→   974→  box-shadow: 0 2px 8px oklch(0.55 0.15 165 / 0.3);
+   476→   975→  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+   477→   976→  z-index: 0;
+   478→   977→  pointer-events: none;
+   479→   978→}
+   480→   979→
+   481→   980→.dark .tab-indicator {
+   482→   981→  background: oklch(0.65 0.15 165);
+   483→   982→  box-shadow: 0 2px 8px oklch(0.65 0.15 165 / 0.3);
+   484→   983→}
+   485→   984→
+   486→   985→/* ===== SECTION DIVIDERS ===== */
+   487→   986→.section-divider {
+   488→   987→  height: 1px;
+   489→   988→  background: linear-gradient(90deg,
+   490→   989→    transparent 0%,
+   491→   990→    oklch(0.55 0.15 165 / 0.15) 20%,
+   492→   991→    oklch(0.55 0.15 165 / 0.3) 50%,
+   493→   992→    oklch(0.55 0.15 165 / 0.15) 80%,
+   494→   993→    transparent 100%
+   495→   994→  );
+   496→   995→  position: relative;
+   497→   996→}
+   498→   997→.section-divider::before {
+   499→   998→  content: '';
+   500→   999→  position: absolute;
+   501→  1000→  top: -3px;
+   502→  1001→  left: 50%;
+   503→  1002→  transform: translateX(-50%);
+   504→  1003→  width: 7px;
+   505→  1004→  height: 7px;
+   506→  1005→  border-radius: 50%;
+   507→  1006→  background: oklch(0.55 0.15 165 / 0.4);
+   508→  1007→  border: 1px solid oklch(0.55 0.15 165 / 0.2);
+   509→  1008→}
+   510→  1009→
+   511→  1010→.dark .section-divider {
+   512→  1011→  background: linear-gradient(90deg,
+   513→  1012→    transparent 0%,
+   514→  1013→    oklch(0.65 0.15 165 / 0.1) 20%,
+   515→  1014→    oklch(0.65 0.15 165 / 0.2) 50%,
+   516→  1015→    oklch(0.65 0.15 165 / 0.1) 80%,
+   517→  1016→    transparent 100%
+   518→  1017→  );
+   519→  1018→}
+   520→  1019→.dark .section-divider::before {
+   521→  1020→  background: oklch(0.65 0.15 165 / 0.5);
+   522→  1021→  border-color: oklch(0.65 0.15 165 / 0.3);
+   523→  1022→}
+   524→  1023→
+   525→  1024→/* ===== INPUT GLOW WRAPPER ===== */
+   526→  1025→.input-glow-wrapper {
+   527→  1026→  position: relative;
+   528→  1027→  display: inline-block;
+   529→  1028→  width: 100%;
+   530→  1029→}
+   531→  1030→.input-glow-wrapper::before {
+   532→  1031→  content: '';
+   533→  1032→  position: absolute;
+   534→  1033→  inset: -1px;
+   535→  1034→  border-radius: calc(var(--radius, 0.625rem) + 2px);
+   536→  1035→  background: linear-gradient(135deg, oklch(0.55 0.15 165 / 0.15), oklch(0.6 0.12 145 / 0.1));
+   537→  1036→  opacity: 0;
+   538→  1037→  transition: opacity 0.3s ease, box-shadow 0.3s ease;
+   539→  1038→  pointer-events: none;
+   540→  1039→  z-index: 0;
+   541→  1040→}
+   542→  1041→.input-glow-wrapper:focus-within::before {
+   543→  1042→  opacity: 1;
+   544→  1043→  box-shadow: 0 0 16px -2px oklch(0.55 0.15 165 / 0.25);
+   545→  1044→}
+   546→  1045→.input-glow-wrapper input,
+   547→  1046→.input-glow-wrapper select {
+   548→  1047→  position: relative;
+   549→  1048→  z-index: 1;
+   550→  1049→}
+   551→  1050→
+   552→  1051→.dark .input-glow-wrapper::before {
+   553→  1052→  background: linear-gradient(135deg, oklch(0.65 0.15 165 / 0.2), oklch(0.6 0.12 145 / 0.15));
+   554→  1053→}
+   555→  1054→
+   556→  1055→/* ===== CARD INNER SHINE ===== */
+   557→  1056→.card-shine {
+   558→  1057→  position: relative;
+   559→  1058→  overflow: hidden;
+   560→  1059→}
+   561→  1060→.card-shine::before {
+   562→  1061→  content: '';
+   563→  1062→  position: absolute;
+   564→  1063→  top: 0;
+   565→  1064→  left: -100%;
+   566→  1065→  width: 100%;
+   567→  1066→  height: 100%;
+   568→  1067→  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.15), transparent);
+   569→  1068→  transition: left 0.6s ease;
+   570→  1069→  pointer-events: none;
+   571→  1070→  z-index: 1;
+   572→  1071→}
+   573→  1072→.card-shine:hover::before {
+   574→  1073→  left: 100%;
+   575→  1074→}
+   576→  1075→
+   577→  1076→.dark .card-shine::before {
+   578→  1077→  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.05), transparent);
+   579→  1078→}
+   580→  1079→
+   581→  1080→/* ===== NUMBER TICKER ===== */
+   582→  1081→.number-ticker {
+   583→  1082→  display: inline-block;
+   584→  1083→  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   585→  1084→}
+   586→  1085→.number-ticker.updated {
+   587→  1086→  transform: scale(1.1);
+   588→  1087→  color: oklch(0.55 0.15 165);
+   589→  1088→}
+   590→  1089→
+   591→  1090→/* ===== FLOATING ACTION BUTTON (FAB) ===== */
+   592→  1091→.fab {
+   593→  1092→  width: 52px;
+   594→  1093→  height: 52px;
+   595→  1094→  border-radius: 16px;
+   596→  1095→  display: flex;
+   597→  1096→  align-items: center;
+   598→  1097→  justify-content: center;
+   599→  1098→  background: oklch(0.55 0.15 165);
+   600→  1099→  color: white;
+   601→  1100→  box-shadow:
+   602→  1101→    0 4px 14px oklch(0.55 0.15 165 / 0.35),
+   603→  1102→    0 0 0 0 oklch(0.55 0.15 165 / 0.3);
+   604→  1103→  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   605→  1104→}
+   606→  1105→.fab:hover {
+   607→  1106→  transform: translateY(-2px) scale(1.05);
+   608→  1107→  box-shadow:
+   609→  1108→    0 8px 20px oklch(0.55 0.15 165 / 0.4),
+   610→  1109→    0 0 0 6px oklch(0.55 0.15 165 / 0.1);
+   611→  1110→}
+   612→  1111→.fab:active {
+   613→  1112→  transform: scale(0.95);
+   614→  1113→}
+   615→  1114→
+   616→  1115→/* ===== TOAST NOTIFICATION ===== */
+   617→  1116→.toast-container {
+   618→  1117→  position: fixed;
+   619→  1118→  top: 72px;
+   620→  1119→  right: 16px;
+   621→  1120→  z-index: 100;
+   622→  1121→  display: flex;
+   623→  1122→  flex-direction: column;
+   624→  1123→  gap: 8px;
+   625→  1124→  pointer-events: none;
+   626→  1125→}
+   627→  1126→.toast-item {
+   628→  1127→  pointer-events: auto;
+   629→  1128→  padding: 12px 16px;
+   630→  1129→  border-radius: 12px;
+   631→  1130→  background: oklch(1 0 0);
+   632→  1131→  border: 1px solid oklch(0.92 0.015 165);
+   633→  1132→  box-shadow:
+   634→  1133→    0 8px 24px oklch(0 0 0 / 0.12),
+   635→  1134→    0 0 0 1px oklch(0.55 0.15 165 / 0.1);
+   636→  1135→  max-width: 340px;
+   637→  1136→  backdrop-filter: blur(16px);
+   638→  1137→  -webkit-backdrop-filter: blur(16px);
+   639→  1138→}
+   640→  1139→.toast-item.success {
+   641→  1140→  border-color: oklch(0.65 0.2 145 / 0.3);
+   642→  1141→}
+   643→  1142→.toast-item.warning {
+   644→  1143→  border-color: oklch(0.75 0.15 75 / 0.4);
+   645→  1144→}
+   646→  1145→.toast-item.error {
+   647→  1146→  border-color: oklch(0.577 0.245 27.325 / 0.3);
+   648→  1147→}
+   649→  1148→
+   650→  1149→.dark .toast-item {
+   651→  1150→  background: oklch(0.22 0.025 165 / 0.95);
+   652→  1151→  border-color: oklch(1 0 0 / 0.08);
+   653→  1152→}
+   654→  1153→.dark .toast-item.success {
+   655→  1154→  border-color: oklch(0.65 0.2 145 / 0.4);
+   656→  1155→}
+   657→  1156→.dark .toast-item.warning {
+   658→  1157→  border-color: oklch(0.75 0.15 75 / 0.4);
+   659→  1158→}
+   660→  1159→.dark .toast-item.error {
+   661→  1160→  border-color: oklch(0.704 0.191 22.216 / 0.4);
+   662→  1161→}
+   663→  1162→
+   664→  1163→/* ===== MICRO TEXTURE OVERLAY ===== */
+   665→  1164→.vet-texture {
+   666→  1165→  position: relative;
+   667→  1166→}
+   668→  1167→.vet-texture::after {
+   669→  1168→  content: '';
+   670→  1169→  position: absolute;
+   671→  1170→  inset: 0;
+   672→  1171→  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+   673→  1172→  background-repeat: repeat;
+   674→  1173→  background-size: 256px 256px;
+   675→  1174→  pointer-events: none;
+   676→  1175→  opacity: 0.5;
+   677→  1176→  z-index: 0;
+   678→  1177→}
+   679→  1178→
+   680→  1179→.dark .vet-texture::after {
+   681→  1180→  opacity: 0.3;
+   682→  1181→}
+   683→  1182→
+   684→  1183→/* ===== ENHANCED BADGE STYLES ===== */
+   685→  1184→.badge-gradient {
+   686→  1185→  background: linear-gradient(135deg, oklch(0.55 0.15 165 / 0.12), oklch(0.6 0.12 145 / 0.08));
+   687→  1186→  border: 1px solid oklch(0.55 0.15 165 / 0.2);
+   688→  1187→}
+   689→  1188→
+   690→  1189→.dark .badge-gradient {
+   691→  1190→  background: linear-gradient(135deg, oklch(0.65 0.15 165 / 0.15), oklch(0.6 0.12 145 / 0.1));
+   692→  1191→  border-color: oklch(0.65 0.15 165 / 0.25);
+   693→  1192→}
+   694→  1193→
+   695→  1194→/* ===== PROGRESS INDICATOR BAR ===== */
+   696→  1195→.progress-mini {
+   697→  1196→  height: 3px;
+   698→  1197→  border-radius: 2px;
+   699→  1198→  background: oklch(0.95 0.01 165);
+   700→  1199→  overflow: hidden;
+   701→  1200→}
+   702→  1201→.progress-mini-fill {
+   703→  1202→  height: 100%;
+   704→  1203→  border-radius: 2px;
+   705→  1204→  background: linear-gradient(90deg, oklch(0.55 0.15 165), oklch(0.6 0.12 145));
+   706→  1205→  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+   707→  1206→}
+   708→  1207→
+   709→  1208→.dark .progress-mini {
+   710→  1209→  background: oklch(1 0 0 / 0.08);
+   711→  1210→}
+   712→  1211→
+   713→  1212→/* ===== VIBRANT CTA BUTTON ===== */
+   714→  1213→.cta-primary {
+   715→  1214→  position: relative;
+   716→  1215→  background: linear-gradient(135deg, oklch(0.55 0.15 165), oklch(0.5 0.13 155));
+   717→  1216→  color: white;
+   718→  1217→  font-weight: 700;
+   719→  1218→  letter-spacing: 0.02em;
+   720→  1219→  border: none;
+   721→  1220→  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   722→  1221→}
+   723→  1222→.cta-primary::before {
+   724→  1223→  content: '';
+   725→  1224→  position: absolute;
+   726→  1225→  inset: 0;
+   727→  1226→  border-radius: inherit;
+   728→  1227→  background: linear-gradient(135deg, oklch(0.6 0.15 165), oklch(0.55 0.18 145));
+   729→  1228→  opacity: 0;
+   730→  1229→  transition: opacity 0.3s;
+   731→  1230→}
+   732→  1231→.cta-primary:hover::before {
+   733→  1232→  opacity: 1;
+   734→  1233→}
+   735→  1234→.cta-primary:active {
+   736→  1235→  transform: scale(0.97);
+   737→  1236→}
+   738→  1237→.cta-primary > * {
+   739→  1238→  position: relative;
+   740→  1239→  z-index: 1;
+   741→  1240→}
+   742→  1241→
+   743→  1242→/* ===== ENHANCED STEP FLOW LINE ===== */
+   744→  1243→.step-flow-line {
+   745→  1244→  position: relative;
+   746→  1245→  padding-left: 24px;
+   747→  1246→}
+   748→  1247→.step-flow-line::before {
+   749→  1248→  content: '';
+   750→  1249→  position: absolute;
+   751→  1250→  left: 13px;
+   752→  1251→  top: 32px;
+   753→  1252→  bottom: 0;
+   754→  1253→  width: 2px;
+   755→  1254→  background: repeating-linear-gradient(
+   756→  1255→    to bottom,
+   757→  1256→    oklch(0.55 0.15 165 / 0.2) 0px,
+   758→  1257→    oklch(0.55 0.15 165 / 0.2) 6px,
+   759→  1258→    transparent 6px,
+   760→  1259→    transparent 12px
+   761→  1260→  );
+   762→  1261→}
+   763→  1262→
+   764→  1263→.dark .step-flow-line::before {
+   765→  1264→  background: repeating-linear-gradient(
+   766→  1265→    to bottom,
+   767→  1266→    oklch(0.65 0.15 165 / 0.15) 0px,
+   768→  1267→    oklch(0.65 0.15 165 / 0.15) 6px,
+   769→  1268→    transparent 6px,
+   770→  1269→    transparent 12px
+   771→  1270→  );
+   772→  1271→}
+   773→  1272→
+   774→  1273→/* ===== GLASSMORPHISM CARD V2 ===== */
+   775→  1274→.glass-card-v2 {
+   776→  1275→  background: oklch(1 0 0 / 0.6);
+   777→  1276→  backdrop-filter: blur(20px) saturate(1.5);
+   778→  1277→  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+   779→  1278→  border: 1px solid oklch(0.55 0.15 165 / 0.12);
+   780→  1279→  box-shadow:
+   781→  1280→    0 4px 6px -1px oklch(0 0 0 / 0.04),
+   782→  1281→    0 10px 20px -5px oklch(0 0 0 / 0.04),
+   783→  1282→    inset 0 1px 0 oklch(1 0 0 / 0.6);
+   784→  1283→}
+   785→  1284→
+   786→  1285→.dark .glass-card-v2 {
+   787→  1286→  background: oklch(0.2 0.02 165 / 0.7);
+   788→  1287→  border-color: oklch(0.65 0.15 165 / 0.12);
+   789→  1288→  box-shadow:
+   790→  1289→    0 4px 6px -1px oklch(0 0 0 / 0.15),
+   791→  1290→    0 10px 20px -5px oklch(0 0 0 / 0.1),
+   792→  1291→    inset 0 1px 0 oklch(1 0 0 / 0.05);
+   793→  1292→}
+   794→  1293→
+   795→  1294→/* ===== SUBTLE BORDER GLOW ===== */
+   796→  1295→.border-glow {
+   797→  1296→  position: relative;
+   798→  1297→}
+   799→  1298→.border-glow::after {
+   800→  1299→  content: '';
+   801→  1300→  position: absolute;
+   802→  1301→  inset: -1px;
+   803→  1302→  border-radius: inherit;
+   804→  1303→  background: conic-gradient(
+   805→  1304→    from 0deg,
+   806→  1305→    oklch(0.55 0.15 165 / 0.15),
+   807→  1306→    oklch(0.6 0.12 145 / 0.05),
+   808→  1307→    oklch(0.65 0.2 30 / 0.1),
+   809→  1308→    oklch(0.55 0.15 165 / 0.05),
+   810→  1309→    oklch(0.55 0.15 165 / 0.15)
+   811→  1310→  );
+   812→  1311→  z-index: -1;
+   813→  1312→  opacity: 0;
+   814→  1313→  transition: opacity 0.3s ease;
+   815→  1314→}
+   816→  1315→.border-glow:hover::after {
+   817→  1316→  opacity: 1;
+   818→  1317→}
+   819→  1318→
+   820→  1319→/* ===== HERO GRADIENT OVERLAY V2 ===== */
+   821→  1320→.hero-vignette {
+   822→  1321→  position: relative;
+   823→  1322→}
+   824→  1323→.hero-vignette::after {
+   825→  1324→  content: '';
+   826→  1325→  position: absolute;
+   827→  1326→  inset: 0;
+   828→  1327→  background: radial-gradient(ellipse at center, transparent 50%, oklch(0.15 0.02 165 / 0.04) 100%);
+   829→  1328→  pointer-events: none;
+   830→  1329→  z-index: 0;
+   831→  1330→}
+   832→  1331→
+   833→  1332→.dark .hero-vignette::after {
+   834→  1333→  background: radial-gradient(ellipse at center, transparent 40%, oklch(0 0 0 / 0.2) 100%);
+   835→  1334→}
+   836→  1335→
+   837→  1336→/* ===== ANIMATED UNDERLINE ===== */
+   838→  1337→.animated-underline {
+   839→  1338→  position: relative;
+   840→  1339→  display: inline-block;
+   841→  1340→}
+   842→  1341→.animated-underline::after {
+   843→  1342→  content: '';
+   844→  1343→  position: absolute;
+   845→  1344→  bottom: -2px;
+   846→  1345→  left: 0;
+   847→  1346→  width: 100%;
+   848→  1347→  height: 2px;
+   849→  1348→  background: linear-gradient(90deg, oklch(0.55 0.15 165), oklch(0.6 0.12 145));
+   850→  1349→  transform: scaleX(0);
+   851→  1350→  transform-origin: left;
+   852→  1351→  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   853→  1352→}
+   854→  1353→.animated-underline:hover::after {
+   855→  1354→  transform: scaleX(1);
+   856→  1355→}
+   857→  1356→
+   858→  1357→/* ===== HOVER TAP FEEDBACK (MOBILE-FRIENDLY) ===== */
+   859→  1358→.hover-tap {
+   860→  1359→  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease;
+   861→  1360→}
+   862→  1361→.hover-tap:hover {
+   863→  1362→  transform: translateY(-2px);
+   864→  1363→  box-shadow: 0 4px 12px oklch(0 0 0 / 0.08);
+   865→  1364→}
+   866→  1365→.hover-tap:active {
+   867→  1366→  transform: translateY(0) scale(0.97);
+   868→  1367→  box-shadow: 0 1px 4px oklch(0 0 0 / 0.06);
+   869→  1368→}
+   870→  1369→
+   871→  1370→/* ===== 3D TILT EFFECT ===== */
+   872→  1371→.tilt-3d {
+   873→  1372→  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s ease;
+   874→  1373→  transform-style: preserve-3d;
+   875→  1374→  perspective: 800px;
+   876→  1375→}
+   877→  1376→.tilt-3d:hover {
+   878→  1377→  transform: translateY(-4px) rotateX(2deg) rotateY(-1deg);
+   879→  1378→  box-shadow: 0 16px 32px -8px oklch(0.55 0.15 165 / 0.2);
+   880→  1379→}
+   881→  1380→
+   882→  1381→/* ===== ANIMATED FOCUS RING ===== */
+   883→  1382→.focus-ring-pulse {
+   884→  1383→  position: relative;
+   885→  1384→}
+   886→  1385→.focus-ring-pulse:focus-visible {
+   887→  1386→  outline: none;
+   888→  1387→}
+   889→  1388→.focus-ring-pulse:focus-visible::after {
+   890→  1389→  content: '';
+   891→  1390→  position: absolute;
+   892→  1391→  inset: -4px;
+   893→  1392→  border-radius: inherit;
+   894→  1393→  border: 2px solid oklch(0.55 0.15 165 / 0.6);
+   895→  1394→  animation: focus-ring-expand 1.5s ease-out infinite;
+   896→  1395→}
+   897→  1396→
+   898→  1397→@keyframes focus-ring-expand {
+   899→  1398→  0% { opacity: 1; transform: scale(1); }
+   900→  1399→  100% { opacity: 0; transform: scale(1.06); }
+   901→  1400→}
+   902→  1401→
+   903→  1402→/* ===== INNER SHADOW GLOW ===== */
+   904→  1403→.inner-shadow-glow {
+   905→  1404→  box-shadow:
+   906→  1405→    inset 0 1px 0 oklch(1 0 0 / 0.8),
+   907→  1406→    inset 0 -1px 0 oklch(0 0 0 / 0.04),
+   908→  1407→    0 4px 12px oklch(0 0 0 / 0.04);
+   909→  1408→}
+   910→  1409→
+   911→  1410→.dark .inner-shadow-glow {
+   912→  1411→  box-shadow:
+   913→  1412→    inset 0 1px 0 oklch(1 0 0 / 0.08),
+   914→  1413→    inset 0 -1px 0 oklch(0 0 0 / 0.2),
+   915→  1414→    0 4px 12px oklch(0 0 0 / 0.15);
+   916→  1415→}
+   917→  1416→
+   918→  1417→/* ===== ANIMATED GRADIENT TEXT ===== */
+   919→  1418→.text-gradient-animate {
+   920→  1419→  background: linear-gradient(270deg, oklch(0.55 0.15 165), oklch(0.6 0.12 145), oklch(0.65 0.2 30), oklch(0.55 0.15 165));
+   921→  1420→  background-size: 300% 100%;
+   922→  1421→  -webkit-background-clip: text;
+   923→  1422→  -webkit-text-fill-color: transparent;
+   924→  1423→  background-clip: text;
+   925→  1424→  animation: text-gradient-shift 4s ease-in-out infinite;
+   926→  1425→}
+   927→  1426→
+   928→  1427→@keyframes text-gradient-shift {
+   929→  1428→  0% { background-position: 0% 50%; }
+   930→  1429→  50% { background-position: 100% 50%; }
+   931→  1430→  100% { background-position: 0% 50%; }
+   932→  1431→}
+   933→  1432→
+   934→  1433→/* ===== GLASSMORPHISM ELEVATED ===== */
+   935→  1434→.glassmorphism-elevated {
+   936→  1435→  background: oklch(1 0 0 / 0.55);
+   937→  1436→  backdrop-filter: blur(24px) saturate(1.8);
+   938→  1437→  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+   939→  1438→  border: 1px solid oklch(1 0 0 / 0.3);
+   940→  1439→  box-shadow:
+   941→  1440→    0 8px 32px oklch(0 0 0 / 0.06),
+   942→  1441→    0 2px 8px oklch(0 0 0 / 0.03),
+   943→  1442→    inset 0 1px 0 oklch(1 0 0 / 0.7);
+   944→  1443→}
+   945→  1444→
+   946→  1445→.dark .glassmorphism-elevated {
+   947→  1446→  background: oklch(0.2 0.02 165 / 0.65);
+   948→  1447→  border-color: oklch(1 0 0 / 0.06);
+   949→  1448→  box-shadow:
+   950→  1449→    0 8px 32px oklch(0 0 0 / 0.2),
+   951→  1450→    0 2px 8px oklch(0 0 0 / 0.1),
+   952→  1451→    inset 0 1px 0 oklch(1 0 0 / 0.05);
+   953→  1452→}
+   954→  1453→
+   955→  1454→/* ===== NEON BORDER EFFECT ===== */
+   956→  1455→.neon-border {
+   957→  1456→  border: 1px solid oklch(0.55 0.15 165 / 0.3);
+   958→  1457→  box-shadow: 0 0 8px oklch(0.55 0.15 165 / 0.1), inset 0 0 8px oklch(0.55 0.15 165 / 0.03);
+   959→  1458→  transition: all 0.3s ease;
+   960→  1459→}
+   961→  1460→.neon-border:hover {
+   962→  1461→  border-color: oklch(0.55 0.15 165 / 0.6);
+   963→  1462→  box-shadow: 0 0 16px oklch(0.55 0.15 165 / 0.2), 0 0 32px oklch(0.55 0.15 165 / 0.05), inset 0 0 12px oklch(0.55 0.15 165 / 0.05);
+   964→  1463→}
+   965→  1464→
+   966→  1465→.dark .neon-border {
+   967→  1466→  border-color: oklch(0.65 0.15 165 / 0.25);
+   968→  1467→  box-shadow: 0 0 8px oklch(0.65 0.15 165 / 0.15), inset 0 0 8px oklch(0.65 0.15 165 / 0.05);
+   969→  1468→}
+   970→  1469→.dark .neon-border:hover {
+   971→  1470→  border-color: oklch(0.65 0.15 165 / 0.5);
+   972→  1471→  box-shadow: 0 0 16px oklch(0.65 0.15 165 / 0.25), 0 0 32px oklch(0.65 0.15 165 / 0.08), inset 0 0 12px oklch(0.65 0.15 165 / 0.08);
+   973→  1472→}
+   974→  1473→
+   975→  1474→/* ===== MICRO BOUNCE ENTRANCE ===== */
+   976→  1475→.micro-bounce {
+   977→  1476→  animation: micro-bounce-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+   978→  1477→}
+   979→  1478→
+   980→  1479→@keyframes micro-bounce-in {
+   981→  1480→  0% { transform: scale(0.9) translateY(8px); opacity: 0; }
+   982→  1481→  100% { transform: scale(1) translateY(0); opacity: 1; }
+   983→  1482→}
+   984→  1483→
+   985→  1484→/* ===== CROSSHAIR DOT PATTERN ===== */
+   986→  1485→.crosshair-dots {
+   987→  1486→  background-image:
+   988→  1487→    radial-gradient(oklch(0.55 0.15 165 / 0.08) 1px, transparent 1px);
+   989→  1488→  background-size: 16px 16px;
+   990→  1489→}
+   991→  1490→
+   992→  1491→.dark .crosshair-dots {
+   993→  1492→  background-image:
+   994→  1493→    radial-gradient(oklch(0.65 0.15 165 / 0.12) 1px, transparent 1px);
+   995→  1494→}
+   996→  1495→
+   997→  1496→/* ===== DEPTH SHADOW LAYERS ===== */
+   998→  1497→.depth-shadow {
+   999→  1498→  box-shadow:
+  1000→  1499→    0 1px 2px oklch(0 0 0 / 0.04),
+  1001→  1500→    0 2px 4px oklch(0 0 0 / 0.03),
+  1002→  1501→    0 4px 8px oklch(0 0 0 / 0.02),
+  1003→  1502→    0 8px 16px oklch(0 0 0 / 0.02);
+  1004→  1503→}
+  1005→  1504→
+  1006→  1505→.dark .depth-shadow {
+  1007→  1506→  box-shadow:
+  1008→  1507→    0 1px 2px oklch(0 0 0 / 0.12),
+  1009→  1508→    0 2px 4px oklch(0 0 0 / 0.1),
+  1010→  1509→    0 4px 8px oklch(0 0 0 / 0.08),
+  1011→  1510→    0 8px 16px oklch(0 0 0 / 0.06);
+  1012→  1511→}
+  1013→  1512→
+  1014→  1513→/* ===== BLINKING CURSOR ===== */
+  1015→  1514→.typing-cursor::after {
+  1016→  1515→  content: '|';
+  1017→  1516→  animation: blink-cursor 1s step-end infinite;
+  1018→  1517→  color: oklch(0.55 0.15 165);
+  1019→  1518→  font-weight: 300;
+  1020→  1519→  margin-left: 2px;
+  1021→  1520→}
+  1022→  1521→
+  1023→  1522→@keyframes blink-cursor {
+  1024→  1523→  0%, 50% { opacity: 1; }
+  1025→  1524→  51%, 100% { opacity: 0; }
+  1026→  1525→}
+  1027→  1526→
+  1028→  1527→/* ===== LIQUID FILL BUTTON ===== */
+  1029→  1528→.liquid-btn {
+  1030→  1529→  position: relative;
+  1031→  1530→  overflow: hidden;
+  1032→  1531→  transition: all 0.4s ease;
+  1033→  1532→}
+  1034→  1533→.liquid-btn::before {
+  1035→  1534→  content: '';
+  1036→  1535→  position: absolute;
+  1037→  1536→  bottom: 0;
+  1038→  1537→  left: 0;
+  1039→  1538→  width: 100%;
+  1040→  1539→  height: 0%;
+  1041→  1540→  background: oklch(1 0 0 / 0.12);
+  1042→  1541→  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  1043→  1542→  z-index: 0;
+  1044→  1543→}
+  1045→  1544→.liquid-btn:hover::before {
+  1046→  1545→  height: 100%;
+  1047→  1546→}
+  1048→  1547→.liquid-btn > * {
+  1049→  1548→  position: relative;
+  1050→  1549→  z-index: 1;
+  1051→  1550→}
+  1052→  1551→
+  1053→  1552→/* ===== GRADIENT MESH BACKGROUND ===== */
+  1054→  1553→.gradient-mesh {
+  1055→  1554→  background:
+  1056→  1555→    radial-gradient(at 20% 30%, oklch(0.55 0.15 165 / 0.06) 0%, transparent 50%),
+  1057→  1556→    radial-gradient(at 80% 20%, oklch(0.6 0.12 145 / 0.05) 0%, transparent 40%),
+  1058→  1557→    radial-gradient(at 50% 80%, oklch(0.65 0.2 30 / 0.04) 0%, transparent 45%);
+  1059→  1558→}
+  1060→  1559→
+  1061→  1560→.dark .gradient-mesh {
+  1062→  1561→  background:
+  1063→  1562→    radial-gradient(at 20% 30%, oklch(0.65 0.15 165 / 0.1) 0%, transparent 50%),
+  1064→  1563→    radial-gradient(at 80% 20%, oklch(0.6 0.12 145 / 0.08) 0%, transparent 40%),
+  1065→  1564→    radial-gradient(at 50% 80%, oklch(0.65 0.2 30 / 0.06) 0%, transparent 45%);
+  1066→  1565→}
+  1067→  1566→
+  1068→  1567→/* ===== ENHANCED RESULT GRID ===== */
+  1069→  1568→.result-grid-enhanced > * {
+  1070→  1569→  position: relative;
+  1071→  1570→  border-radius: 12px;
+  1072→  1571→  padding: 16px;
+  1073→  1572→  background: oklch(1 0 0);
+  1074→  1573→  border: 1px solid oklch(0.92 0.015 165);
+  1075→  1574→  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  1076→  1575→}
+  1077→  1576→.result-grid-enhanced > *:hover {
+  1078→  1577→  transform: translateY(-2px) scale(1.02);
+  1079→  1578→  box-shadow: 0 8px 20px oklch(0.55 0.15 165 / 0.1);
+  1080→  1579→  border-color: oklch(0.55 0.15 165 / 0.2);
+  1081→  1580→}
+  1082→  1581→
+  1083→  1582→.dark .result-grid-enhanced > * {
+  1084→  1583→  background: oklch(0.2 0.02 165);
+  1085→  1584→  border-color: oklch(1 0 0 / 0.06);
+  1086→  1585→}
+  1087→  1586→.dark .result-grid-enhanced > *:hover {
+  1088→  1587→  box-shadow: 0 8px 20px oklch(0.65 0.15 165 / 0.12);
+  1089→  1588→  border-color: oklch(0.65 0.15 165 / 0.2);
+  1090→  1589→}
+  1091→  1590→
+  1092→  1591→/* ===== HIGHLIGHTED DOSE ACCENT RING ===== */
+  1093→  1592→.dose-accent-ring {
+  1094→  1593→  position: relative;
+  1095→  1594→}
+  1096→  1595→.dose-accent-ring::before {
+  1097→  1596→  content: '';
+  1098→  1597→  position: absolute;
+  1099→  1598→  inset: -3px;
+  1100→  1599→  border-radius: inherit;
+  1101→  1600→  background: linear-gradient(135deg, oklch(0.55 0.15 165), oklch(0.6 0.12 145));
+  1102→  1601→  z-index: -1;
+  1103→  1602→  opacity: 0.3;
+  1104→  1603→  filter: blur(4px);
+  1105→  1604→  animation: accent-pulse 2.5s ease-in-out infinite;
+  1106→  1605→}
+  1107→  1606→
+  1108→  1607→@keyframes accent-pulse {
+  1109→  1608→  0%, 100% { opacity: 0.2; transform: scale(1); }
+  1110→  1609→  50% { opacity: 0.4; transform: scale(1.02); }
+  1111→  1610→}
+  1112→  1611→
+  1113→  1612→/* ===== SMOOTH UNDERLINE ACCENT ===== */
+  1114→  1613→.smooth-underline {
+  1115→  1614→  text-decoration: none;
+  1116→  1615→  background-image: linear-gradient(oklch(0.55 0.15 165 / 0.4), oklch(0.55 0.15 165 / 0.4));
+  1117→  1616→  background-size: 100% 1px;
+  1118→  1617→  background-position: 0 100%;
+  1119→  1618→  background-repeat: no-repeat;
+  1120→  1619→  transition: background-size 0.3s ease, background-image 0.3s ease;
+  1121→  1620→}
+  1122→  1621→.smooth-underline:hover {
+  1123→  1622→  background-size: 100% 2px;
+  1124→  1623→  background-image: linear-gradient(oklch(0.55 0.15 165 / 0.7), oklch(0.6 0.12 145 / 0.7));
+  1125→  1624→}
+  1126→  1625→
+  1127→  1626→/* ===== SUBTLE ENTRANCE FADE UP ===== */
+  1128→  1627→.fade-up {
+  1129→  1628→  opacity: 0;
+  1130→  1629→  transform: translateY(16px);
+  1131→  1630→  animation: fade-up-anim 0.5s ease-out forwards;
+  1132→  1631→}
+  1133→  1632→
+  1134→  1633→@keyframes fade-up-anim {
+  1135→  1634→  to { opacity: 1; transform: translateY(0); }
+  1136→  1635→}
+  1137→  1636→
+  1138→  1637→/* ===== DURATION BADGE PULSE ===== */
+  1139→  1638→.duration-badge {
+  1140→  1639→  position: relative;
+  1141→  1640→}
+  1142→  1641→.duration-badge::after {
+  1143→  1642→  content: '';
+  1144→  1643→  position: absolute;
+  1145→  1644→  inset: 0;
+  1146→  1645→  border-radius: inherit;
+  1147→  1646→  border: 1px solid oklch(0.55 0.15 165 / 0.3);
+  1148→  1647→  animation: duration-pulse 2s ease-in-out infinite;
+  1149→  1648→}
+  1150→  1649→
+  1151→  1650→@keyframes duration-pulse {
+  1152→  1651→  0%, 100% { transform: scale(1); opacity: 0; }
+  1153→  1652→  50% { transform: scale(1.15); opacity: 1; }
+  1154→  1653→}
+  1155→  1654→
+  1156→  1655→/* ===== WAVE BOTTOM SECTION DIVIDER ===== */
+  1157→  1656→.wave-bottom {
+  1158→  1657→  position: relative;
+  1159→  1658→}
+  1160→  1659→.wave-bottom::after {
+  1161→  1660→  content: '';
+  1162→  1661→  position: absolute;
+  1163→  1662→  bottom: -1px;
+  1164→  1663→  left: 0;
+  1165→  1664→  right: 0;
+  1166→  1665→  height: 24px;
+  1167→  1666→  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 24'%3E%3Cpath fill='oklch(0.98 0.01 165)' d='M0,12 C240,24 480,0 720,12 C960,24 1200,0 1440,12 L1440,24 L0,24 Z'/%3E%3C/svg%3E") no-repeat center;
+  1168→  1667→  background-size: cover;
+  1169→  1668→}
+  1170→  1669→
+  1171→  1670→.dark .wave-bottom::after {
+  1172→  1671→  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 24'%3E%3Cpath fill='oklch(0.16 0.02 165)' d='M0,12 C240,24 480,0 720,12 C960,24 1200,0 1440,12 L1440,24 L0,24 Z'/%3E%3C/svg%3E") no-repeat center;
+  1173→  1672→  background-size: cover;
+  1174→  1673→}
+  1175→  1674→
+  1176→  1675→/* ===== PRINT STYLES ===== */
+  1177→  1676→@media print {
+  1178→  1677→  header, footer, .no-print, .vet-float, .hospital-stripe, .heartbeat-line::after, .morph-blob, .particles-bg::before, .particles-bg::after, .hover-lift, .animated-border::before, .animated-border::after, .stagger-in > *, .scroll-progress-bar, .tab-indicator, .section-divider, .input-glow-wrapper::before, .toast-container, .neon-border, .tilt-3d, .hover-tap, .focus-ring-pulse::after, .dose-accent-ring::before, .duration-badge::after {
+  1179→  1678→    display: none !important;
+  1180→  1679→  }
+  1181→  1680→  main {
+  1182→  1681→    padding: 0 !important;
+  1183→  1682→  }
+  1184→  1683→  .glass-card, .result-card {
+  1185→  1684→    backdrop-filter: none !important;
+  1186→  1685→    box-shadow: none !important;
+  1187→  1686→    border: 1px solid #ccc !important;
+  1188→  1687→  }
+  1189→  1688→  body {
+  1190→  1689→    background: white !important;
+  1191→  1690→  }
+  1192→  1691→  kbd {
+  1193→  1692→    display: none !important;
+  1194→  1693→  }
+  1195→  1694→}
+  1196→  1695→

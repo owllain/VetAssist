@@ -183,10 +183,10 @@ export default function DataManager({ open, onOpenChange }: DataManagerProps) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader>
+      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto glassmorphism-elevated">
+        <SheetHeader className="bg-gradient-to-r from-primary/5 to-transparent border-b border-primary/10 pb-3">
           <SheetTitle className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center depth-shadow">
               <Database size={18} weight="Outline" color="oklch(0.55 0.15 165)" />
             </div>
             Gestor de Datos
@@ -202,21 +202,21 @@ export default function DataManager({ open, onOpenChange }: DataManagerProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-muted/50 rounded-xl p-4 space-y-3"
+            className="bg-muted/30 rounded-xl p-4 space-y-3 neon-border depth-shadow"
           >
             <h4 className="text-sm font-semibold flex items-center gap-2">
               <CircleInfo size={14} weight="Outline" className="text-muted-foreground" />
               Resumen de Datos
             </h4>
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center gap-2 bg-card rounded-lg p-3 border border-border/50">
+              <div className="flex items-center gap-2 bg-card rounded-lg p-3 border border-border/50 hover-tap">
                 <Star size={16} weight="Fill" className="text-amber-500 flex-shrink-0" />
                 <div>
                   <p className="text-lg font-bold leading-none">{favorites.length}</p>
                   <p className="text-[10px] text-muted-foreground">Favoritos</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 bg-card rounded-lg p-3 border border-border/50">
+              <div className="flex items-center gap-2 bg-card rounded-lg p-3 border border-border/50 hover-tap">
                 <Clock size={16} weight="Outline" className="text-primary flex-shrink-0" />
                 <div>
                   <p className="text-lg font-bold leading-none">{totalHistory}</p>
