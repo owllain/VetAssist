@@ -1,0 +1,26 @@
+{
+  "name": "VetCalc CR - Calculadora Veterinaria",
+  "short_name": "VetCalc CR",
+  "description": "Calculadora de dosis veterinarias para perros y gatos en Costa Rica",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f0fdfa",
+  "theme_color": "#0d9488",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "192x192",
+      "type": "image/x-icon",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "512x512",
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["medical", "utilities"],
+  "lang": "es-CR"
+}

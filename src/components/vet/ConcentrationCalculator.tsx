@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Droplets, ChevronDown, CircleInfo } from 'reicon-react';
+import { Drop, ChevronDown, CircleInfo } from 'reicon-react';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import {
@@ -99,7 +99,7 @@ export default function ConcentrationCalculator({ result }: { result: CalcResult
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className="glass-card rounded-xl overflow-hidden">
         <CollapsibleTrigger className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-          <Droplets size={16} weight="Outline" className="text-primary/70" />
+          <Drop size={16} weight="Outline" className="text-primary/70" />
           <span>Calculadora de Concentración</span>
           <motion.div
             animate={{ rotate: open ? 180 : 0 }}

@@ -560,7 +560,7 @@ export default function MedicationCalculator() {
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="result-card shadow-lg card-shine">
+            <Card className="result-card shadow-lg card-shine result-glow">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-primary">
@@ -652,7 +652,7 @@ export default function MedicationCalculator() {
 
                 {/* Dose Results */}
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10 transition-transform duration-200 hover:scale-105 hover:shadow-md">
+                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10 transition-transform duration-200 hover-scale-sm dose-accent-ring">
                     <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Mínima</p>
                     <p className="text-2xl font-extrabold text-primary mt-1 number-ticker">
                       {result.calculatedDose.min}
@@ -661,7 +661,7 @@ export default function MedicationCalculator() {
                       {result.calculatedDose.unit.split('/')[0]}
                     </p>
                   </div>
-                  <div className="bg-accent/10 rounded-xl p-3 text-center border border-accent/20 transition-transform duration-200 hover:scale-105 hover:shadow-md ring-2 ring-accent/15">
+                  <div className="bg-accent/10 rounded-xl p-3 text-center border border-accent/20 transition-transform duration-200 hover-scale-sm ring-2 ring-accent/15 dose-accent-ring">
                     <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Recomendada</p>
                     <p className="text-2xl font-extrabold text-accent mt-1 number-ticker">
                       {result.calculatedDose.recommended}
@@ -670,7 +670,7 @@ export default function MedicationCalculator() {
                       {result.calculatedDose.unit.split('/')[0]}
                     </p>
                   </div>
-                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10 transition-transform duration-200 hover:scale-105 hover:shadow-md">
+                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10 transition-transform duration-200 hover-scale-sm dose-accent-ring">
                     <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Máxima</p>
                     <p className="text-2xl font-extrabold text-primary mt-1 number-ticker">
                       {result.calculatedDose.max}

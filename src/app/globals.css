@@ -1692,3 +1692,545 @@ kbd {
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   NEW CSS UTILITY CLASSES — STYLING ADDITIONS (Task 8-a)
+   ========================================================================== */
+
+/* ----- 1. Shimmer: Loading shimmer animation ----- */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+  background: oklch(0.94 0.01 165);
+}
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    oklch(0.94 0.01 165 / 0) 0%,
+    oklch(1 0 0 / 0.5) 50%,
+    oklch(0.94 0.01 165 / 0) 100%
+  );
+  animation: shimmer-slide 1.8s ease-in-out infinite;
+}
+@keyframes shimmer-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.dark .shimmer {
+  background: oklch(0.25 0.02 165);
+}
+.dark .shimmer::after {
+  background: linear-gradient(
+    90deg,
+    oklch(0.25 0.02 165 / 0) 0%,
+    oklch(0.4 0.05 165 / 0.3) 50%,
+    oklch(0.25 0.02 165 / 0) 100%
+  );
+}
+
+/* ----- 2. Pulse-soft: Soft opacity pulse for status indicators ----- */
+.pulse-soft {
+  animation: pulse-soft-opacity 2s ease-in-out infinite;
+}
+@keyframes pulse-soft-opacity {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* ----- 3. Card-spotlight: Mouse-following spotlight on hover ----- */
+.card-spotlight {
+  position: relative;
+  overflow: hidden;
+}
+.card-spotlight::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    oklch(0.55 0.15 165 / 0.12),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  border-radius: inherit;
+}
+.card-spotlight:hover::after {
+  opacity: 1;
+}
+.dark .card-spotlight::after {
+  background: radial-gradient(
+    400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    oklch(0.65 0.15 165 / 0.15),
+    transparent 60%
+  );
+}
+
+/* ----- 4. Gradient-border: Animated gradient border ----- */
+.gradient-border {
+  position: relative;
+  border-radius: var(--radius);
+  background: oklch(1 0 0);
+  z-index: 0;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: calc(var(--radius) + 2px);
+  background: linear-gradient(
+    135deg,
+    oklch(0.55 0.15 165),
+    oklch(0.65 0.2 30),
+    oklch(0.6 0.12 145),
+    oklch(0.55 0.15 165)
+  );
+  background-size: 300% 300%;
+  animation: gradient-rotate 4s ease infinite;
+  z-index: -1;
+}
+@keyframes gradient-rotate {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.dark .gradient-border {
+  background: oklch(0.18 0.02 165);
+}
+.dark .gradient-border::before {
+  background: linear-gradient(
+    135deg,
+    oklch(0.55 0.15 165 / 0.6),
+    oklch(0.65 0.2 30 / 0.6),
+    oklch(0.6 0.12 145 / 0.6),
+    oklch(0.55 0.15 165 / 0.6)
+  );
+  background-size: 300% 300%;
+  animation: gradient-rotate 4s ease infinite;
+}
+
+/* ----- 5. Text-shadow-glow: Subtle text glow ----- */
+.text-shadow-glow {
+  text-shadow: 0 0 20px oklch(0.55 0.15 165 / 0.3);
+}
+.dark .text-shadow-glow {
+  text-shadow: 0 0 24px oklch(0.65 0.15 165 / 0.4);
+}
+
+/* ----- 6. Backdrop-blur-strong: Stronger backdrop blur ----- */
+.backdrop-blur-strong {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* ----- 7. Floating-label: Float label for inputs ----- */
+.floating-label {
+  position: relative;
+}
+.floating-label label {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  transform-origin: left center;
+  font-size: 0.875rem;
+  color: oklch(0.5 0.02 165);
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.floating-label input:focus-within + label,
+.floating-label input:not(:placeholder-shown) + label,
+.floating-label textarea:focus-within + label,
+.floating-label textarea:not(:placeholder-shown) + label,
+.floating-label select:focus-within + label,
+.floating-label select:not([data-empty="true"]) + label {
+  top: 0.25rem;
+  transform: translateY(0) scale(0.75);
+  color: oklch(0.55 0.15 165);
+  font-weight: 500;
+}
+.dark .floating-label label {
+  color: oklch(0.65 0.02 165);
+}
+.dark .floating-label input:focus-within + label,
+.dark .floating-label input:not(:placeholder-shown) + label,
+.dark .floating-label textarea:focus-within + label,
+.dark .floating-label textarea:not(:placeholder-shown) + label,
+.dark .floating-label select:focus-within + label,
+.dark .floating-label select:not([data-empty="true"]) + label {
+  color: oklch(0.7 0.15 165);
+}
+
+/* ----- 8. Ripple-effect: Ripple click effect ----- */
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.ripple-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: oklch(0.55 0.15 165 / 0.2);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s ease, height 0.6s ease, opacity 0.6s ease;
+  opacity: 0;
+}
+.ripple-effect:active::after {
+  width: 300px;
+  height: 300px;
+  opacity: 1;
+  transition: width 0s, height 0s, opacity 0s;
+}
+.dark .ripple-effect::after {
+  background: oklch(0.65 0.15 165 / 0.25);
+}
+
+/* ----- 9. Skeleton-shine: Polished skeleton loading ----- */
+.skeleton-shine {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    oklch(0.92 0.01 165) 25%,
+    oklch(0.95 0.01 165) 37%,
+    oklch(0.92 0.01 165) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-slide 1.6s ease infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes skeleton-slide {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.dark .skeleton-shine {
+  background: linear-gradient(
+    90deg,
+    oklch(0.22 0.02 165) 25%,
+    oklch(0.28 0.03 165) 37%,
+    oklch(0.22 0.02 165) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-slide 1.6s ease infinite;
+}
+
+/* ----- 10. Badge-pulse: Subtle scale pulse on badges ----- */
+.badge-pulse {
+  animation: badge-scale-pulse 2s ease-in-out infinite;
+}
+@keyframes badge-scale-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* ----- 11. Tab-glow: Active tab glow ----- */
+.tab-glow {
+  box-shadow: 0 0 0 0.4px oklch(0.55 0.15 165 / 0.5), 0 0 16px oklch(0.55 0.15 165 / 0.15);
+}
+.dark .tab-glow {
+  box-shadow: 0 0 0 0.4px oklch(0.65 0.15 165 / 0.6), 0 0 20px oklch(0.65 0.15 165 / 0.2);
+}
+
+/* ----- 12. Input-focus-glow: Input focus ring + glow ----- */
+.input-focus-glow {
+  transition: box-shadow 0.2s ease, outline-color 0.2s ease;
+}
+.input-focus-glow:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px oklch(0.55 0.15 165 / 0.25), 0 0 12px oklch(0.55 0.15 165 / 0.15);
+  border-color: oklch(0.55 0.15 165);
+}
+.dark .input-focus-glow:focus {
+  box-shadow: 0 0 0 3px oklch(0.65 0.15 165 / 0.3), 0 0 16px oklch(0.65 0.15 165 / 0.2);
+  border-color: oklch(0.65 0.15 165);
+}
+
+/* ----- 13. Hover-scale-sm: Small hover scale ----- */
+.hover-scale-sm {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hover-scale-sm:hover {
+  transform: scale(1.02);
+}
+
+/* ----- 14. Hover-scale-md: Medium hover scale with bounce ----- */
+.hover-scale-md {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hover-scale-md:hover {
+  transform: scale(1.04);
+}
+
+/* ----- 15. Stagger-children: Incremental animation-delay ----- */
+.stagger-children > * {
+  animation-delay: calc(var(--i, 0) * 0.1s);
+}
+
+/* ----- 16. Glass-card-strong: Stronger glassmorphism ----- */
+.glass-card-strong {
+  background: oklch(1 0 0 / 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid oklch(0.55 0.15 165 / 0.15);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.08), inset 0 1px 0 oklch(1 0 0 / 0.5);
+}
+.dark .glass-card-strong {
+  background: oklch(0.15 0.02 165 / 0.85);
+  border: 1px solid oklch(0.55 0.15 165 / 0.2);
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.3), inset 0 1px 0 oklch(1 0 0 / 0.08);
+}
+
+/* ----- 17. Result-glow: Green glow behind result values ----- */
+.result-glow {
+  box-shadow: 0 0 30px oklch(0.65 0.15 145 / 0.2);
+}
+.dark .result-glow {
+  box-shadow: 0 0 30px oklch(0.65 0.15 145 / 0.3);
+}
+
+/* ----- 18. Scroll-reveal: Fade + slide up on scroll ----- */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.scroll-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ----- 19. Tooltip-arrow: CSS-only tooltip arrow ----- */
+.tooltip-arrow {
+  position: relative;
+}
+.tooltip-arrow::before {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid oklch(0.15 0.02 165 / 0.9);
+}
+.dark .tooltip-arrow::before {
+  border-top-color: oklch(0.85 0.01 165 / 0.95);
+}
+
+/* ----- 20. Progress-stripe: Animated striped progress bar ----- */
+.progress-stripe {
+  position: relative;
+  overflow: hidden;
+  background: oklch(0.92 0.01 165);
+  border-radius: var(--radius);
+}
+.progress-stripe > .progress-fill {
+  position: relative;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    oklch(0.55 0.15 165),
+    oklch(0.6 0.12 145)
+  );
+  background-size: 100% 100%;
+  border-radius: var(--radius);
+}
+.progress-stripe > .progress-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    transparent 25%,
+    oklch(1 0 0 / 0.2) 25%,
+    oklch(1 0 0 / 0.2) 50%,
+    transparent 50%,
+    transparent 75%,
+    oklch(1 0 0 / 0.2) 75%
+  );
+  background-size: 1rem 1rem;
+  animation: progress-stripe-move 0.8s linear infinite;
+}
+@keyframes progress-stripe-move {
+  0% { background-position: 1rem 0; }
+  100% { background-position: 0 0; }
+}
+.dark .progress-stripe {
+  background: oklch(0.22 0.02 165);
+}
+
+/* ----- 21. Icon-bounce: Bounce animation for icons on hover ----- */
+.icon-bounce {
+  display: inline-block;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.icon-bounce:hover {
+  animation: icon-bounce-anim 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes icon-bounce-anim {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+  60% { transform: translateY(-2px); }
+}
+
+/* ----- 22. Section-fade-in: Section entrance animation ----- */
+.section-fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: section-fade 0.6s ease forwards;
+}
+@keyframes section-fade {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ----- 23. Status-dot: Colored dot with pulse for online/status ----- */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: oklch(0.65 0.15 145);
+  animation: status-dot-pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes status-dot-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.65 0.15 145 / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px oklch(0.65 0.15 145 / 0);
+  }
+}
+.status-dot.status-dot-warning {
+  background: oklch(0.75 0.15 85);
+}
+.status-dot.status-dot-warning {
+  animation-name: status-dot-pulse-warning;
+}
+@keyframes status-dot-pulse-warning {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.75 0.15 85 / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px oklch(0.75 0.15 85 / 0);
+  }
+}
+.status-dot.status-dot-danger {
+  background: oklch(0.577 0.245 27.325);
+  animation-name: status-dot-pulse-danger;
+}
+@keyframes status-dot-pulse-danger {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.577 0.245 27.325 / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px oklch(0.577 0.245 27.325 / 0);
+  }
+}
+.dark .status-dot {
+  background: oklch(0.7 0.18 145);
+}
+
+/* ----- 24. Card-shine-hover: Light sweep across card on hover ----- */
+.card-shine-hover {
+  position: relative;
+  overflow: hidden;
+}
+.card-shine-hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    oklch(1 0 0 / 0.08) 45%,
+    oklch(1 0 0 / 0.12) 50%,
+    oklch(1 0 0 / 0.08) 55%,
+    transparent 60%
+  );
+  transition: left 0.6s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+.card-shine-hover:hover::before {
+  left: 100%;
+}
+.dark .card-shine-hover::before {
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    oklch(1 0 0 / 0.04) 45%,
+    oklch(1 0 0 / 0.06) 50%,
+    oklch(1 0 0 / 0.04) 55%,
+    transparent 60%
+  );
+}
+
+/* ==========================================================================
+   PRINT MEDIA QUERIES — NEW UTILITIES (Task 8-a)
+   ========================================================================== */
+@media print {
+  .shimmer,
+  .vet-float,
+  .morph-blob,
+  .pulse-soft,
+  .ripple-effect,
+  .badge-pulse,
+  .icon-bounce:hover,
+  .skeleton-shine,
+  .card-spotlight::after,
+  .card-shine-hover::before,
+  .gradient-border::before,
+  .status-dot,
+  .progress-stripe > .progress-fill::after {
+    animation: none !important;
+  }
+  .shimmer::after {
+    display: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .glass-card,
+  .glass-card-strong {
+    background: white !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .backdrop-blur-strong {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .text-shadow-glow {
+    text-shadow: none !important;
+  }
+  .result-glow,
+  .tab-glow,
+  .input-focus-glow:focus {
+    box-shadow: none !important;
+  }
+  .hover-scale-sm:hover,
+  .hover-scale-md:hover {
+    transform: none !important;
+  }
+  .tooltip-arrow::before {
+    display: none !important;
+  }
+}

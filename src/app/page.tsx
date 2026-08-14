@@ -29,6 +29,8 @@ import {
   Notebook,
   Drop,
   CalendarCheck,
+  Warning,
+  Repeat,
 } from 'reicon-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,15 +44,32 @@ import {
   SheetTrigger,
   SheetClose,
 } from '@/components/ui/sheet';
-import MedicationCalculator from '@/components/vet/MedicationCalculator';
-import FreeModeCalculator from '@/components/vet/FreeModeCalculator';
-import FoodCalculator from '@/components/vet/FoodCalculator';
-import IVFluidCalculator from '@/components/vet/IVFluidCalculator';
-import DoseSchedule from '@/components/vet/DoseSchedule';
-import DataManager from '@/components/vet/DataManager';
-import ClinicalNotes from '@/components/vet/ClinicalNotes';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
 
-type TabId = 'medicamentos' | 'modo-libre' | 'alimentos' | 'fluidos' | 'horarios' | 'acerca';
+const TabSkeleton = () => (
+  <div className="space-y-4 max-w-2xl mx-auto">
+    <Skeleton className="h-8 w-64 mx-auto" />
+    <Skeleton className="h-4 w-96 mx-auto" />
+    <div className="glass-card rounded-2xl p-6 space-y-4">
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-32 w-full" />
+    </div>
+  </div>
+);
+
+const MedicationCalculator = dynamic(() => import('@/components/vet/MedicationCalculator'), { loading: () => <TabSkeleton />, ssr: false });
+const FreeModeCalculator = dynamic(() => import('@/components/vet/FreeModeCalculator'), { loading: () => <TabSkeleton />, ssr: false });
+const FoodCalculator = dynamic(() => import('@/components/vet/FoodCalculator'), { loading: () => <TabSkeleton />, ssr: false });
+const IVFluidCalculator = dynamic(() => import('@/components/vet/IVFluidCalculator'), { loading: () => <TabSkeleton />, ssr: false });
+const DoseSchedule = dynamic(() => import('@/components/vet/DoseSchedule'), { loading: () => <TabSkeleton />, ssr: false });
+const DataManager = dynamic(() => import('@/components/vet/DataManager'), { ssr: false });
+const ClinicalNotes = dynamic(() => import('@/components/vet/ClinicalNotes'), { ssr: false });
+const EmergencyReference = dynamic(() => import('@/components/vet/EmergencyReference'), { loading: () => <TabSkeleton />, ssr: false });
+const QuickConverter = dynamic(() => import('@/components/vet/QuickConverter'), { loading: () => <TabSkeleton />, ssr: false });
+
+type TabId = 'medicamentos' | 'modo-libre' | 'conversor' | 'alimentos' | 'fluidos' | 'horarios' | 'emergencias' | 'acerca';
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode; desc: string }[] = [
   {
@@ -64,6 +83,12 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; desc: string }[] 
     label: 'Modo Libre',
     icon: <Calculator size={16} weight="Outline" />,
     desc: 'Dosis personalizada por kg',
+  },
+  {
+    id: 'conversor',
+    label: 'Conversor',
+    icon: <Repeat size={16} weight="Outline" />,
+    desc: 'Conversión rápida de unidades',
   },
   {
     id: 'alimentos',
@@ -82,6 +107,12 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; desc: string }[] 
     label: 'Horarios',
     icon: <CalendarCheck size={16} weight="Outline" />,
     desc: 'Generador de horarios de medicación',
+  },
+  {
+    id: 'emergencias',
+    label: 'Emergencias',
+    icon: <Warning size={16} weight="Outline" />,
+    desc: 'Fármacos de emergencia rápida referencia',
   },
   {
     id: 'acerca',
@@ -199,10 +230,12 @@ export default function Home() {
   const shortcuts = useMemo(() => ({
     'ctrl+1': () => handleTabChange('medicamentos'),
     'ctrl+2': () => handleTabChange('modo-libre'),
-    'ctrl+3': () => handleTabChange('alimentos'),
-    'ctrl+4': () => handleTabChange('fluidos'),
-    'ctrl+5': () => handleTabChange('horarios'),
-    'ctrl+6': () => handleTabChange('acerca'),
+    'ctrl+3': () => handleTabChange('conversor'),
+    'ctrl+4': () => handleTabChange('alimentos'),
+    'ctrl+5': () => handleTabChange('fluidos'),
+    'ctrl+6': () => handleTabChange('horarios'),
+    'ctrl+7': () => handleTabChange('emergencias'),
+    'ctrl+8': () => handleTabChange('acerca'),
     'ctrl+p': handlePrint,
     'ctrl+d': () => setTheme(theme === 'dark' ? 'light' : 'dark'),
   }), [handleTabChange, handlePrint, theme, setTheme]);
@@ -432,7 +465,7 @@ export default function Home() {
               />
               <StatCard
                 icon={<Database size={20} color="oklch(0.55 0.2 290)" weight="Outline" />}
-                value={12} suffix="" label="Herramientas integradas"
+                value={14} suffix="" label="Herramientas integradas"
               />
             </div>
           </div>
@@ -504,6 +537,33 @@ export default function Home() {
                 style={{ animationDelay: '2s' }}
                 aria-hidden="true"
               />
+            </motion.section>
+          )}
+
+          {activeTab === 'conversor' && (
+            <motion.section
+              key="conversor"
+              id="conversor"
+              className="py-10 md:py-14 relative gradient-mesh"
+              {...sectionVariants}
+            >
+              <div className="container mx-auto px-4">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                    <Repeat size={28} color="oklch(0.55 0.15 165)" weight="Outline" />
+                    <SlotText
+                      text="Conversor Rápido de Unidades"
+                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
+                    />
+                  </h2>
+                  <p className="mt-2 text-muted-foreground max-w-md mx-auto">
+                    Convierta rápidamente entre unidades de peso, volumen, temperatura y concentración
+                  </p>
+                </div>
+                <div className="max-w-2xl mx-auto">
+                  <QuickConverter />
+                </div>
+              </div>
             </motion.section>
           )}
 
@@ -596,6 +656,31 @@ export default function Home() {
             </motion.section>
           )}
 
+          {activeTab === 'emergencias' && (
+            <motion.section
+              key="emergencias"
+              id="emergencias"
+              className="py-10 md:py-14 relative gradient-mesh"
+              {...sectionVariants}
+            >
+              <div className="container mx-auto px-4">
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                    <Warning size={28} color="oklch(0.6 0.2 25)" weight="Outline" />
+                    <SlotText
+                      text="Referencia de Emergencias"
+                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
+                    />
+                  </h2>
+                  <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
+                    Fichas rápidas de fármacos críticos para emergencias veterinarias en perros y gatos
+                  </p>
+                </div>
+                <EmergencyReference />
+              </div>
+            </motion.section>
+          )}
+
           {activeTab === 'acerca' && (
             <motion.section
               key="acerca"
@@ -626,7 +711,7 @@ export default function Home() {
                   {/* Feature cards */}
                   <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-in">
                     <div style={{ '--i': 0 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
                       <div className="h-1.5 bg-gradient-to-r from-primary to-primary/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-primary/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -641,7 +726,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 1 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
                       <div className="h-1.5 bg-gradient-to-r from-chart-3 to-chart-3/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-chart-3/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -656,7 +741,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 2 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
                       <div className="h-1.5 bg-gradient-to-r from-chart-2 to-chart-2/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-chart-2/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -671,7 +756,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 3 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
                       <div className="h-1.5 bg-gradient-to-r from-amber-400 to-amber-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-amber-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -686,7 +771,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 4 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
                       <div className="h-1.5 bg-gradient-to-r from-red-400 to-red-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-red-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -701,7 +786,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 5 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
                       <div className="h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-emerald-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -716,7 +801,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 6 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
                       <div className="h-1.5 bg-gradient-to-r from-violet-400 to-violet-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-violet-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -740,7 +825,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 7 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
                       <div className="h-1.5 bg-gradient-to-r from-sky-400 to-sky-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-sky-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -755,7 +840,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 8 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine">
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
                       <div className="h-1.5 bg-gradient-to-r from-orange-400 to-orange-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-orange-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -765,6 +850,36 @@ export default function Home() {
                         <h3 className="font-bold">Horarios de Medicación</h3>
                         <p className="text-sm text-muted-foreground mt-1">
                           Generador de horarios con seguimiento diario y alertas sonoras
+                        </p>
+                      </CardContent>
+                    </Card>
+                    </div>
+                    <div style={{ '--i': 9 } as React.CSSProperties}>
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
+                      <div className="h-1.5 bg-gradient-to-r from-red-500 to-red-400/40" />
+                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-red-500/5 to-transparent pointer-events-none" aria-hidden="true" />
+                      <CardContent className="p-5 text-center relative z-10">
+                        <div className="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center mx-auto mb-3">
+                          <Warning size={24} color="oklch(0.6 0.2 25)" weight="Outline" />
+                        </div>
+                        <h3 className="font-bold">Referencia de Emergencias</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          8 fármacos críticos con dosis rápidas para anafilaxia, convulsiones y shock
+                        </p>
+                      </CardContent>
+                    </Card>
+                    </div>
+                    <div style={{ '--i': 10 } as React.CSSProperties}>
+                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
+                      <div className="h-1.5 bg-gradient-to-r from-violet-400 to-violet-400/40" />
+                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-violet-400/5 to-transparent pointer-events-none" aria-hidden="true" />
+                      <CardContent className="p-5 text-center relative z-10">
+                        <div className="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-950/30 flex items-center justify-center mx-auto mb-3">
+                          <Repeat size={24} color="oklch(0.55 0.2 290)" weight="Outline" />
+                        </div>
+                        <h3 className="font-bold">Conversor Rápido</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Peso, volumen, temperatura y concentración — conversiones instantáneas
                         </p>
                       </CardContent>
                     </Card>
@@ -888,6 +1003,15 @@ export default function Home() {
                     <span>Modo Libre</span>
                   </button>
                 </li>
+                <li>
+                  <button
+                    onClick={() => handleTabChange('conversor')}
+                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2 animated-underline"
+                  >
+                    <Repeat size={14} weight="Outline" />
+                    <span>Conversor de Unidades</span>
+                  </button>
+                </li>
               </ul>
             </div>
             <div>
@@ -918,7 +1042,7 @@ export default function Home() {
             <div className="flex items-center gap-3">
               <p>© 2025 VetCalc CR — Herramienta de referencia para veterinarios en Costa Rica</p>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-teal-300 text-[10px] font-mono font-semibold tracking-wider">
-                v2.1
+                v2.2
               </span>
             </div>
             <p className="flex items-center gap-1.5">

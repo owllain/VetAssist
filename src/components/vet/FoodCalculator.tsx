@@ -363,7 +363,7 @@ export default function FoodCalculator() {
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }} transition={{ duration: 0.3 }}>
-            <Card className="result-card shadow-lg card-shine">
+            <Card className="result-card shadow-lg card-shine result-glow">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-primary">

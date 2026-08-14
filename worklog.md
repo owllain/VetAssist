@@ -1030,3 +1030,227 @@ clinical notes, and an extensive hospital-themed design with 30+ CSS utility ani
 5. **Expand drug interactions** to cover all 27 medications comprehensively
 6. **Concentration Calculator in Free Mode** — Currently only in Medication tab
 7. **Sound alerts for dose validation warnings** — Extend beyond drug interactions
+---
+Task ID: 8-b
+Agent: full-stack-developer
+Task: Add PWA (Progressive Web App) support for offline veterinary field use
+
+Work Log:
+- Created /public/manifest.json with PWA manifest (name, short_name, description, icons, theme, categories, lang)
+- Created /public/sw.js service worker with three-tier caching strategy:
+  - Network-first for /api/ routes (always try fresh data, cache on success, 503 JSON fallback offline)
+  - Cache-first for static assets (images, fonts, JS, CSS — serve from cache, 1px SVG fallback for images offline)
+  - Stale-while-revalidate for HTML/navigation (serve cached immediately, update in background, branded 503 HTML fallback)
+- Pre-caches /, /manifest.json, /favicon.ico, /logo.svg on install
+- Cleans old caches on activate, calls skipWaiting + clients.claim for immediate takeover
+- Modified /src/app/layout.tsx:
+  - Added manifest, themeColor, appleWebApp to Next.js Metadata export
+  - Added apple icon reference
+  - Added <head> block with apple-mobile-web-app meta tags, theme-color meta, mobile-web-app-capable meta
+  - Added inline <script dangerouslySetInnerHTML> for SW registration on window load
+  - Added disableTransitionOnChange to ThemeProvider
+
+Stage Summary:
+- App is now installable as a PWA (manifest + SW registered)
+- Offline-capable: static assets cache-first, API network-first with cache fallback, HTML stale-while-revalidate
+- Graceful offline fallback pages for both API (JSON) and navigation (branded HTML)
+- `bun run lint` passes clean (0 errors, 0 warnings)
+
+## Files Created
+- `/public/manifest.json` — PWA manifest
+- `/public/sw.js` — Service worker (cache name: vetcalc-cr-v2.2)
+
+## Files Modified
+- `/src/app/layout.tsx` — PWA meta tags, manifest link, SW registration script
+
+## Verification Results
+- `bun run lint` passes clean (0 errors, 0 warnings)
+- page.tsx was NOT modified
+
+---
+Task ID: 8-c
+Agent: full-stack-developer
+Task: Create Emergency Drug Quick-Reference Card component
+
+Work Log:
+- Read worklog (last 30 lines) for project context
+- Read full page.tsx to understand tab structure, imports, keyboard shortcuts, feature cards, footer version
+- Verified reicon-react exports: Warning ✓, ChevronDown ✓, CircleInfo ✓, FirstAidKit ✗
+- Verified shadcn/ui collapsible.tsx exists with Collapsible, CollapsibleTrigger, CollapsibleContent exports
+- Created /src/components/vet/EmergencyReference.tsx with:
+  - 8 emergency drugs in Spanish with all specified dosages, routes, species restrictions
+  - Color-coded severity system: CRÍTICO (red), IMPORTANTE (amber), SOPORTE (teal)
+  - Warning banner at top with badge-pulse animation
+  - Species restriction badges: "Perro ✓" / "Gato ✗" with red styling for restricted
+  - Collapsible detail sections per drug card with framer-motion animations
+  - Uses glass-card, result-glow, hover-scale-sm CSS classes
+  - no-print class on non-essential elements
+  - Responsive: 1 col mobile, 2 cols md+
+- Updated page.tsx:
+  - Added Warning import from reicon-react
+  - Added dynamic import for EmergencyReference with TabSkeleton loading
+  - Added 'emergencias' to TabId union type
+  - Added emergencias tab to TABS array (index 6, before 'acerca')
+  - Added emergencias tab section with AnimatePresence, SlotText, gradient-mesh
+  - Updated keyboard shortcuts: Ctrl+6 → emergencias, Ctrl+7 → acerca
+  - Added 10th feature card (index 9) for "Referencia de Emergencias" with red gradient and Warning icon
+  - Updated StatCard count from 12 to 13
+  - Updated version badge from v2.1 to v2.2
+- Fixed JSX comment parsing errors (missing closing `}` in comment blocks)
+- `bun run lint` passes clean (0 errors, 0 warnings)
+
+Stage Summary:
+- Emergency Reference tab fully integrated as tab index 6
+- 8 critical emergency drugs with color-coded severity cards
+- Species restrictions clearly visible with ✓/✗ badges
+- Collapsible details for additional notes
+- Version bumped to v2.2
+
+## Files Created
+- `/src/components/vet/EmergencyReference.tsx` - Emergency drug quick-reference component
+
+## Files Modified
+- `/src/app/page.tsx` - New tab, imports, shortcuts, feature card, version
+
+## Verification Results
+- `bun run lint` passes clean (0 errors, 0 warnings)
+---
+Task ID: 8-a, 8-b, 8-c, 8-d, 8-e
+Agent: Main Agent (coordinating sub-agents + direct development)
+Task: QA assessment, bug fixes, styling improvements, new features
+
+## Current Project Status Assessment
+VetCalc CR v2.2 is a comprehensive, production-quality veterinary calculator SPA for Costa Rica.
+All calculators fully functional: medication (27 meds/8 categories), free mode, food (RER/DER),
+IV fluid therapy, dose schedule generation, unit converter, and emergency drug reference.
+Features include: favorites, dose reference tables, search/filter, history, weight converter, print,
+dark mode, BCS chart, 6 protocol templates, 21 drug interactions with sound alerts, keyboard shortcuts
+(Ctrl+1-8), data export/import, patient profiles, dose range validation, concentration calculator,
+clinical notes, PWA support (manifest + service worker for offline use), and an extensive hospital-themed
+design with 50+ CSS utility animations.
+
+## Completed Modifications
+
+### Bug Fixes (Critical)
+1. **Droplets icon not found** — `reicon-react` exports `Drop` not `Droplets`.
+   Fixed in `/src/components/vet/ConcentrationCalculator.tsx` (line 5, line 102).
+   This was causing a compilation failure that prevented the dev server from starting.
+
+2. **OOM during Turbopack compilation** — The page.tsx (933 lines) imported 7 heavy components
+   directly, causing Turbopack to allocate 2.7GB+ RSS and get OOM-killed (4GB container limit).
+   Fixed by converting all 7 component imports to `next/dynamic` with `ssr: false` + Skeleton
+   loading states. This reduced initial compilation to ~800MB and page loads successfully.
+
+3. **themeColor viewport warning** — Moved `themeColor` from `metadata` export to new `viewport`
+   export in `/src/app/layout.tsx` per Next.js 16 requirements.
+
+### Styling Improvements (Task 8-a)
+24 new CSS utility classes appended to globals.css (now 2,236 lines total):
+- `.shimmer` — Loading shimmer animation (gradient translateX) + dark variant
+- `.pulse-soft` — Opacity pulse 0.7→1.0 for status indicators
+- `.card-spotlight` — Radial gradient spotlight on hover via `::after` + dark variant
+- `.gradient-border` — Animated gradient border via `::before` + dark variant
+- `.text-shadow-glow` — Subtle text glow with oklch primary color + dark variant
+- `.backdrop-blur-strong` — 24px blur + webkit fallback
+- `.floating-label` — Float label animation on focus-within + dark variant
+- `.ripple-effect` — Scale ripple on `:active` via `::after` + dark variant
+- `.skeleton-shine` — Moving highlight gradient skeleton + dark variant
+- `.badge-pulse` — Scale pulse 1.0→1.05→1.0
+- `.tab-glow` — Box-shadow with primary, 0.4px spread + dark variant
+- `.input-focus-glow` — Focus ring + glow shadow + dark variant
+- `.hover-scale-sm` — Scale 1.02 on hover, smooth transition
+- `.hover-scale-md` — Scale 1.04 on hover, bounce easing
+- `.stagger-children > *` — Incremental animation-delay via `--i` CSS var
+- `.glass-card-strong` — Stronger glassmorphism (blur 24px, 0.85 opacity) + dark variant
+- `.result-glow` — Green glow shadow for result displays + dark variant
+- `.scroll-reveal` — Fade+slide up triggered by `.visible` class
+- `.tooltip-arrow` — CSS border triangle tooltip + dark variant
+- `.progress-stripe` — Animated diagonal stripes + dark variant
+- `.icon-bounce` — Bounce on hover (translateY)
+- `.section-fade-in` — Entrance fade 0→1, translateY 20→0, 0.6s ease
+- `.status-dot` — 8px dot with pulse, +warning/+danger sub-classes + dark variants
+- `.card-shine-hover` — Diagonal light sweep on hover
+- Comprehensive `@media print` block disabling all animations/effects
+
+### New CSS Applied to Existing Components
+- MedicationCalculator: `result-glow` on result card, `hover-scale-sm dose-accent-ring` on dose boxes
+- FoodCalculator: `result-glow` on result card
+- All 11 Acerca feature cards: `card-shine` → `card-shine-hover` (diagonal light sweep)
+
+### New Features
+
+1. **PWA Support** (Task 8-b)
+   - `/public/manifest.json` — Full PWA manifest (installable, standalone, es-CR locale)
+   - `/public/sw.js` — Service worker with 3-tier caching:
+     - Network-first for /api/ routes with cache fallback
+     - Cache-first for static assets (images, fonts, JS, CSS)
+     - Stale-while-revalidate for HTML navigation
+     - Branded offline fallback pages (both JSON and HTML)
+   - `/src/app/layout.tsx` — PWA meta tags, viewport export, SW registration script
+
+2. **Emergency Drug Quick-Reference** (Task 8-c)
+   - `/src/components/vet/EmergencyReference.tsx` — 8 critical emergency drugs
+   - Color-coded severity: CRÍTICO (red), IMPORTANTE (amber), SOPORTE (teal)
+   - Species restriction badges (Perro ✓ / Gato ✗)
+   - Collapsible details, framer-motion stagger animations
+   - Integrated as "Emergencias" tab (Ctrl+7)
+
+3. **Quick Unit Converter** (Task 8-d)
+   - `/src/components/vet/QuickConverter.tsx` — 4 categories, 13 conversions
+   - Peso: kg↔lb, kg↔g, lb↔oz, g↔mg, mg↔mcg
+   - Volumen: mL↔L, mL↔cc, fl oz↔mL, tsp↔mL, tbsp↔mL
+   - Temperatura: °C↔°F
+   - Concentración: %↔mg/mL, mcg/mL↔mg/L
+   - Two-way conversion with swap button, copy to clipboard, reference table
+   - Integrated as "Conversor" tab (Ctrl+3)
+
+4. **App Structure Updates**
+   - 8 tabs total (was 6): Medicamentos, Modo Libre, Conversor, Alimentos, Fluidoterapia,
+     Horarios, Emergencias, Acerca de
+   - 11 feature cards in Acerca section (was 9)
+   - 14 integrated tools count (was 12)
+   - Keyboard shortcuts Ctrl+1 through Ctrl+8
+   - Version: v2.2
+   - Footer: Added "Conversor de Unidades" link
+
+## Files Created
+- `/src/components/vet/EmergencyReference.tsx` — Emergency drug reference (267 lines)
+- `/src/components/vet/QuickConverter.tsx` — Unit converter widget (218 lines)
+- `/public/manifest.json` — PWA manifest
+- `/public/sw.js` — Service worker
+
+## Files Modified
+- `/src/app/globals.css` — 542 lines appended (24 new CSS utilities + keyframes + print)
+- `/src/app/page.tsx` — Dynamic imports, 2 new tabs, 2 new feature cards, shortcuts, footer, v2.2
+- `/src/app/layout.tsx` — Viewport export, PWA meta tags, SW registration
+- `/src/components/vet/ConcentrationCalculator.tsx` — Droplets→Drop icon fix
+- `/src/components/vet/MedicationCalculator.tsx` — result-glow, hover-scale-sm, dose-accent-ring
+- `/src/components/vet/FoodCalculator.tsx` — result-glow on result card
+
+## Verification Results
+- `bun run lint` — passes clean (0 errors, 0 warnings)
+- `next build` — compiles successfully in 12.8s, 0 warnings
+- Production build verified: 5 routes (/, /_not-found, /api, /api/calculate-food, /api/calculate-medication)
+- Dynamic imports confirmed: 7 lazy-loaded components with Skeleton loading states
+- All reicon-react icon imports verified valid (no Droplets, Info, FirstAidKit, Droplet issues)
+- Total codebase: ~10,807 lines across 17 vet components + page + CSS + lib files
+
+## Unresolved Issues & Risks
+1. **Dev server OOM** — Turbopack compilation of the full app in dev mode consumes 2.7GB+ RSS.
+   Workaround: Use `NODE_OPTIONS='--max-old-space-size=1024'` or run production build.
+   The dynamic imports mitigate this but large components still stress memory.
+2. **No browser QA testing** — Chrome agent-browser consumes ~700MB RAM, leaving insufficient
+   memory for Next.js dev server in the 4GB container. All verification done via build + curl.
+3. **PWA icons** — manifest.json references /favicon.ico for 192x192 and 512x512 but proper
+   sized icons should be created for optimal PWA experience.
+4. **API routes in standalone** — API routes need to be manually copied to .next/standalone for
+   production standalone deployments (not an issue in dev or standard deployment).
+
+## Priority Recommendations for Next Phase
+1. **Generate PWA icons** — Create proper 192x192 and 512x512 PNG icons from the logo
+2. **Accessibility audit** — Screen reader testing, full ARIA label coverage for all 17 components
+3. **Protocol customization** — Allow editing drug doses within protocol templates
+4. **Expand drug interactions** to comprehensively cover all 27 medications
+5. **Sound alerts for dose validation** — Extend beyond drug interactions to all dose warnings
+6. **Concentration Calculator in Free Mode** — Currently only available in Medication tab
+7. **Performance optimization** — Consider code-splitting the large page.tsx into separate route segments
