@@ -26,6 +26,7 @@ import {
   Moon,
   Database,
   ArrowUp,
+  Notebook,
 } from 'reicon-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,7 @@ import MedicationCalculator from '@/components/vet/MedicationCalculator';
 import FreeModeCalculator from '@/components/vet/FreeModeCalculator';
 import FoodCalculator from '@/components/vet/FoodCalculator';
 import DataManager from '@/components/vet/DataManager';
+import ClinicalNotes from '@/components/vet/ClinicalNotes';
 
 type TabId = 'medicamentos' | 'modo-libre' | 'alimentos' | 'acerca';
 
@@ -132,6 +134,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>('medicamentos');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dataManagerOpen, setDataManagerOpen] = useState(false);
+  const [clinicalNotesOpen, setClinicalNotesOpen] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -320,7 +323,7 @@ export default function Home() {
 
       <main className="flex-1">
         {/* ========== HERO SECTION ========== */}
-        <section className="vet-gradient heartbeat-line particles-bg relative overflow-hidden">
+        <section className="vet-gradient heartbeat-line particles-bg hero-vignette relative overflow-hidden">
           {/* Morph blobs */}
           <div className="morph-blob" style={{ top: '10%', left: '5%', background: 'oklch(0.55 0.15 165)' }} />
           <div className="morph-blob" style={{ top: '40%', right: '8%', background: 'oklch(0.6 0.12 145)', animationDelay: '-4s', width: '160px', height: '160px' }} />
@@ -406,12 +409,12 @@ export default function Home() {
                 value={6} suffix="" label="Protocolos rápidos"
               />
               <StatCard
-                icon={<Paw size={20} color="oklch(0.65 0.2 30)" weight="Outline" />}
-                value={2} suffix="" label="Especies (perros y gatos)"
-              />
-              <StatCard
                 icon={<Shield size={20} color="oklch(0.7 0.15 75)" weight="Outline" />}
                 value={21} suffix="" label="Interacciones registradas"
+              />
+              <StatCard
+                icon={<Database size={20} color="oklch(0.55 0.2 290)" weight="Outline" />}
+                value={10} suffix="" label="Herramientas integradas"
               />
             </div>
           </div>
@@ -694,6 +697,25 @@ export default function Home() {
       {/* Data Manager Sheet */}
       <DataManager open={dataManagerOpen} onOpenChange={setDataManagerOpen} />
 
+      {/* Clinical Notes Panel */}
+      <ClinicalNotes open={clinicalNotesOpen} onOpenChange={setClinicalNotesOpen} />
+
+      {/* Floating Clinical Notes FAB */}
+      <AnimatePresence>
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.8, y: 10 }}
+          transition={{ duration: 0.2 }}
+          onClick={() => setClinicalNotesOpen(true)}
+          className="no-print fab fixed bottom-20 right-5 z-50"
+          title="Notas Clínicas"
+          aria-label="Abrir notas clínicas"
+        >
+          <Notebook size={24} weight="Outline" />
+        </motion.button>
+      </AnimatePresence>
+
       {/* Scroll to top button */}
       <AnimatePresence>
         {showScrollTop && (
@@ -740,28 +762,28 @@ export default function Home() {
                 <li>
                   <button
                     onClick={() => handleTabChange('medicamentos')}
-                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2"
+                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2 animated-underline"
                   >
                     <Pill size={14} weight="Outline" />
-                    Calculadora de Medicamentos
+                    <span>Calculadora de Medicamentos</span>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => handleTabChange('alimentos')}
-                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2"
+                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2 animated-underline"
                   >
                     <Scale size={14} weight="Outline" />
-                    Calculadora de Alimentos
+                    <span>Calculadora de Alimentos</span>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => handleTabChange('modo-libre')}
-                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2"
+                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2 animated-underline"
                   >
                     <Calculator size={14} weight="Outline" />
-                    Modo Libre
+                    <span>Modo Libre</span>
                   </button>
                 </li>
               </ul>
@@ -772,26 +794,31 @@ export default function Home() {
                 <li>
                   <button
                     onClick={() => handleTabChange('acerca')}
-                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2"
+                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2 animated-underline"
                   >
                     <CircleInfo size={14} weight="Outline" />
-                    Acerca de
+                    <span>Acerca de</span>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={handlePrint}
-                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2"
+                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2 animated-underline"
                   >
                     <Printer size={14} weight="Outline" />
-                    Imprimir resultado
+                    <span>Imprimir resultado</span>
                   </button>
                 </li>
               </ul>
             </div>
           </div>
           <div className="border-t border-white/15 mt-8 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-teal-300/70">
-            <p>© 2025 VetCalc CR — Herramienta de referencia para veterinarios en Costa Rica</p>
+            <div className="flex items-center gap-3">
+              <p>© 2025 VetCalc CR — Herramienta de referencia para veterinarios en Costa Rica</p>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-teal-300 text-[10px] font-mono font-semibold tracking-wider">
+                v2.0
+              </span>
+            </div>
             <p className="flex items-center gap-1.5">
               <Shield size={12} weight="Outline" />
               Solo para uso profesional veterinario

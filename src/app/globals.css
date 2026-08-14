@@ -1239,6 +1239,121 @@ kbd {
   z-index: 1;
 }
 
+/* ===== ENHANCED STEP FLOW LINE ===== */
+.step-flow-line {
+  position: relative;
+  padding-left: 24px;
+}
+.step-flow-line::before {
+  content: '';
+  position: absolute;
+  left: 13px;
+  top: 32px;
+  bottom: 0;
+  width: 2px;
+  background: repeating-linear-gradient(
+    to bottom,
+    oklch(0.55 0.15 165 / 0.2) 0px,
+    oklch(0.55 0.15 165 / 0.2) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+.dark .step-flow-line::before {
+  background: repeating-linear-gradient(
+    to bottom,
+    oklch(0.65 0.15 165 / 0.15) 0px,
+    oklch(0.65 0.15 165 / 0.15) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+/* ===== GLASSMORPHISM CARD V2 ===== */
+.glass-card-v2 {
+  background: oklch(1 0 0 / 0.6);
+  backdrop-filter: blur(20px) saturate(1.5);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid oklch(0.55 0.15 165 / 0.12);
+  box-shadow:
+    0 4px 6px -1px oklch(0 0 0 / 0.04),
+    0 10px 20px -5px oklch(0 0 0 / 0.04),
+    inset 0 1px 0 oklch(1 0 0 / 0.6);
+}
+
+.dark .glass-card-v2 {
+  background: oklch(0.2 0.02 165 / 0.7);
+  border-color: oklch(0.65 0.15 165 / 0.12);
+  box-shadow:
+    0 4px 6px -1px oklch(0 0 0 / 0.15),
+    0 10px 20px -5px oklch(0 0 0 / 0.1),
+    inset 0 1px 0 oklch(1 0 0 / 0.05);
+}
+
+/* ===== SUBTLE BORDER GLOW ===== */
+.border-glow {
+  position: relative;
+}
+.border-glow::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    oklch(0.55 0.15 165 / 0.15),
+    oklch(0.6 0.12 145 / 0.05),
+    oklch(0.65 0.2 30 / 0.1),
+    oklch(0.55 0.15 165 / 0.05),
+    oklch(0.55 0.15 165 / 0.15)
+  );
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.border-glow:hover::after {
+  opacity: 1;
+}
+
+/* ===== HERO GRADIENT OVERLAY V2 ===== */
+.hero-vignette {
+  position: relative;
+}
+.hero-vignette::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, oklch(0.15 0.02 165 / 0.04) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dark .hero-vignette::after {
+  background: radial-gradient(ellipse at center, transparent 40%, oklch(0 0 0 / 0.2) 100%);
+}
+
+/* ===== ANIMATED UNDERLINE ===== */
+.animated-underline {
+  position: relative;
+  display: inline-block;
+}
+.animated-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, oklch(0.55 0.15 165), oklch(0.6 0.12 145));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.animated-underline:hover::after {
+  transform: scaleX(1);
+}
+
 /* ===== PRINT STYLES ===== */
 @media print {
   header, footer, .no-print, .vet-float, .hospital-stripe, .heartbeat-line::after, .morph-blob, .particles-bg::before, .particles-bg::after, .hover-lift, .animated-border::before, .animated-border::after, .stagger-in > *, .scroll-progress-bar, .tab-indicator, .section-divider, .input-glow-wrapper::before, .toast-container {

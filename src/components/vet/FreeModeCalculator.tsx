@@ -30,6 +30,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { type AnimalType } from '@/lib/medications';
 import { validateDose } from '@/lib/dose-validation';
 import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-store';
+import { useVetToast } from './VetToast';
 
 const DOSE_UNITS = [
   { value: 'mg/kg', label: 'mg/kg' },
@@ -60,6 +61,7 @@ export default function FreeModeCalculator() {
   const addHistory = useAddHistory();
   const clearHistory = useClearHistory();
   const [copied, setCopied] = useState(false);
+  const { addToast } = useVetToast();
 
   const handleCalculate = () => {
     setError(null);
@@ -231,12 +233,13 @@ export default function FreeModeCalculator() {
                       const text = `VetCalc CR\nModo Libre\nEspecie: ${animalType} | Peso: ${result.weightKg}kg\nDosis: ${dosePerKg}${doseUnit} × ${result.weightKg}kg = ${result.total} ${result.unit}\n---\nCalculado con VetCalc CR`;
                       navigator.clipboard.writeText(text);
                       setCopied(true);
+                      addToast('Resultado copiado al portapapeles', 'success');
                       setTimeout(() => setCopied(false), 2000);
                     }}
                     className="no-print h-8 w-8 text-muted-foreground hover:text-primary relative"
                     title="Copiar resultado"
                   >
-                    <Copy size={16} weight={copied ? 'fill' : 'outline'} />
+                    <Copy size={16} weight={copied ? 'Fill' : 'Outline'} />
                     {copied && (
                       <motion.span
                         initial={{ opacity: 0, y: 4 }}

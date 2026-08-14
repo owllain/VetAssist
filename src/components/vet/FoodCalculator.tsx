@@ -17,6 +17,7 @@ import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-st
 import PatientProfiles from './PatientProfiles';
 import type { Patient } from '@/lib/use-patients-store';
 import BodyConditionScore from './BodyConditionScore';
+import { useVetToast } from './VetToast';
 
 const ACTIVITY_LEVELS: { value: ActivityLevel; label: string; emoji: string; desc: string }[] = [
   { value: 'bajo', label: 'Bajo', emoji: '🛋️', desc: 'Sedentario' },
@@ -52,6 +53,7 @@ export default function FoodCalculator() {
   const [converterUnit, setConverterUnit] = useState<'kg' | 'lb' | 'oz'>('kg');
   const [bcs, setBcs] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+  const { addToast } = useVetToast();
   const [showPatientPanel, setShowPatientPanel] = useState(false);
   const history = useHistory('food');
   const addHistory = useAddHistory();
@@ -377,12 +379,13 @@ export default function FoodCalculator() {
                         const text = `VetCalc CR\nAlimentación Diaria\nEspecie: ${petType} | Peso: ${result.weightKg}kg\nGramos/día: ${result.dailyGrams.recommended}g (${result.dailyGrams.min}-${result.dailyGrams.max}g)\nOnzas/día: ${result.dailyOunces}oz\nTazas/día: ${result.dailyCups}\nComidas/día: ${result.mealsPerDay} (${result.perMealGrams.recommended}g/comida)\nActividad: ${ACTIVITY_LABEL_MAP[effectiveActivity]}\n---\nCalculado con VetCalc CR`;
                         navigator.clipboard.writeText(text);
                         setCopied(true);
+                        addToast('Resultado copiado al portapapeles', 'success');
                         setTimeout(() => setCopied(false), 2000);
                       }}
                       className="no-print h-8 w-8 text-muted-foreground hover:text-primary relative"
                       title="Copiar resultado"
                     >
-                      <Copy size={16} weight={copied ? 'fill' : 'outline'} />
+                      <Copy size={16} weight={copied ? 'Fill' : 'Outline'} />
                       {copied && (
                         <motion.span
                           initial={{ opacity: 0, y: 4 }}

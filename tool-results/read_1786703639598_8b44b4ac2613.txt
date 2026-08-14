@@ -1,0 +1,802 @@
+     1→'use client';
+     2→
+     3→import { useState, useMemo, useCallback } from 'react';
+     4→import { motion, AnimatePresence } from 'framer-motion';
+     5→import {
+     6→  HeartPulse,
+     7→  Pill,
+     8→  Stethoscope,
+     9→  Shield,
+    10→  Syringe,
+    11→  Cat,
+    12→  Scale,
+    13→  Calculator,
+    14→  AlertTriangle,
+    15→  CircleInfo,
+    16→  Warning,
+    17→  MedicalKit,
+    18→  Paw,
+    19→  ChevronRight,
+    20→  ChevronDown,
+    21→  Search,
+    22→  Printer,
+    23→  Clock,
+    24→  Star,
+    25→  ClipboardList,
+    26→  Copy,
+    27→  Trash,
+    28→  User,
+    29→} from 'reicon-react';
+    30→import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+    31→import { Button } from '@/components/ui/button';
+    32→import { Input } from '@/components/ui/input';
+    33→import { Badge } from '@/components/ui/badge';
+    34→import { Alert, AlertDescription } from '@/components/ui/alert';
+    35→import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+    36→import {
+    37→  type Medication,
+    38→  type AnimalType,
+    39→  medicationCategories,
+    40→  getMedicationsByCategory,
+    41→  medications,
+    42→} from '@/lib/medications';
+    43→import type { FavoriteMed } from '@/lib/favorites';
+    44→import { useToggleFavorite, useFavorites } from '@/lib/use-favorites-store';
+    45→import FavoritesPanel from './FavoritesPanel';
+    46→import DoseReferenceTable from './DoseReferenceTable';
+    47→import ProtocolTemplates from './ProtocolTemplates';
+    48→import DrugInteractionChecker from './DrugInteractionChecker';
+    49→import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-store';
+    50→import PatientProfiles from './PatientProfiles';
+    51→import type { Patient } from '@/lib/use-patients-store';
+    52→import { validateDose } from '@/lib/dose-validation';
+    53→import ConcentrationCalculator from './ConcentrationCalculator';
+    54→
+    55→interface CalcResult {
+    56→  medication: {
+    57→    id: string;
+    58→    name: string;
+    59→    genericName: string;
+    60→    category: string;
+    61→    brandNames: string[];
+    62→  };
+    63→  calculatedDose: {
+    64→    min: number;
+    65→    max: number;
+    66→    recommended: number;
+    67→    unit: string;
+    68→  };
+    69→  weightKg: number;
+    70→  routes: string[];
+    71→  frequency: string[];
+    72→  notes: string;
+    73→}
+    74→
+    75→
+    76→
+    77→function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
+    78→  return (
+    79→    <h3 className="text-base font-semibold mb-3 flex items-center gap-2.5">
+    80→      <span className="step-number">{num}</span>
+    81→      {children}
+    82→    </h3>
+    83→  );
+    84→}
+    85→
+    86→export default function MedicationCalculator() {
+    87→  const [animalType, setAnimalType] = useState<AnimalType>('perro');
+    88→  const [weight, setWeight] = useState('');
+    89→  const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg');
+    90→  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    91→  const [selectedMedication, setSelectedMedication] = useState<Medication | null>(null);
+    92→  const [result, setResult] = useState<CalcResult | null>(null);
+    93→  const [loading, setLoading] = useState(false);
+    94→  const [error, setError] = useState<string | null>(null);
+    95→  const [searchQuery, setSearchQuery] = useState('');
+    96→  const history = useHistory('medication');
+    97→  const addHistory = useAddHistory();
+    98→  const [showFavorites, setShowFavorites] = useState(false);
+    99→  const [showRefTable, setShowRefTable] = useState(false);
+   100→  const [showPatientPanel, setShowPatientPanel] = useState(false);
+   101→  const [copied, setCopied] = useState(false);
+   102→  const clearHistory = useClearHistory();
+   103→  const toggleFav = useToggleFavorite();
+   104→  const favorites = useFavorites();
+   105→  const favIdSet = new Set(favorites.map(f => f.medicationId));
+   106→
+   107→  const handleSelectFavorite = useCallback((fav: FavoriteMed) => {
+   108→    setSelectedCategory(fav.category);
+   109→    setSearchQuery('');
+   110→    const med = medications.find((m) => m.id === fav.medicationId);
+   111→    if (med) {
+   112→      setSelectedMedication(med);
+   113→      setResult(null);
+   114→    }
+   115→  }, []);
+   116→
+   117→
+   118→
+   119→  const filteredMedications = useMemo(() => {
+   120→    if (!selectedCategory) return [];
+   121→    let meds = getMedicationsByCategory(selectedCategory);
+   122→    if (searchQuery.trim()) {
+   123→      const q = searchQuery.toLowerCase();
+   124→      meds = meds.filter(
+   125→        (m) =>
+   126→          m.name.toLowerCase().includes(q) ||
+   127→          m.genericName.toLowerCase().includes(q) ||
+   128→          (m.brandNames && m.brandNames.some((b) => b.toLowerCase().includes(q)))
+   129→      );
+   130→    }
+   131→    return meds;
+   132→  }, [selectedCategory, searchQuery]);
+   133→
+   134→  const canCalculate = selectedMedication && weight && parseFloat(weight) > 0;
+   135→
+   136→  const handleCalculate = async () => {
+   137→    if (!selectedMedication || !weight) return;
+   138→    setLoading(true);
+   139→    setError(null);
+   140→    setResult(null);
+   141→
+   142→    try {
+   143→      const res = await fetch('/api/calculate-medication', {
+   144→        method: 'POST',
+   145→        headers: { 'Content-Type': 'application/json' },
+   146→        body: JSON.stringify({
+   147→          medicationId: selectedMedication.id,
+   148→          animalType,
+   149→          weight: parseFloat(weight),
+   150→          weightUnit,
+   151→        }),
+   152→      });
+   153→
+   154→      const data = await res.json();
+   155→
+   156→      if (!res.ok) {
+   157→        setError(data.error || 'Error al calcular la dosis');
+   158→        return;
+   159→      }
+   160→
+   161→      setResult(data);
+   162→      // Save to history
+   163→      const unit = data.calculatedDose.unit.split('/')[0];
+   164→      addHistory({
+   165→        type: 'medication',
+   166→        timestamp: Date.now(),
+   167→        summary: `${data.medication.name} | ${animalType} ${data.weightKg}kg | ${data.calculatedDose.recommended}${unit}`,
+   168→      });
+   169→      // history auto-updates via useSyncExternalStore
+   170→    } catch {
+   171→      setError('Error de conexión. Intente de nuevo.');
+   172→    } finally {
+   173→      setLoading(false);
+   174→    }
+   175→  };
+   176→
+   177→  const handleReset = () => {
+   178→    setSelectedMedication(null);
+   179→    setResult(null);
+   180→    setError(null);
+   181→  };
+   182→
+   183→  return (
+   184→    <div className="space-y-6">
+   185→      {/* Recent History */}
+   186→      {history.length > 0 && !result && (
+   187→        <div className="no-print">
+   188→          <div className="flex items-center justify-between gap-2 mb-2">
+   189→            <div className="flex items-center gap-2">
+   190→              <Clock size={16} weight="Outline" className="text-muted-foreground" />
+   191→              <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
+   192→            </div>
+   193→            <button
+   194→              onClick={clearHistory}
+   195→              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+   196→              title="Limpiar historial"
+   197→            >
+   198→              <Trash size={12} weight="Outline" />
+   199→              Limpiar
+   200→            </button>
+   201→          </div>
+   202→          <div className="flex gap-2 overflow-x-auto pb-1">
+   203→            {history.slice(0, 5).map((h, i) => (
+   204→              <div
+   205→                key={i}
+   206→                className="flex-shrink-0 bg-muted/60 rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/50"
+   207→              >
+   208→                {h.summary}
+   209→              </div>
+   210→            ))}
+   211→          </div>
+   212→        </div>
+   213→      )}
+   214→
+   215→      {/* Step 1: Animal Type */}
+   216→      <div>
+   217→        <StepHeading num={1}>Tipo de Animal</StepHeading>
+   218→        <div className="grid grid-cols-2 gap-3">
+   219→          {(['perro', 'gato'] as const).map((type) => (
+   220→            <button
+   221→              key={type}
+   222→              onClick={() => { setAnimalType(type); setSelectedMedication(null); setResult(null); }}
+   223→              className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
+   224→                animalType === type
+   225→                  ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
+   226→                  : 'border-border hover:border-primary/30'
+   227→              }`}
+   228→            >
+   229→              {type === 'perro' ? (
+   230→                <span className="text-4xl">🐕</span>
+   231→              ) : (
+   232→                <Cat size={36} weight="Outline" color={animalType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
+   233→              )}
+   234→              <span className={`font-semibold ${animalType === type ? 'text-primary' : 'text-muted-foreground'}`}>
+   235→                {type === 'perro' ? 'Perro' : 'Gato'}
+   236→              </span>
+   237→            </button>
+   238→          ))}
+   239→        </div>
+   240→      </div>
+   241→
+   242→      {/* Step 2: Weight */}
+   243→      <div>
+   244→        <StepHeading num={2}>Peso del Animal</StepHeading>
+   245→        <div className="flex gap-3 items-center">
+   246→          <Input
+   247→            type="number"
+   248→            placeholder="Ej: 5"
+   249→            value={weight}
+   250→            onChange={(e) => { setWeight(e.target.value); setResult(null); }}
+   251→            min="0.1"
+   252→            step="0.1"
+   253→            className="flex-1 h-12 text-lg"
+   254→          />
+   255→          <div className="flex rounded-lg border border-border overflow-hidden">
+   256→            {(['kg', 'lb'] as const).map((u) => (
+   257→              <button
+   258→                key={u}
+   259→                onClick={() => setWeightUnit(u)}
+   260→                className={`px-4 py-3 text-sm font-semibold transition-colors ${
+   261→                  weightUnit === u ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-muted'
+   262→                }`}
+   263→              >
+   264→                {u}
+   265→              </button>
+   266→            ))}
+   267→          </div>
+   268→          <Button
+   269→            variant="outline"
+   270→            size="icon"
+   271→            className={`h-12 w-12 flex-shrink-0 transition-colors ${showPatientPanel ? 'bg-primary/10 border-primary/30' : ''}`}
+   272→            onClick={() => setShowPatientPanel(!showPatientPanel)}
+   273→            title="Perfiles de pacientes"
+   274→          >
+   275→            <User size={18} weight={showPatientPanel ? 'Fill' : 'Outline'} className={showPatientPanel ? 'text-primary' : ''} />
+   276→          </Button>
+   277→        </div>
+   278→      </div>
+   279→
+   280→      {/* Patient Profiles (collapsible) */}
+   281→      <Collapsible open={showPatientPanel} onOpenChange={setShowPatientPanel}>
+   282→        <CollapsibleContent>
+   283→          <motion.div
+   284→            initial={{ opacity: 0, height: 0 }}
+   285→            animate={{ opacity: 1, height: 'auto' }}
+   286→            exit={{ opacity: 0, height: 0 }}
+   287→            transition={{ duration: 0.2 }}
+   288→          >
+   289→            <Card className="glass-card">
+   290→              <CardContent className="p-4">
+   291→                <PatientProfiles
+   292→                  species={animalType}
+   293→                  onSelectPatient={(patient: Patient) => {
+   294→                    setWeight(String(patient.weight));
+   295→                    setWeightUnit(patient.weightUnit);
+   296→                    setAnimalType(patient.species);
+   297→                    setResult(null);
+   298→                  }}
+   299→                  currentWeight={weight}
+   300→                />
+   301→              </CardContent>
+   302→            </Card>
+   303→          </motion.div>
+   304→        </CollapsibleContent>
+   305→      </Collapsible>
+   306→
+   307→      {/* Protocol Quick Templates */}
+   308→      {!selectedCategory && !result && (
+   309→        <div>
+   310→          <ProtocolTemplates
+   311→            animalType={animalType}
+   312→            onSelectProtocol={(protocol) => {
+   313→              if (protocol.drugs.length > 0) {
+   314→                const firstDrug = medications.find((m) => m.id === protocol.drugs[0].medicationId);
+   315→                if (firstDrug) {
+   316→                  setSelectedCategory(firstDrug.categoryId);
+   317→                  setSelectedMedication(firstDrug);
+   318→                }
+   319→              }
+   320→            }}
+   321→          />
+   322→        </div>
+   323→      )}
+   324→
+   325→      {/* Step 3: Category Selection */}
+   326→      <div>
+   327→        <div className="flex items-center justify-between gap-3 mb-3">
+   328→          <StepHeading num={3}>Categoría de Medicamento</StepHeading>
+   329→          <Button
+   330→            variant="outline"
+   331→            size="sm"
+   332→            onClick={() => setShowFavorites(true)}
+   333→            className="flex-shrink-0 gap-1.5 text-xs no-print"
+   334→          >
+   335→            <Star size={14} weight="Fill" className="text-amber-500" />
+   336→            Favoritos
+   337→          </Button>
+   338→        </div>
+   339→        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 no-print">
+   340→          {medicationCategories.map((cat) => (
+   341→            <button
+   342→              key={cat.id}
+   343→              onClick={() => {
+   344→                setSelectedCategory(cat.id === selectedCategory ? null : cat.id);
+   345→                setSelectedMedication(null);
+   346→                setResult(null);
+   347→                setSearchQuery('');
+   348→              }}
+   349→              className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium border transition-all duration-200 whitespace-nowrap ${
+   350→                selectedCategory === cat.id
+   351→                  ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
+   352→                  : 'bg-card border-border hover:border-primary/30 hover:bg-primary/5'
+   353→              }`}
+   354→            >
+   355→              <span>{cat.icon}</span>
+   356→              <span>{cat.name}</span>
+   357→            </button>
+   358→          ))}
+   359→        </div>
+   360→      </div>
+   361→
+   362→      {/* Step 4: Medication List with Search */}
+   363→      <AnimatePresence mode="wait">
+   364→        {selectedCategory && filteredMedications.length > 0 && (
+   365→          <motion.div
+   366→            key={selectedCategory}
+   367→            initial={{ opacity: 0, y: 10 }}
+   368→            animate={{ opacity: 1, y: 0 }}
+   369→            exit={{ opacity: 0, y: -10 }}
+   370→            transition={{ duration: 0.2 }}
+   371→          >
+   372→            <div className="flex items-center justify-between gap-3 mb-3">
+   373→              <StepHeading num={4}>Seleccione un Medicamento</StepHeading>
+   374→              <div className="relative w-40 flex-shrink-0 no-print">
+   375→                <Search size={14} weight="Outline" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+   376→                <Input
+   377→                  type="text"
+   378→                  placeholder="Buscar..."
+   379→                  value={searchQuery}
+   380→                  onChange={(e) => setSearchQuery(e.target.value)}
+   381→                  className="h-8 text-sm pl-8"
+   382→                />
+   383→              </div>
+   384→            </div>
+   385→
+   386→            {/* Dose Reference Table - collapsible */}
+   387→            <Collapsible open={showRefTable} onOpenChange={setShowRefTable} className="mb-3 no-print">
+   388→              <CollapsibleTrigger asChild>
+   389→                <Button
+   390→                  variant="ghost"
+   391→                  size="sm"
+   392→                  className="w-full justify-between gap-2 text-xs text-muted-foreground hover:text-foreground h-8 px-2"
+   393→                >
+   394→                  <span className="flex items-center gap-1.5">
+   395→                    <ClipboardList size={14} weight="Outline" />
+   396→                    Ver tabla de referencia
+   397→                  </span>
+   398→                  <motion.span
+   399→                    animate={{ rotate: showRefTable ? 180 : 0 }}
+   400→                    transition={{ duration: 0.2 }}
+   401→                  >
+   402→                    <ChevronDown size={14} weight="Outline" />
+   403→                  </motion.span>
+   404→                </Button>
+   405→              </CollapsibleTrigger>
+   406→              <CollapsibleContent>
+   407→                <motion.div
+   408→                  initial={{ opacity: 0, height: 0 }}
+   409→                  animate={{ opacity: 1, height: 'auto' }}
+   410→                  exit={{ opacity: 0, height: 0 }}
+   411→                  transition={{ duration: 0.2 }}
+   412→                >
+   413→                  <DoseReferenceTable categoryId={selectedCategory} animalType={animalType} />
+   414→                </motion.div>
+   415→              </CollapsibleContent>
+   416→            </Collapsible>
+   417→
+   418→            <div className="grid gap-2.5 max-h-[400px] overflow-y-auto pr-1">
+   419→              {filteredMedications.map((med) => {
+   420→                const isAvailable = med.species.includes(animalType);
+   421→                const isSelected = selectedMedication?.id === med.id;
+   422→                const medIsFav = favIdSet.has(med.id);
+   423→
+   424→                return (
+   425→                  <Card
+   426→                    key={med.id}
+   427→                    className={`med-card cursor-pointer ${isSelected ? 'selected' : ''} ${
+   428→                      !isAvailable ? 'opacity-40 pointer-events-none' : ''
+   429→                    }`}
+   430→                    onClick={() => {
+   431→                      if (!isAvailable) return;
+   432→                      setSelectedMedication(isSelected ? null : med);
+   433→                      setResult(null);
+   434→                    }}
+   435→                  >
+   436→                    <CardContent className="p-3.5">
+   437→                      <div className="flex items-start justify-between gap-2">
+   438→                        <div className="flex-1 min-w-0">
+   439→                          <div className="flex items-center gap-2 flex-wrap">
+   440→                            <h4 className="font-bold text-sm">{med.name}</h4>
+   441→                            {med.species.map((s) => (
+   442→                              <Badge
+   443→                                key={s}
+   444→                                variant={s === animalType ? 'default' : 'secondary'}
+   445→                                className="text-[10px] px-1.5 py-0"
+   446→                              >
+   447→                                {s === 'perro' ? '🐕' : '🐈'} {s}
+   448→                              </Badge>
+   449→                            ))}
+   450→                          </div>
+   451→                          <p className="text-xs text-muted-foreground mt-0.5">{med.genericName}</p>
+   452→                          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+   453→                            <Badge variant="outline" className="text-[10px] font-semibold text-primary border-primary/30">
+   454→                              {med.doseMin === med.doseMax
+   455→                                ? `${med.doseMin} ${med.unit}`
+   456→                                : `${med.doseMin}–${med.doseMax} ${med.unit}`}
+   457→                            </Badge>
+   458→                            {med.route.map((r) => (
+   459→                              <Badge key={r} variant="secondary" className="text-[10px] px-1.5 py-0">
+   460→                                {r}
+   461→                              </Badge>
+   462→                            ))}
+   463→                          </div>
+   464→                        </div>
+   465→                        <div className="flex items-center gap-1 flex-shrink-0 mt-1">
+   466→                          <button
+   467→                            onClick={(e) => {
+   468→                              e.stopPropagation();
+   469→                              toggleFav(med);
+   470→                            }}
+   471→                            className={`p-1 rounded-md transition-all hover:bg-amber-100 dark:hover:bg-amber-900/30 ${
+   472→                              medIsFav ? 'text-amber-500' : 'text-muted-foreground/30 hover:text-amber-400'
+   473→                            }`}
+   474→                            title={medIsFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+   475→                          >
+   476→                            <Star size={16} weight={medIsFav ? 'fill' : 'outline'} />
+   477→                          </button>
+   478→                          <ChevronRight
+   479→                            size={18} weight="Outline"
+   480→                            className={`transition-all ${isSelected ? 'text-primary rotate-90' : 'text-muted-foreground/40'}`}
+   481→                          />
+   482→                        </div>
+   483→                      </div>
+   484→                    </CardContent>
+   485→                  </Card>
+   486→                );
+   487→              })}
+   488→            </div>
+   489→          </motion.div>
+   490→        )}
+   491→        {selectedCategory && filteredMedications.length === 0 && (
+   492→          <motion.div
+   493→            key="empty"
+   494→            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+   495→            className="text-center py-8 text-muted-foreground"
+   496→          >
+   497→            <Search size={32} weight="Outline" className="mx-auto mb-2 opacity-30" />
+   498→            <p className="text-sm">No se encontraron medicamentos</p>
+   499→          </motion.div>
+   500→        )}
+   501→      </AnimatePresence>
+   502→
+   503→      {/* Calculate Button */}
+   504→      <AnimatePresence>
+   505→        {selectedMedication && (
+   506→          <motion.div
+   507→            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+   508→            className="flex flex-col items-center gap-3 no-print"
+   509→          >
+   510→            <Button
+   511→              size="lg"
+   512→              onClick={handleCalculate}
+   513→              disabled={!canCalculate || loading}
+   514→              className="vet-pulse text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg shadow-primary/20"
+   515→            >
+   516→              {loading ? (
+   517→                <span className="flex items-center gap-2">
+   518→                  <span className="animate-spin">⚙️</span>
+   519→                  Calculando...
+   520→                </span>
+   521→              ) : (
+   522→                <span className="flex items-center gap-2">
+   523→                  <Calculator size={22} weight="Outline" />
+   524→                  CALCULAR DOSIS
+   525→                </span>
+   526→              )}
+   527→            </Button>
+   528→            <p className="text-sm text-muted-foreground">
+   529→              {selectedMedication.name} — {selectedMedication.genericName}
+   530→            </p>
+   531→          </motion.div>
+   532→        )}
+   533→      </AnimatePresence>
+   534→
+   535→      {/* Drug Interaction Checker */}
+   536→      {selectedMedication && !result && (
+   537→        <DrugInteractionChecker selectedMedicationId={selectedMedication.id} />
+   538→      )}
+   539→
+   540→      {/* Error */}
+   541→      <AnimatePresence>
+   542→        {error && (
+   543→          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+   544→            <Alert variant="destructive">
+   545→              <AlertTriangle size={18} weight="Outline" />
+   546→              <AlertDescription>{error}</AlertDescription>
+   547→            </Alert>
+   548→          </motion.div>
+   549→        )}
+   550→      </AnimatePresence>
+   551→
+   552→      {/* Result */}
+   553→      <AnimatePresence>
+   554→        {result && (
+   555→          <motion.div
+   556→            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+   557→            animate={{ opacity: 1, y: 0, scale: 1 }}
+   558→            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+   559→            transition={{ duration: 0.3 }}
+   560→          >
+   561→            <Card className="result-card shadow-lg card-shine">
+   562→              <CardHeader className="pb-3">
+   563→                <div className="flex items-center justify-between">
+   564→                  <CardTitle className="flex items-center gap-2 text-primary">
+   565→                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+   566→                      <Stethoscope size={18} weight="Outline" />
+   567→                    </div>
+   568→                    Resultado del Cálculo
+   569→                  </CardTitle>
+   570→                  <div className="flex items-center gap-1">
+   571→                    {result.medication.id && (
+   572→                      <Button
+   573→                        variant="ghost"
+   574→                        size="icon"
+   575→                        onClick={() => {
+   576→                          const med = medications.find((m) => m.id === result.medication.id);
+   577→                          if (med) toggleFav(med);
+   578→                        }}
+   579→                        className={`no-print h-8 w-8 ${
+   580→                          favIdSet.has(result.medication.id)
+   581→                            ? 'text-amber-500'
+   582→                            : 'text-muted-foreground/40 hover:text-amber-400'
+   583→                        }`}
+   584→                        title={
+   585→                          favIdSet.has(result.medication.id)
+   586→                            ? 'Quitar de favoritos'
+   587→                            : 'Agregar a favoritos'
+   588→                        }
+   589→                      >
+   590→                        <Star
+   591→                          size={16}
+   592→                          weight={favIdSet.has(result.medication.id) ? 'fill' : 'outline'}
+   593→                        />
+   594→                      </Button>
+   595→                    )}
+   596→                    <Button
+   597→                      variant="ghost"
+   598→                      size="icon"
+   599→                      onClick={() => {
+   600→                        const unit = result.calculatedDose.unit.split('/')[0];
+   601→                        const text = `VetCalc CR\nMedicamento: ${result.medication.name}\nEspecie: ${animalType} | Peso: ${result.weightKg}kg\nDosis recomendada: ${result.calculatedDose.recommended} ${unit}\nRango: ${result.calculatedDose.min}-${result.calculatedDose.max} ${unit}\nVía: ${result.routes.join(', ')}\nFrecuencia: ${result.frequency.join(', ')}\n---\nCalculado con VetCalc CR`;
+   602→                        navigator.clipboard.writeText(text);
+   603→                        setCopied(true);
+   604→                        setTimeout(() => setCopied(false), 2000);
+   605→                      }}
+   606→                      className="no-print h-8 w-8 text-muted-foreground hover:text-primary relative"
+   607→                      title="Copiar resultado"
+   608→                    >
+   609→                      <Copy size={16} weight={copied ? 'fill' : 'outline'} />
+   610→                      {copied && (
+   611→                        <motion.span
+   612→                          initial={{ opacity: 0, y: 4 }}
+   613→                          animate={{ opacity: 1, y: 0 }}
+   614→                          exit={{ opacity: 0 }}
+   615→                          className="absolute -top-7 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-semibold px-2 py-0.5 rounded-md whitespace-nowrap"
+   616→                        >
+   617→                          Copiado!
+   618→                        </motion.span>
+   619→                      )}
+   620→                    </Button>
+   621→                    <Button
+   622→                      variant="ghost"
+   623→                      size="icon"
+   624→                      onClick={() => window.print()}
+   625→                      className="no-print h-8 w-8 text-muted-foreground hover:text-primary"
+   626→                      title="Imprimir"
+   627→                    >
+   628→                      <Printer size={16} weight="Outline" />
+   629→                    </Button>
+   630→                  </div>
+   631→                </div>
+   632→              </CardHeader>
+   633→              <CardContent className="space-y-4">
+   634→                {/* Medication Info */}
+   635→                <div className="dose-highlight p-4">
+   636→                  <div className="flex items-center gap-3">
+   637→                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+   638→                      <Pill size={24} color="oklch(0.55 0.15 165)" weight="Outline" />
+   639→                    </div>
+   640→                    <div className="flex-1 min-w-0">
+   641→                      <h4 className="font-bold text-lg leading-tight">{result.medication.name}</h4>
+   642→                      <p className="text-sm text-muted-foreground">{result.medication.genericName}</p>
+   643→                    </div>
+   644→                  </div>
+   645→                </div>
+   646→
+   647→                {/* Concentration Calculator */}
+   648→                <ConcentrationCalculator result={result} />
+   649→
+   650→                {/* Dose Results */}
+   651→                <div className="grid grid-cols-3 gap-3">
+   652→                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10 transition-transform duration-200 hover:scale-105 hover:shadow-md">
+   653→                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Mínima</p>
+   654→                    <p className="text-2xl font-extrabold text-primary mt-1 number-ticker">
+   655→                      {result.calculatedDose.min}
+   656→                    </p>
+   657→                    <p className="text-xs text-muted-foreground font-medium">
+   658→                      {result.calculatedDose.unit.split('/')[0]}
+   659→                    </p>
+   660→                  </div>
+   661→                  <div className="bg-accent/10 rounded-xl p-3 text-center border border-accent/20 transition-transform duration-200 hover:scale-105 hover:shadow-md ring-2 ring-accent/15">
+   662→                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Recomendada</p>
+   663→                    <p className="text-2xl font-extrabold text-accent mt-1 number-ticker">
+   664→                      {result.calculatedDose.recommended}
+   665→                    </p>
+   666→                    <p className="text-xs text-muted-foreground font-medium">
+   667→                      {result.calculatedDose.unit.split('/')[0]}
+   668→                    </p>
+   669→                  </div>
+   670→                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10 transition-transform duration-200 hover:scale-105 hover:shadow-md">
+   671→                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Máxima</p>
+   672→                    <p className="text-2xl font-extrabold text-primary mt-1 number-ticker">
+   673→                      {result.calculatedDose.max}
+   674→                    </p>
+   675→                    <p className="text-xs text-muted-foreground font-medium">
+   676→                      {result.calculatedDose.unit.split('/')[0]}
+   677→                    </p>
+   678→                  </div>
+   679→                </div>
+   680→
+   681→                {/* Details */}
+   682→                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+   683→                  <div className="bg-muted/50 rounded-lg p-3">
+   684→                    <div className="flex items-center gap-1.5 mb-1.5">
+   685→                      <Syringe size={14} color="oklch(0.55 0.15 165)" weight="Outline" />
+   686→                      <p className="font-semibold text-xs uppercase tracking-wider">Vía de Administración</p>
+   687→                    </div>
+   688→                    <div className="flex gap-1 flex-wrap">
+   689→                      {result.routes.map((r) => (
+   690→                        <Badge key={r} variant="outline" className="text-xs font-medium">
+   691→                          {r}
+   692→                        </Badge>
+   693→                      ))}
+   694→                    </div>
+   695→                  </div>
+   696→                  <div className="bg-muted/50 rounded-lg p-3">
+   697→                    <div className="flex items-center gap-1.5 mb-1.5">
+   698→                      <HeartPulse size={14} color="oklch(0.55 0.15 165)" weight="Outline" />
+   699→                      <p className="font-semibold text-xs uppercase tracking-wider">Frecuencia</p>
+   700→                    </div>
+   701→                    {result.frequency.map((f) => (
+   702→                      <p key={f} className="text-muted-foreground text-xs">{f}</p>
+   703→                    ))}
+   704→                  </div>
+   705→                </div>
+   706→
+   707→                {/* Weight note */}
+   708→                <p className="text-xs text-muted-foreground bg-muted/30 rounded-md px-3 py-2 flex items-center gap-1.5">
+   709→                  <CircleInfo size={13} weight="Outline" />
+   710→                  <span>Peso utilizado: <strong>{result.weightKg} kg</strong></span>
+   711→                </p>
+   712→
+   713→                {/* Dose Range Validation */}
+   714→                {(() => {
+   715→                  const validation = validateDose({ weightKg: result.weightKg, animalType });
+   716→                  const IconComponent = validation.icon === 'Warning' ? Warning : validation.icon === 'AlertTriangle' ? AlertTriangle : CircleInfo;
+   717→                  return (
+   718→                    <Alert className={validation.colorClass}>
+   719→                      <IconComponent
+   720→                        size={18}
+   721→                        weight="Outline"
+   722→                        className={
+   723→                          validation.status === 'warning'
+   724→                            ? 'text-red-600 dark:text-red-400'
+   725→                            : validation.status === 'caution'
+   726→                              ? 'text-amber-600 dark:text-amber-400'
+   727→                              : 'text-emerald-600 dark:text-emerald-400'
+   728→                        }
+   729→                      />
+   730→                      <AlertDescription
+   731→                        className={`text-sm leading-relaxed ${
+   732→                          validation.status === 'warning'
+   733→                            ? 'text-red-800 dark:text-red-200'
+   734→                            : validation.status === 'caution'
+   735→                              ? 'text-amber-800 dark:text-amber-200'
+   736→                              : 'text-emerald-800 dark:text-emerald-200'
+   737→                        }`}
+   738→                      >
+   739→                        {validation.message}
+   740→                        {validation.status !== 'normal' && (
+   741→                          <span className="block mt-1.5 text-xs opacity-75 font-medium">
+   742→                            Ajuste la dosis según criterio clínico profesional
+   743→                          </span>
+   744→                        )}
+   745→                      </AlertDescription>
+   746→                    </Alert>
+   747→                  );
+   748→                })()}
+   749→
+   750→                {/* Notes Warning */}
+   751→                {result.notes && (
+   752→                  <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-950/30">
+   753→                    <AlertTriangle size={18} weight="Outline" className="text-amber-600" />
+   754→                    <AlertDescription className="text-amber-800 dark:text-amber-200 text-sm leading-relaxed">
+   755→                      {result.notes}
+   756→                    </AlertDescription>
+   757→                  </Alert>
+   758→                )}
+   759→
+   760→                {/* Brand Names */}
+   761→                {result.medication.brandNames && result.medication.brandNames.length > 0 && (
+   762→                  <div className="bg-muted/30 rounded-lg p-3">
+   763→                    <div className="flex items-center gap-1.5 mb-1.5">
+   764→                      <Shield size={14} color="oklch(0.55 0.15 165)" weight="Outline" />
+   765→                      <p className="text-xs font-semibold uppercase tracking-wider">Nombres Comerciales en CR</p>
+   766→                    </div>
+   767→                    <div className="flex gap-1 flex-wrap">
+   768→                      {result.medication.brandNames.map((b) => (
+   769→                        <Badge key={b} variant="secondary" className="text-xs font-medium">
+   770→                          {b}
+   771→                        </Badge>
+   772→                      ))}
+   773→                    </div>
+   774→                  </div>
+   775→                )}
+   776→
+   777→                <div className="flex gap-2 no-print">
+   778→                  <Button variant="outline" onClick={handleReset} className="flex-1">
+   779→                    Calcular Otro Medicamento
+   780→                  </Button>
+   781→                  <Button variant="outline" onClick={() => window.print()} className="px-4">
+   782→                    <Printer size={16} weight="Outline" className="mr-1.5" />
+   783→                    Imprimir
+   784→                  </Button>
+   785→                </div>
+   786→              </CardContent>
+   787→            </Card>
+   788→          </motion.div>
+   789→        )}
+   790→      </AnimatePresence>
+   791→
+   792→      {/* Favorites Panel */}
+   793→      <FavoritesPanel
+   794→        onSelectMedication={handleSelectFavorite}
+   795→        currentMedicationId={selectedMedication?.id}
+   796→        open={showFavorites}
+   797→        onOpenChange={setShowFavorites}
+   798→      />
+   799→    </div>
+   800→  );
+   801→}
+   802→

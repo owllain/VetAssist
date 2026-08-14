@@ -50,6 +50,8 @@ import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-st
 import PatientProfiles from './PatientProfiles';
 import type { Patient } from '@/lib/use-patients-store';
 import { validateDose } from '@/lib/dose-validation';
+import ConcentrationCalculator from './ConcentrationCalculator';
+import { useVetToast } from './VetToast';
 
 interface CalcResult {
   medication: {
@@ -102,6 +104,7 @@ export default function MedicationCalculator() {
   const toggleFav = useToggleFavorite();
   const favorites = useFavorites();
   const favIdSet = new Set(favorites.map(f => f.medicationId));
+  const { addToast } = useVetToast();
 
   const handleSelectFavorite = useCallback((fav: FavoriteMed) => {
     setSelectedCategory(fav.category);
@@ -600,12 +603,13 @@ export default function MedicationCalculator() {
                         const text = `VetCalc CR\nMedicamento: ${result.medication.name}\nEspecie: ${animalType} | Peso: ${result.weightKg}kg\nDosis recomendada: ${result.calculatedDose.recommended} ${unit}\nRango: ${result.calculatedDose.min}-${result.calculatedDose.max} ${unit}\nVía: ${result.routes.join(', ')}\nFrecuencia: ${result.frequency.join(', ')}\n---\nCalculado con VetCalc CR`;
                         navigator.clipboard.writeText(text);
                         setCopied(true);
+                        addToast('Resultado copiado al portapapeles', 'success');
                         setTimeout(() => setCopied(false), 2000);
                       }}
                       className="no-print h-8 w-8 text-muted-foreground hover:text-primary relative"
                       title="Copiar resultado"
                     >
-                      <Copy size={16} weight={copied ? 'fill' : 'outline'} />
+                      <Copy size={16} weight={copied ? 'Fill' : 'Outline'} />
                       {copied && (
                         <motion.span
                           initial={{ opacity: 0, y: 4 }}
@@ -642,6 +646,9 @@ export default function MedicationCalculator() {
                     </div>
                   </div>
                 </div>
+
+                {/* Concentration Calculator */}
+                <ConcentrationCalculator result={result} />
 
                 {/* Dose Results */}
                 <div className="grid grid-cols-3 gap-3">
