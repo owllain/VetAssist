@@ -13,6 +13,7 @@ import {
   Calculator,
   AlertTriangle,
   CircleInfo,
+  Warning,
   MedicalKit,
   Paw,
   ChevronRight,
@@ -24,6 +25,7 @@ import {
   ClipboardList,
   Copy,
   Trash,
+  User,
 } from 'reicon-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,6 +47,9 @@ import DoseReferenceTable from './DoseReferenceTable';
 import ProtocolTemplates from './ProtocolTemplates';
 import DrugInteractionChecker from './DrugInteractionChecker';
 import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-store';
+import PatientProfiles from './PatientProfiles';
+import type { Patient } from '@/lib/use-patients-store';
+import { validateDose } from '@/lib/dose-validation';
 
 interface CalcResult {
   medication: {
@@ -91,6 +96,7 @@ export default function MedicationCalculator() {
   const addHistory = useAddHistory();
   const [showFavorites, setShowFavorites] = useState(false);
   const [showRefTable, setShowRefTable] = useState(false);
+  const [showPatientPanel, setShowPatientPanel] = useState(false);
   const [copied, setCopied] = useState(false);
   const clearHistory = useClearHistory();
   const toggleFav = useToggleFavorite();
@@ -258,8 +264,44 @@ export default function MedicationCalculator() {
               </button>
             ))}
           </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className={`h-12 w-12 flex-shrink-0 transition-colors ${showPatientPanel ? 'bg-primary/10 border-primary/30' : ''}`}
+            onClick={() => setShowPatientPanel(!showPatientPanel)}
+            title="Perfiles de pacientes"
+          >
+            <User size={18} weight={showPatientPanel ? 'Fill' : 'Outline'} className={showPatientPanel ? 'text-primary' : ''} />
+          </Button>
         </div>
       </div>
+
+      {/* Patient Profiles (collapsible) */}
+      <Collapsible open={showPatientPanel} onOpenChange={setShowPatientPanel}>
+        <CollapsibleContent>
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card className="glass-card">
+              <CardContent className="p-4">
+                <PatientProfiles
+                  species={animalType}
+                  onSelectPatient={(patient: Patient) => {
+                    setWeight(String(patient.weight));
+                    setWeightUnit(patient.weightUnit);
+                    setAnimalType(patient.species);
+                    setResult(null);
+                  }}
+                  currentWeight={weight}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Protocol Quick Templates */}
       {!selectedCategory && !result && (
@@ -515,7 +557,7 @@ export default function MedicationCalculator() {
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.3 }}
           >
-            <Card className="result-card shadow-lg">
+            <Card className="result-card shadow-lg card-shine">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-primary">
@@ -603,27 +645,27 @@ export default function MedicationCalculator() {
 
                 {/* Dose Results */}
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10">
+                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10 transition-transform duration-200 hover:scale-105 hover:shadow-md">
                     <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Mínima</p>
-                    <p className="text-2xl font-extrabold text-primary mt-1">
+                    <p className="text-2xl font-extrabold text-primary mt-1 number-ticker">
                       {result.calculatedDose.min}
                     </p>
                     <p className="text-xs text-muted-foreground font-medium">
                       {result.calculatedDose.unit.split('/')[0]}
                     </p>
                   </div>
-                  <div className="bg-accent/10 rounded-xl p-3 text-center border border-accent/20">
+                  <div className="bg-accent/10 rounded-xl p-3 text-center border border-accent/20 transition-transform duration-200 hover:scale-105 hover:shadow-md ring-2 ring-accent/15">
                     <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Recomendada</p>
-                    <p className="text-2xl font-extrabold text-accent mt-1">
+                    <p className="text-2xl font-extrabold text-accent mt-1 number-ticker">
                       {result.calculatedDose.recommended}
                     </p>
                     <p className="text-xs text-muted-foreground font-medium">
                       {result.calculatedDose.unit.split('/')[0]}
                     </p>
                   </div>
-                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10">
+                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10 transition-transform duration-200 hover:scale-105 hover:shadow-md">
                     <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Máxima</p>
-                    <p className="text-2xl font-extrabold text-primary mt-1">
+                    <p className="text-2xl font-extrabold text-primary mt-1 number-ticker">
                       {result.calculatedDose.max}
                     </p>
                     <p className="text-xs text-muted-foreground font-medium">
@@ -663,6 +705,43 @@ export default function MedicationCalculator() {
                   <CircleInfo size={13} weight="Outline" />
                   <span>Peso utilizado: <strong>{result.weightKg} kg</strong></span>
                 </p>
+
+                {/* Dose Range Validation */}
+                {(() => {
+                  const validation = validateDose({ weightKg: result.weightKg, animalType });
+                  const IconComponent = validation.icon === 'Warning' ? Warning : validation.icon === 'AlertTriangle' ? AlertTriangle : CircleInfo;
+                  return (
+                    <Alert className={validation.colorClass}>
+                      <IconComponent
+                        size={18}
+                        weight="Outline"
+                        className={
+                          validation.status === 'warning'
+                            ? 'text-red-600 dark:text-red-400'
+                            : validation.status === 'caution'
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : 'text-emerald-600 dark:text-emerald-400'
+                        }
+                      />
+                      <AlertDescription
+                        className={`text-sm leading-relaxed ${
+                          validation.status === 'warning'
+                            ? 'text-red-800 dark:text-red-200'
+                            : validation.status === 'caution'
+                              ? 'text-amber-800 dark:text-amber-200'
+                              : 'text-emerald-800 dark:text-emerald-200'
+                        }`}
+                      >
+                        {validation.message}
+                        {validation.status !== 'normal' && (
+                          <span className="block mt-1.5 text-xs opacity-75 font-medium">
+                            Ajuste la dosis según criterio clínico profesional
+                          </span>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  );
+                })()}
 
                 {/* Notes Warning */}
                 {result.notes && (

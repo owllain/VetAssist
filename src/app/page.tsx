@@ -135,6 +135,25 @@ export default function Home() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { theme, setTheme } = useTheme();
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
+
+  // Update tab indicator position
+  useEffect(() => {
+    const idx = TABS.findIndex(t => t.id === activeTab);
+    const btn = tabRefs.current[idx];
+    if (btn) {
+      const parent = btn.parentElement;
+      if (parent) {
+        const parentRect = parent.getBoundingClientRect();
+        const btnRect = btn.getBoundingClientRect();
+        setIndicatorStyle({
+          left: btnRect.left - parentRect.left,
+          width: btnRect.width,
+        });
+      }
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -201,16 +220,22 @@ export default function Home() {
             </div>
           </button>
 
-          {/* Desktop nav tabs */}
-          <div className="hidden md:flex gap-1 bg-muted/50 rounded-xl p-1 border border-border/30">
-            {TABS.map((tab) => (
+          {/* Desktop nav tabs with sliding indicator */}
+          <div className="hidden md:flex gap-1 bg-muted/50 rounded-xl p-1 border border-border/30 tab-indicator-track relative">
+            <motion.div
+              className="tab-indicator"
+              animate={indicatorStyle}
+              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+            />
+            {TABS.map((tab, idx) => (
               <button
                 key={tab.id}
+                ref={(el) => { tabRefs.current[idx] = el; }}
                 onClick={() => handleTabChange(tab.id)}
-                className={`relative flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`relative z-10 flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
                   activeTab === tab.id
-                    ? 'text-primary-foreground bg-primary shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-card/60'
+                    ? 'text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {tab.icon}
@@ -365,8 +390,11 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Section divider */}
+        <div className="section-divider no-print" aria-hidden="true" />
+
         {/* ========== QUICK INFO BAR ========== */}
-        <div className="quick-info-bar no-print">
+        <div className="quick-info-bar no-print vet-texture">
           <div className="container mx-auto px-4 py-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <StatCard
@@ -383,7 +411,7 @@ export default function Home() {
               />
               <StatCard
                 icon={<Shield size={20} color="oklch(0.7 0.15 75)" weight="Outline" />}
-                value={7} suffix="" label="Interacciones registradas"
+                value={21} suffix="" label="Interacciones registradas"
               />
             </div>
           </div>
@@ -523,7 +551,7 @@ export default function Home() {
                   {/* Feature cards */}
                   <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-in">
                     <div style={{ '--i': 0 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative">
+                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-primary to-primary/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-primary/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -538,7 +566,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 1 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative">
+                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-chart-3 to-chart-3/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-chart-3/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -553,7 +581,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 2 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative">
+                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-chart-2 to-chart-2/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-chart-2/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -568,7 +596,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 3 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative">
+                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-amber-400 to-amber-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-amber-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -583,7 +611,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 4 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative">
+                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-red-400 to-red-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-red-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -598,7 +626,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 5 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative">
+                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-emerald-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -613,7 +641,7 @@ export default function Home() {
                     </Card>
                     </div>
                     <div style={{ '--i': 6 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative">
+                    <Card className="vet-card-hover-enhanced hover-lift overflow-hidden glow-ring relative card-shine">
                       <div className="h-1.5 bg-gradient-to-r from-violet-400 to-violet-400/40" />
                       <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-violet-400/5 to-transparent pointer-events-none" aria-hidden="true" />
                       <CardContent className="p-5 text-center relative z-10">
@@ -684,10 +712,13 @@ export default function Home() {
         )}
       </AnimatePresence>
 
+      {/* Section divider before footer */}
+      <div className="section-divider no-print" aria-hidden="true" />
+
       {/* ========== FOOTER ========== */}
       <footer className="footer-wave bg-[#115459] text-white pt-12 pb-8 mt-auto no-print">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 relative z-10">
             <div>
               <div className="flex items-center gap-2.5 mb-3">
                 <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center">

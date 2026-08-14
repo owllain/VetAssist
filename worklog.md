@@ -624,3 +624,161 @@ keyboard shortcuts, data export/import, and a rich hospital-themed design with e
 5. **Protocol customization** — Allow editing drug doses within protocol templates
 6. **Add more drug interactions** — Cover all 27 medications (currently some gaps remain)
 7. **Dose range validation** — Visual warnings when calculated dose is outside normal range
+
+---
+Task ID: 5-a
+Agent: Subagent
+Task: Create Patient Profiles system
+
+Work Log:
+- Created /src/lib/use-patients-store.ts with useSyncExternalStore-based CRUD
+- Created /src/components/vet/PatientProfiles.tsx compact widget
+- Integrated into MedicationCalculator.tsx (collapsible after Step 2)
+- Integrated into FoodCalculator.tsx (collapsible after weight input)
+- Lint passes clean
+
+Stage Summary:
+- Patient Profiles: save up to 20 patients (name, species, weight, notes)
+- Quick-select patient auto-fills calculator fields
+- Compact collapsible UI integrated into both medication and food calculators
+
+---
+Task ID: 5-b
+Agent: Subagent
+Task: Add dose range validation with visual warnings
+
+Work Log:
+- Created /src/lib/dose-validation.ts with weight range validation logic
+- Modified MedicationCalculator.tsx: added validation alert after weight note, before notes warning
+- Modified FreeModeCalculator.tsx: added validation alert after weight note, before reference warning
+- Imported Warning icon from reicon-react for severe warnings
+- Lint passes clean
+
+Stage Summary:
+- Weight range validation for dogs (1-80kg normal) and cats (2-10kg normal)
+- Three severity levels: normal (emerald/green), caution (amber), warning (red)
+- Integrated into both MedicationCalculator and FreeModeCalculator result displays
+- Caution/warning alerts include note: "Ajuste la dosis según criterio clínico profesional"
+
+---
+Task ID: Review-5
+Agent: Main Agent
+Task: QA assessment, bug fixes, styling improvements, Patient Profiles, Dose Validation
+
+## Current Project Status Assessment
+VetCalc CR is a comprehensive, production-quality veterinary calculator SPA for Costa Rica.
+All 3 calculators (medication, free mode, food) fully functional with 27 medications in 8 categories.
+Features: favorites, dose reference tables, search/filter, history, weight converter, print,
+dark mode, BCS chart with dog silhouettes, 6 protocol templates, 21 drug interactions,
+keyboard shortcuts, data export/import, patient profiles, dose range validation,
+and an extensive hospital-themed design with rich animations.
+
+## Completed Modifications
+
+### Bug Fixes
+1. **Stat count incorrect** — Quick Info Bar showed "7 Interacciones registradas" when the
+drug interaction database was expanded to 21 in a previous session. Fixed: `value={7}` → `value={21}`.
+
+2. **Toast component conflict** — Custom VetToast was written to `/src/components/ui/toast.tsx`
+which overwrote the shadcn/ui radix-based toast. Restored original via `git checkout` and
+moved custom implementation to `/src/components/vet/VetToast.tsx` (renamed to `VetToastProvider`,
+`useVetToast` to avoid naming conflicts).
+
+### New Features
+1. **Patient Profiles System** (Task ID 5-a, subagent)
+   - `/src/lib/use-patients-store.ts` — useSyncExternalStore-based CRUD for up to 20 patients
+   - `/src/components/vet/PatientProfiles.tsx` — Compact widget with quick-select dropdown,
+     inline edit/delete, quick-add form, empty state
+   - Integrated into MedicationCalculator (collapsible after Step 2) and FoodCalculator
+   - Auto-fills species, weight, and weight unit when a patient is selected
+
+2. **Dose Range Validation** (Task ID 5-b, subagent)
+   - `/src/lib/dose-validation.ts` — Species-specific weight range validation:
+     Dogs: <1kg warning, 1-3kg caution, 3-80kg normal, 80-120kg caution, >120kg warning
+     Cats: <2kg warning, 2-3.5kg caution, 3.5-8kg normal, 8-12kg caution, >12kg warning
+   - Color-coded Alert in result cards (emerald/amber/red) with appropriate icons
+   - Integrated into MedicationCalculator and FreeModeCalculator
+
+3. **Custom Toast Notification System**
+   - `/src/components/vet/VetToast.tsx` — Context-based toast system with 4 types
+     (success, warning, error, info), auto-dismiss, framer-motion slide-in animations
+   - Wrapped in layout.tsx via `VetToastProvider`
+   - Available via `useVetToast()` hook for use in any component
+
+### Styling Improvements
+1. **Animated Tab Indicator** — Desktop nav tabs now have a spring-animated sliding pill
+   indicator (framer-motion `motion.div` with stiffness: 380, damping: 30) that follows
+   the active tab. Uses `useRef` array + `getBoundingClientRect` for precise positioning.
+
+2. **Section Dividers** — Gradient line dividers with centered dot ornament between
+   hero→quick-info-bar and main→footer. CSS class `.section-divider` with oklch gradient
+   and `::before` dot. Full dark mode support.
+
+3. **Card Shine Effect** — `.card-shine` class adds a light sweep animation on hover.
+   Applied to all result cards (Medication, FreeMode, Food) and all 7 Acerca feature cards.
+
+4. **Micro Texture Overlay** — `.vet-texture` class adds a subtle SVG noise texture
+   overlay for premium feel. Applied to the Quick Info Bar. Includes dark mode variant.
+
+5. **Input Glow Wrapper** — `.input-glow-wrapper` class provides an animated gradient
+   border glow on input focus. Ready for use in calculator input fields.
+
+6. **Badge Gradient** — `.badge-gradient` class with subtle gradient background and
+   themed border for enhanced badge styling.
+
+7. **Progress Mini Bar** — `.progress-mini` / `.progress-mini-fill` for compact
+   progress indicators.
+
+8. **Vibrant CTA Button** — `.cta-primary` class with dual-layer gradient hover effect
+   and scale-down active state.
+
+9. **Floating Action Button** — `.fab` class with 52px size, 16px border-radius,
+   hover lift + ripple ring, active scale-down.
+
+10. **Toast Notification CSS** — `.toast-container` (fixed top-right), `.toast-item`
+    with success/warning/error color variants, glass-like backdrop blur, max-width 340px.
+
+11. **Dose Result Grid Enhancement** — Hover scale(1.05) + shadow on dose cards,
+    "Recomendada" column gets accent ring highlight, `.number-ticker` class for
+    future animation support.
+
+12. **Tab Text z-index Fix** — Active tab buttons now have `z-10` so text renders
+    above the sliding indicator pill.
+
+## Files Created
+- `/src/lib/use-patients-store.ts` — useSyncExternalStore-based patient CRUD
+- `/src/components/vet/PatientProfiles.tsx` — Patient profile widget
+- `/src/lib/dose-validation.ts` — Weight range validation utility
+- `/src/components/vet/VetToast.tsx` — Custom toast notification system
+
+## Files Modified
+- `/src/app/page.tsx` — Stat fix, animated tab indicator, section dividers, card-shine, vet-texture
+- `/src/app/layout.tsx` — VetToastProvider wrapper (restored original toast.tsx first)
+- `/src/app/globals.css` — 11 new CSS utility classes with dark mode + print support
+- `/src/components/vet/MedicationCalculator.tsx` — card-shine, dose grid hover, number-ticker, PatientProfiles integration, dose validation
+- `/src/components/vet/FreeModeCalculator.tsx` — card-shine, dose validation
+- `/src/components/vet/FoodCalculator.tsx` — card-shine, PatientProfiles integration
+
+## Verification Results
+- `bun run lint` passes clean (0 errors, 0 warnings)
+- Dev server compiles and returns HTTP 200 on /
+- All reicon-react weight props verified capitalized (Outline/Fill)
+- Toast component conflict resolved — shadcn/ui toast.tsx preserved, custom in VetToast.tsx
+- No `Info` icon imports (using `CircleInfo` or `Information`)
+
+## Unresolved Issues & Risks
+1. **Container OOM** — Next.js Turbopack compilation uses ~2.7GB RSS, hitting 4GB container limit.
+   Page renders correctly (HTTP 200) but agent-browser Chrome cannot run simultaneously.
+2. **VetToast unused** — Toast system created and wrapped in layout but not yet consumed by
+   any component (clipboard copy still uses inline tooltip). Ready for future integration.
+3. **Tab indicator initial position** — Indicator starts at left:0, width:0 until first tab
+   render completes. A brief flash may be visible on initial load.
+
+## Priority Recommendations for Next Phase
+1. **Integrate VetToast** into copy/print actions (replace inline tooltip with toast)
+2. **Performance optimization** — Lazy load tab content with React.lazy + Suspense
+3. **PWA support** — Service worker + manifest for offline field use
+4. **Sound alerts** for high-severity drug interaction warnings
+5. **Accessibility audit** — Screen reader testing, ARIA label coverage
+6. **Protocol customization** — Edit drug doses within protocol templates
+7. **Expand drug interactions** to cover all 27 medications

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from 'next-themes';
+import { VetToastProvider } from '@/components/vet/VetToast';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,8 +35,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--background)] text-foreground`}
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          {children}
-          <Toaster />
+          <VetToastProvider>
+            {children}
+            <Toaster />
+          </VetToastProvider>
         </ThemeProvider>
       </body>
     </html>

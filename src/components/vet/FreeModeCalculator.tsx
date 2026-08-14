@@ -9,6 +9,7 @@ import {
   Paw,
   CircleInfo,
   AlertTriangle,
+  Warning,
   MedicalKit,
   Printer,
   Clock,
@@ -27,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { type AnimalType } from '@/lib/medications';
+import { validateDose } from '@/lib/dose-validation';
 import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-store';
 
 const DOSE_UNITS = [
@@ -214,7 +216,7 @@ export default function FreeModeCalculator() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }} transition={{ duration: 0.3 }}
           >
-            <Card className="result-card shadow-lg">
+            <Card className="result-card shadow-lg card-shine">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-primary">
@@ -276,6 +278,43 @@ export default function FreeModeCalculator() {
                   <CircleInfo size={13} weight="Outline" />
                   <span>Peso utilizado: <strong>{result.weightKg} kg</strong> ({animalType})</span>
                 </p>
+
+                {/* Dose Range Validation */}
+                {(() => {
+                  const validation = validateDose({ weightKg: result.weightKg, animalType });
+                  const IconComponent = validation.icon === 'Warning' ? Warning : validation.icon === 'AlertTriangle' ? AlertTriangle : CircleInfo;
+                  return (
+                    <Alert className={validation.colorClass}>
+                      <IconComponent
+                        size={18}
+                        weight="Outline"
+                        className={
+                          validation.status === 'warning'
+                            ? 'text-red-600 dark:text-red-400'
+                            : validation.status === 'caution'
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : 'text-emerald-600 dark:text-emerald-400'
+                        }
+                      />
+                      <AlertDescription
+                        className={`text-sm leading-relaxed ${
+                          validation.status === 'warning'
+                            ? 'text-red-800 dark:text-red-200'
+                            : validation.status === 'caution'
+                              ? 'text-amber-800 dark:text-amber-200'
+                              : 'text-emerald-800 dark:text-emerald-200'
+                        }`}
+                      >
+                        {validation.message}
+                        {validation.status !== 'normal' && (
+                          <span className="block mt-1.5 text-xs opacity-75 font-medium">
+                            Ajuste la dosis según criterio clínico profesional
+                          </span>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  );
+                })()}
 
                 <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-950/30">
                   <AlertTriangle size={18} weight="Outline" className="text-amber-600" />

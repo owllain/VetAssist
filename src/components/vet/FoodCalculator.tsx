@@ -5,14 +5,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Cat, Scale, CircleInfo, AlertTriangle,
   Calculator, Printer, Repeat, Clock,
-  Copy, Trash,
+  Copy, Trash, User,
 } from 'reicon-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { FoodCalculationResult, PetType, ActivityLevel } from '@/lib/food-data';
 import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-store';
+import PatientProfiles from './PatientProfiles';
+import type { Patient } from '@/lib/use-patients-store';
 import BodyConditionScore from './BodyConditionScore';
 
 const ACTIVITY_LEVELS: { value: ActivityLevel; label: string; emoji: string; desc: string }[] = [
@@ -49,6 +52,7 @@ export default function FoodCalculator() {
   const [converterUnit, setConverterUnit] = useState<'kg' | 'lb' | 'oz'>('kg');
   const [bcs, setBcs] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showPatientPanel, setShowPatientPanel] = useState(false);
   const history = useHistory('food');
   const addHistory = useAddHistory();
   const clearHistory = useClearHistory();
@@ -228,8 +232,44 @@ export default function FoodCalculator() {
               </button>
             ))}
           </div>
+          <Button
+            variant="outline"
+            size="icon"
+            className={`h-12 w-12 flex-shrink-0 transition-colors ${showPatientPanel ? 'bg-primary/10 border-primary/30' : ''}`}
+            onClick={() => setShowPatientPanel(!showPatientPanel)}
+            title="Perfiles de pacientes"
+          >
+            <User size={18} weight={showPatientPanel ? 'Fill' : 'Outline'} className={showPatientPanel ? 'text-primary' : ''} />
+          </Button>
         </div>
       </div>
+
+      {/* Patient Profiles (collapsible) */}
+      <Collapsible open={showPatientPanel} onOpenChange={setShowPatientPanel}>
+        <CollapsibleContent>
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Card className="glass-card">
+              <CardContent className="p-4">
+                <PatientProfiles
+                  species={petType}
+                  onSelectPatient={(patient: Patient) => {
+                    setWeight(String(patient.weight));
+                    setWeightUnit(patient.weightUnit);
+                    setPetType(patient.species);
+                    setResult(null);
+                  }}
+                  currentWeight={weight}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Step 3 */}
       <div>
@@ -321,7 +361,7 @@ export default function FoodCalculator() {
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }} transition={{ duration: 0.3 }}>
-            <Card className="result-card shadow-lg">
+            <Card className="result-card shadow-lg card-shine">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-primary">
