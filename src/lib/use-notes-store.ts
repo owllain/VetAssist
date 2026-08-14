@@ -14,13 +14,26 @@ const MAX_NOTES = 50;
 
 let listeners: Set<() => void> = new Set();
 
+// Cached snapshot to avoid infinite loop in useSyncExternalStore
+let cachedSnapshot: Note[] = [];
+let cachedRaw: string | null = null;
+
 function subscribe(listener: () => void) {
   listeners.add(listener);
   return () => { listeners.delete(listener); };
 }
 
 function getSnapshot(): Note[] {
-  try { return JSON.parse(localStorage.getItem(NOTES_KEY) || '[]'); } catch { return []; }
+  try {
+    const raw = localStorage.getItem(NOTES_KEY) || '[]';
+    if (raw !== cachedRaw) {
+      cachedRaw = raw;
+      cachedSnapshot = JSON.parse(raw);
+    }
+    return cachedSnapshot;
+  } catch {
+    return [];
+  }
 }
 
 function getServerSnapshot(): Note[] {
@@ -28,6 +41,7 @@ function getServerSnapshot(): Note[] {
 }
 
 function emitChange() {
+  cachedRaw = null;
   listeners.forEach((l) => l());
   dispatchEvent(new StorageEvent('storage', { key: NOTES_KEY }));
 }

@@ -8,7 +8,6 @@ import {
   Stethoscope,
   Shield,
   Syringe,
-  Cat,
   Scale,
   Calculator,
   AlertTriangle,
@@ -27,6 +26,7 @@ import {
   Trash,
   User,
 } from 'reicon-react';
+import AnimalIcon, { AnimalBadge } from './AnimalIcon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -77,10 +77,11 @@ interface CalcResult {
 
 function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
   return (
-    <h3 className="text-base font-semibold mb-3 flex items-center gap-2.5">
-      <span className="step-number">{num}</span>
-      {children}
-    </h3>
+    <div className="relative pl-8">
+      {/* Timeline dot + vertical line */}
+      <span className="step-number absolute left-0 top-0.5">{num}</span>
+      <h3 className="text-sm sm:text-base font-semibold flex items-center gap-2">{children}</h3>
+    </div>
   );
 }
 
@@ -183,7 +184,7 @@ export default function MedicationCalculator() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="glass-card rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5">
       {/* Recent History */}
       {history.length > 0 && !result && (
         <div className="no-print">
@@ -228,11 +229,7 @@ export default function MedicationCalculator() {
                   : 'border-border hover:border-primary/30'
               }`}
             >
-              {type === 'perro' ? (
-                <span className="text-4xl">🐕</span>
-              ) : (
-                <Cat size={36} weight="Outline" color={animalType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
-              )}
+              <AnimalIcon type={type} size={36} active={animalType === type} />
               <span className={`font-semibold ${animalType === type ? 'text-primary' : 'text-muted-foreground'}`}>
                 {type === 'perro' ? 'Perro' : 'Gato'}
               </span>
@@ -338,7 +335,7 @@ export default function MedicationCalculator() {
             Favoritos
           </Button>
         </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 no-print">
+        <div className="flex flex-wrap gap-2 no-print">
           {medicationCategories.map((cat) => (
             <button
               key={cat.id}
@@ -348,7 +345,7 @@ export default function MedicationCalculator() {
                 setResult(null);
                 setSearchQuery('');
               }}
-              className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium border transition-all duration-200 whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-full text-xs sm:text-sm font-medium border transition-all duration-200 ${
                 selectedCategory === cat.id
                   ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
                   : 'bg-card border-border hover:border-primary/30 hover:bg-primary/5'
@@ -444,9 +441,9 @@ export default function MedicationCalculator() {
                               <Badge
                                 key={s}
                                 variant={s === animalType ? 'default' : 'secondary'}
-                                className="text-[10px] px-1.5 py-0"
+                                className="text-[10px] px-1.5 py-0 gap-1"
                               >
-                                {s === 'perro' ? '🐕' : '🐈'} {s}
+                                <AnimalBadge type={s} active={s === animalType} /> {s}
                               </Badge>
                             ))}
                           </div>

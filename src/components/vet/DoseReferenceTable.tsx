@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AnimalBadge } from './AnimalIcon';
 import {
   type AnimalType,
   medicationCategories,
@@ -93,7 +94,7 @@ export default function DoseReferenceTable({ categoryId, animalType }: DoseRefTa
                           variant={s === animalType ? 'default' : 'secondary'}
                           className="text-[10px] px-1.5 py-0 h-5"
                         >
-                          {s === 'perro' ? '🐕' : '🐈'} {s}
+                          <AnimalBadge type={s} active={s === animalType} /> {s}
                         </Badge>
                       ))}
                     </div>

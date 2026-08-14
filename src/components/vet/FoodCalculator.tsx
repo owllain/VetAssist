@@ -3,10 +3,11 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Cat, Scale, CircleInfo, AlertTriangle,
+  Scale, CircleInfo, AlertTriangle,
   Calculator, Printer, Repeat, Clock,
   Copy, Trash, User,
 } from 'reicon-react';
+import AnimalIcon from './AnimalIcon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
@@ -33,10 +34,10 @@ const ACTIVITY_LABEL_MAP: Record<ActivityLevel, string> = {
 
 function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
   return (
-    <h3 className="text-base font-semibold mb-3 flex items-center gap-2.5">
-      <span className="step-number">{num}</span>
-      {children}
-    </h3>
+    <div className="relative pl-8">
+      <span className="step-number absolute left-0 top-0.5">{num}</span>
+      <h3 className="text-sm sm:text-base font-semibold flex items-center gap-2">{children}</h3>
+    </div>
   );
 }
 
@@ -123,7 +124,7 @@ export default function FoodCalculator() {
       : activity;
 
   return (
-    <div className="space-y-6">
+    <div className="glass-card rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5">
       {/* Recent History */}
       {history.length > 0 && !result && (
         <div className="no-print">
@@ -204,11 +205,7 @@ export default function FoodCalculator() {
                   ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
                   : 'border-border hover:border-primary/30'
               }`}>
-              {type === 'perro' ? (
-                <span className="text-4xl">🐕</span>
-              ) : (
-                <Cat size={36} weight="Outline" color={petType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
-              )}
+              <AnimalIcon type={type} size={36} active={petType === type} />
               <span className={`font-semibold ${petType === type ? 'text-primary' : 'text-muted-foreground'}`}>
                 {type === 'perro' ? 'Perro' : 'Gato'}
               </span>

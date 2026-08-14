@@ -1254,3 +1254,27 @@ design with 50+ CSS utility animations.
 5. **Sound alerts for dose validation** — Extend beyond drug interactions to all dose warnings
 6. **Concentration Calculator in Free Mode** — Currently only available in Medication tab
 7. **Performance optimization** — Consider code-splitting the large page.tsx into separate route segments
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: UX improvements — homologate icons, responsive badges, unified calculator UX, fix useSyncExternalStore bug
+
+Work Log:
+- Created shared AnimalIcon component (src/components/vet/AnimalIcon.tsx) using Lucide Dog+Cat icons for consistent lineart style
+- Replaced all emoji 🐕/🐈 with AnimalIcon across: MedicationCalculator, FreeModeCalculator, FoodCalculator, IVFluidCalculator, FavoritesPanel, DoseReferenceTable, ProtocolTemplates
+- Changed medication category badges from horizontal scroll (overflow-x-auto) to flex-wrap layout
+- Removed flex-shrink-0 and whitespace-nowrap from category badges, added responsive text sizing (text-xs sm:text-sm)
+- Wrapped all 4 main calculators in unified glass-card (rounded-2xl p-4 sm:p-6)
+- Redesigned StepHeading with timeline connector (vertical line via CSS ::after pseudo-element)
+- Replaced food section decoration image from dachshund to pet food dispenser (image-75mX...)
+- Fixed critical useSyncExternalStore infinite loop bug in all 4 stores (use-history-store, use-favorites-store, use-patients-store, use-notes-store) by caching snapshots
+- Updated step-number CSS: smaller size (24px), added position:relative z-index:1, connecting line via ::after
+
+Stage Summary:
+- All dog/cat icons now use consistent Lucide lineart style (AnimalIcon component)
+- Category badges wrap naturally on mobile without horizontal scroll
+- All calculators have unified glass-card appearance with connected step timeline
+- useSyncExternalStore caches prevent infinite re-render loops
+- ESLint clean, agent-browser verified page loads without errors
+- Produced artifacts: AnimalIcon.tsx, updated 4 calculator components, 4 store files, globals.css, page.tsx

@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calculator,
-  Cat,
   Scale,
   Paw,
   CircleInfo,
@@ -16,6 +15,7 @@ import {
   Copy,
   Trash,
 } from 'reicon-react';
+import AnimalIcon from './AnimalIcon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,10 +42,10 @@ const DOSE_UNITS = [
 
 function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
   return (
-    <h3 className="text-base font-semibold mb-3 flex items-center gap-2.5">
-      <span className="step-number">{num}</span>
-      {children}
-    </h3>
+    <div className="relative pl-8">
+      <span className="step-number absolute left-0 top-0.5">{num}</span>
+      <h3 className="text-sm sm:text-base font-semibold flex items-center gap-2">{children}</h3>
+    </div>
   );
 }
 
@@ -87,7 +87,7 @@ export default function FreeModeCalculator() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="glass-card rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5">
       {/* Recent History */}
       {history.length > 0 && !result && (
         <div className="no-print">
@@ -129,11 +129,7 @@ export default function FreeModeCalculator() {
                   : 'border-border hover:border-primary/30'
               }`}
             >
-              {type === 'perro' ? (
-                <span className="text-4xl">🐕</span>
-              ) : (
-                <Cat size={36} weight="Outline" color={animalType === 'gato' ? 'oklch(0.55 0.15 165)' : 'oklch(0.5 0.02 165)'} />
-              )}
+              <AnimalIcon type={type} size={36} active={animalType === type} />
               <span className={`font-semibold ${animalType === type ? 'text-primary' : 'text-muted-foreground'}`}>
                 {type === 'perro' ? 'Perro' : 'Gato'}
               </span>

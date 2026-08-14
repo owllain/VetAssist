@@ -593,9 +593,9 @@ export default function Home() {
                 </div>
               </div>
               <img
-                src="/images/image-m4itMs7R4FPhQzkRJCPAY1oHA04XQw.png"
+                src="/images/image-75mXdfvt3lvbs8fSCmASg9n6biV6Q5.png"
                 alt=""
-                className="absolute top-20 right-8 w-28 opacity-15 vet-float hidden lg:block"
+                className="absolute top-20 left-4 w-28 opacity-15 vet-float hidden lg:block"
                 style={{ animationDelay: '1.5s' }}
                 aria-hidden="true"
               />

@@ -6,6 +6,7 @@ import {
   ClipboardText, ChevronRight, AlertTriangle, Pill, InfoSquare,
 } from 'reicon-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { AnimalBadge } from './AnimalIcon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { protocols, type Protocol } from '@/lib/protocols';
@@ -59,7 +60,7 @@ export default function ProtocolTemplates({ animalType, onSelectProtocol }: Prot
                           <div className="flex gap-1 mt-1.5">
                             {protocol.species.map((s) => (
                               <Badge key={s} variant="secondary" className="text-[9px] px-1.5 py-0">
-                                {s === 'perro' ? '🐕' : '🐈'} {s}
+                                <AnimalBadge type={s} /> {s}
                               </Badge>
                             ))}
                             <Badge variant="outline" className="text-[9px] px-1.5 py-0">

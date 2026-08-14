@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star, Trash, StarFall2 } from 'reicon-react';
+import { AnimalBadge } from './AnimalIcon';
 import {
   Sheet,
   SheetContent,
@@ -121,7 +122,7 @@ export default function FavoritesPanel({
                                 variant="secondary"
                                 className="text-[10px] px-1.5 py-0"
                               >
-                                {s === 'perro' ? '🐕' : '🐈'} {s}
+                                <AnimalBadge type={s} /> {s}
                               </Badge>
                             ))}
                           </div>
