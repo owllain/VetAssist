@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calculator,
@@ -12,6 +12,8 @@ import {
   MedicalKit,
   Printer,
   Clock,
+  Copy,
+  Trash,
 } from 'reicon-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { type AnimalType } from '@/lib/medications';
+import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-store';
 
 const DOSE_UNITS = [
   { value: 'mg/kg', label: 'mg/kg' },
@@ -33,25 +36,6 @@ const DOSE_UNITS = [
   { value: 'UI/kg', label: 'UI/kg' },
   { value: 'mL/kg', label: 'mL/kg' },
 ];
-
-interface HistoryEntry {
-  type: string;
-  timestamp: number;
-  summary: string;
-}
-
-const STORAGE_KEY = 'vetcalc-history';
-
-function loadHistory(): HistoryEntry[] {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
-}
-
-function saveHistory(entry: HistoryEntry) {
-  const h = loadHistory();
-  h.unshift(entry);
-  if (h.length > 20) h.pop();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
-}
 
 function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
   return (
@@ -70,7 +54,10 @@ export default function FreeModeCalculator() {
   const [doseUnit, setDoseUnit] = useState('mg/kg');
   const [result, setResult] = useState<{ total: number; unit: string; weightKg: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
+  const history = useHistory('free');
+  const addHistory = useAddHistory();
+  const clearHistory = useClearHistory();
+  const [copied, setCopied] = useState(false);
 
   const handleCalculate = () => {
     setError(null);
@@ -88,25 +75,34 @@ export default function FreeModeCalculator() {
 
     setResult({ total, unit: displayUnit, weightKg: Math.round(weightKg * 100) / 100 });
 
-    saveHistory({
+    addHistory({
       type: 'free',
       timestamp: Date.now(),
       summary: `Modo libre | ${animalType} ${weightKg.toFixed(1)}kg | ${d}${doseUnit} = ${total}${displayUnit}`,
     });
-    setHistory(loadHistory());
   };
 
   return (
     <div className="space-y-6">
       {/* Recent History */}
-      {history.filter(h => h.type === 'free').length > 0 && !result && (
+      {history.length > 0 && !result && (
         <div className="no-print">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock size={16} weight="outline" className="text-muted-foreground" />
-            <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <Clock size={16} weight="outline" className="text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
+            </div>
+            <button
+              onClick={clearHistory}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+              title="Limpiar historial"
+            >
+              <Trash size={12} weight="outline" />
+              Limpiar
+            </button>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {history.filter(h => h.type === 'free').slice(0, 4).map((h, i) => (
+            {history.slice(0, 4).map((h, i) => (
               <div key={i} className="flex-shrink-0 bg-muted/60 rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/50">
                 {h.summary}
               </div>
@@ -227,6 +223,29 @@ export default function FreeModeCalculator() {
                     </div>
                     Resultado — Modo Libre
                   </CardTitle>
+                  <Button
+                    variant="ghost" size="icon"
+                    onClick={() => {
+                      const text = `VetCalc CR\nModo Libre\nEspecie: ${animalType} | Peso: ${result.weightKg}kg\nDosis: ${dosePerKg}${doseUnit} × ${result.weightKg}kg = ${result.total} ${result.unit}\n---\nCalculado con VetCalc CR`;
+                      navigator.clipboard.writeText(text);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    className="no-print h-8 w-8 text-muted-foreground hover:text-primary relative"
+                    title="Copiar resultado"
+                  >
+                    <Copy size={16} weight={copied ? 'fill' : 'outline'} />
+                    {copied && (
+                      <motion.span
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute -top-7 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-semibold px-2 py-0.5 rounded-md whitespace-nowrap"
+                      >
+                        Copiado!
+                      </motion.span>
+                    )}
+                  </Button>
                   <Button variant="ghost" size="icon" onClick={() => window.print()}
                     className="no-print h-8 w-8 text-muted-foreground hover:text-primary">
                     <Printer size={16} weight="outline" />

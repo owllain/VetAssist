@@ -22,6 +22,8 @@ import {
   Clock,
   Star,
   ClipboardList,
+  Copy,
+  Trash,
 } from 'reicon-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +42,7 @@ import { addFavorite, removeFavorite, isFavorite } from '@/lib/favorites';
 import type { FavoriteMed } from '@/lib/favorites';
 import FavoritesPanel from './FavoritesPanel';
 import DoseReferenceTable from './DoseReferenceTable';
+import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-store';
 
 interface CalcResult {
   medication: {
@@ -61,24 +64,7 @@ interface CalcResult {
   notes: string;
 }
 
-interface HistoryEntry {
-  type: 'medication' | 'free' | 'food';
-  timestamp: number;
-  summary: string;
-}
 
-const STORAGE_KEY = 'vetcalc-history';
-
-function loadHistory(): HistoryEntry[] {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
-}
-
-function saveHistory(entry: HistoryEntry) {
-  const history = loadHistory();
-  history.unshift(entry);
-  if (history.length > 20) history.pop();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-}
 
 function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
   return (
@@ -99,10 +85,13 @@ export default function MedicationCalculator() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
+  const history = useHistory('medication');
+  const addHistory = useAddHistory();
   const [showFavorites, setShowFavorites] = useState(false);
   const [showRefTable, setShowRefTable] = useState(false);
   const [favTick, setFavTick] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const clearHistory = useClearHistory();
 
   const handleSelectFavorite = useCallback((fav: FavoriteMed) => {
     setSelectedCategory(fav.category);
@@ -174,12 +163,12 @@ export default function MedicationCalculator() {
       setResult(data);
       // Save to history
       const unit = data.calculatedDose.unit.split('/')[0];
-      saveHistory({
+      addHistory({
         type: 'medication',
         timestamp: Date.now(),
         summary: `${data.medication.name} | ${animalType} ${data.weightKg}kg | ${data.calculatedDose.recommended}${unit}`,
       });
-      setHistory(loadHistory());
+      // history auto-updates via useSyncExternalStore
     } catch {
       setError('Error de conexión. Intente de nuevo.');
     } finally {
@@ -198,9 +187,19 @@ export default function MedicationCalculator() {
       {/* Recent History */}
       {history.length > 0 && !result && (
         <div className="no-print">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock size={16} weight="outline" className="text-muted-foreground" />
-            <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <Clock size={16} weight="outline" className="text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
+            </div>
+            <button
+              onClick={clearHistory}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+              title="Limpiar historial"
+            >
+              <Trash size={12} weight="outline" />
+              Limpiar
+            </button>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {history.slice(0, 5).map((h, i) => (
@@ -537,6 +536,31 @@ export default function MedicationCalculator() {
                         />
                       </Button>
                     )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        const unit = result.calculatedDose.unit.split('/')[0];
+                        const text = `VetCalc CR\nMedicamento: ${result.medication.name}\nEspecie: ${animalType} | Peso: ${result.weightKg}kg\nDosis recomendada: ${result.calculatedDose.recommended} ${unit}\nRango: ${result.calculatedDose.min}-${result.calculatedDose.max} ${unit}\nVía: ${result.routes.join(', ')}\nFrecuencia: ${result.frequency.join(', ')}\n---\nCalculado con VetCalc CR`;
+                        navigator.clipboard.writeText(text);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="no-print h-8 w-8 text-muted-foreground hover:text-primary relative"
+                      title="Copiar resultado"
+                    >
+                      <Copy size={16} weight={copied ? 'fill' : 'outline'} />
+                      {copied && (
+                        <motion.span
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute -top-7 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-semibold px-2 py-0.5 rounded-md whitespace-nowrap"
+                        >
+                          Copiado!
+                        </motion.span>
+                      )}
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"

@@ -312,6 +312,12 @@ html {
   box-shadow: 0 2px 8px oklch(0 0 0 / 0.03);
 }
 
+.dark .quick-info-bar {
+  background: oklch(0.18 0.02 165);
+  border-top-color: oklch(1 0 0 / 0.06);
+  border-bottom-color: oklch(1 0 0 / 0.06);
+}
+
 /* ===== FOOTER WAVE ===== */
 .footer-wave {
   position: relative;
@@ -341,6 +347,14 @@ html {
   background-image: radial-gradient(oklch(0.55 0.15 165 / 0.04) 1px, transparent 1px);
   background-size: 24px 24px;
   pointer-events: none;
+}
+
+.dark .section-alt {
+  background: linear-gradient(180deg, oklch(0.16 0.02 165) 0%, oklch(0.145 0.02 165) 100%);
+}
+
+.dark .section-alt::before {
+  background-image: radial-gradient(oklch(0.65 0.15 165 / 0.06) 1px, transparent 1px);
 }
 
 /* ===== CATEGORY PILL COLORS ===== */
@@ -388,6 +402,198 @@ html {
   border-left-color: oklch(0.55 0.15 165);
   background: linear-gradient(135deg, oklch(0.995 0.01 165) 0%, oklch(1 0 0) 100%);
   box-shadow: 0 4px 12px oklch(0.55 0.15 165 / 0.12);
+}
+
+.dark .med-card.selected {
+  background: linear-gradient(135deg, oklch(0.22 0.025 165) 0%, oklch(0.2 0.02 165) 100%);
+}
+
+/* ===== BCS BAR ===== */
+.bcs-bar {
+  display: flex;
+  gap: 4px;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 4px;
+  background: oklch(0.95 0.01 165);
+  border: 1px solid oklch(0.9 0.015 165);
+}
+
+.dark .bcs-bar {
+  background: oklch(0.2 0.02 165);
+  border-color: oklch(1 0 0 / 0.08);
+}
+
+.bcs-segment {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  position: relative;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.bcs-segment:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.08);
+}
+
+.bcs-segment.active {
+  border-color: var(--bcs-color);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 4px 16px oklch(0 0 0 / 0.12);
+}
+
+.bcs-segment .bcs-score {
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.bcs-segment .bcs-label {
+  font-size: 0.55rem;
+  font-weight: 600;
+  opacity: 0.8;
+  line-height: 1.1;
+}
+
+.bcs-desc-card {
+  background: linear-gradient(135deg, oklch(0.55 0.15 165 / 0.06), oklch(0.6 0.12 145 / 0.03));
+  border: 1px solid oklch(0.55 0.15 165 / 0.12);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.dark .bcs-desc-card {
+  background: linear-gradient(135deg, oklch(0.65 0.15 165 / 0.08), oklch(0.6 0.12 145 / 0.04));
+}
+
+/* ===== DARK MODE OVERRIDES ===== */
+.dark .vet-gradient {
+  background: linear-gradient(135deg, oklch(0.18 0.025 155) 0%, oklch(0.16 0.035 170) 50%, oklch(0.18 0.02 160) 100%);
+}
+
+.dark .vet-gradient::before {
+  background:
+    radial-gradient(ellipse at 20% 50%, oklch(0.65 0.15 165 / 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, oklch(0.65 0.2 30 / 0.05) 0%, transparent 50%);
+}
+
+.dark .hospital-stripe {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 10px,
+    oklch(0.65 0.15 165 / 0.03) 10px,
+    oklch(0.65 0.15 165 / 0.03) 20px
+  );
+}
+
+.dark .vet-card-selected {
+  background: linear-gradient(135deg, oklch(0.22 0.025 165) 0%, oklch(0.2 0.02 165) 100%);
+}
+
+.dark .glass-card {
+  background: oklch(0.2 0.02 165 / 0.8);
+  border-color: oklch(0.65 0.15 165 / 0.15);
+  box-shadow:
+    0 4px 6px -1px oklch(0 0 0 / 0.2),
+    0 10px 15px -3px oklch(0 0 0 / 0.15),
+    inset 0 1px 0 oklch(1 0 0 / 0.05);
+}
+
+.dark .step-number {
+  background: linear-gradient(135deg, oklch(0.6 0.15 165), oklch(0.65 0.12 145));
+}
+
+.dark .result-card {
+  background: linear-gradient(135deg, oklch(0.22 0.025 165) 0%, oklch(0.2 0.02 165) 100%);
+  box-shadow:
+    0 1px 3px oklch(0 0 0 / 0.2),
+    0 10px 25px -5px oklch(0.65 0.15 165 / 0.12);
+}
+
+.dark .dose-highlight {
+  background: linear-gradient(135deg, oklch(0.65 0.15 165 / 0.1), oklch(0.6 0.12 145 / 0.06));
+  border-color: oklch(0.65 0.15 165 / 0.2);
+}
+
+.dark .med-card:hover {
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.15);
+}
+
+.dark .med-card.selected {
+  box-shadow: 0 4px 12px oklch(0.65 0.15 165 / 0.15);
+}
+
+/* ===== HEADER DARK MODE ===== */
+.dark header {
+  background: oklch(0.16 0.02 165 / 0.9) !important;
+  border-bottom-color: oklch(1 0 0 / 0.06) !important;
+}
+
+/* ===== ANIMATIONS: SHIMMER & GLOW ===== */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-bg {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.55 0.15 165 / 0.05) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* ===== PULSE DOT INDICATOR ===== */
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: oklch(0.65 0.2 145);
+  position: relative;
+}
+
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid oklch(0.65 0.2 145);
+  animation: pulse-dot-ring 2s ease-out infinite;
+}
+
+@keyframes pulse-dot-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* ===== TOOLTIP / COPIED FEEDBACK ===== */
+.copied-tooltip {
+  animation: copied-pop 0.3s ease-out;
+}
+
+@keyframes copied-pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ===== COPY BUTTON FEEDBACK ===== */
+.copy-success {
+  color: oklch(0.65 0.2 145) !important;
 }
 
 /* ===== PRINT STYLES ===== */

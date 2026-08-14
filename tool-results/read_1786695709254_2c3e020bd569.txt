@@ -1,0 +1,596 @@
+     1→'use client';
+     2→
+     3→import { useState, useCallback, useRef } from 'react';
+     4→
+     5→import { motion, AnimatePresence, useInView } from 'framer-motion';
+     6→import { SlotText } from 'slot-text/react';
+     7→import {
+     8→  HeartPulse,
+     9→  Pill,
+    10→  Stethoscope,
+    11→  Shield,
+    12→  Syringe,
+    13→  Calculator,
+    14→  Menu,
+    15→  Scale,
+    16→  MedicalKit,
+    17→  Paw,
+    18→  CircleInfo,
+    19→  ClipboardText,
+    20→  Star,
+    21→  Clock,
+    22→  Printer,
+    23→} from 'reicon-react';
+    24→import { Button } from '@/components/ui/button';
+    25→import { Badge } from '@/components/ui/badge';
+    26→import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+    27→import { Card, CardContent } from '@/components/ui/card';
+    28→import {
+    29→  Sheet,
+    30→  SheetContent,
+    31→  SheetHeader,
+    32→  SheetTitle,
+    33→  SheetTrigger,
+    34→  SheetClose,
+    35→} from '@/components/ui/sheet';
+    36→import MedicationCalculator from '@/components/vet/MedicationCalculator';
+    37→import FreeModeCalculator from '@/components/vet/FreeModeCalculator';
+    38→import FoodCalculator from '@/components/vet/FoodCalculator';
+    39→
+    40→type TabId = 'medicamentos' | 'modo-libre' | 'alimentos' | 'acerca';
+    41→
+    42→const TABS: { id: TabId; label: string; icon: React.ReactNode; desc: string }[] = [
+    43→  {
+    44→    id: 'medicamentos',
+    45→    label: 'Medicamentos',
+    46→    icon: <Pill size={16} weight="outline" />,
+    47→    desc: '27 medicamentos en 8 categorías',
+    48→  },
+    49→  {
+    50→    id: 'modo-libre',
+    51→    label: 'Modo Libre',
+    52→    icon: <Calculator size={16} weight="outline" />,
+    53→    desc: 'Dosis personalizada por kg',
+    54→  },
+    55→  {
+    56→    id: 'alimentos',
+    57→    label: 'Alimentos',
+    58→    icon: <Scale size={16} weight="outline" />,
+    59→    desc: 'Ración diaria en gramos, onzas y tazas',
+    60→  },
+    61→  {
+    62→    id: 'acerca',
+    63→    label: 'Acerca de',
+    64→    icon: <CircleInfo size={16} weight="outline" />,
+    65→    desc: 'Información y aviso legal',
+    66→  },
+    67→];
+    68→
+    69→const sectionVariants = {
+    70→  initial: { opacity: 0, y: 20 },
+    71→  animate: { opacity: 1, y: 0 },
+    72→  exit: { opacity: 0, y: -20 },
+    73→  transition: { duration: 0.3 },
+    74→};
+    75→
+    76→function AnimatedCounter({ target, suffix = '' }: { target: number; suffix?: string }) {
+    77→  const ref = useRef<HTMLSpanElement>(null);
+    78→  const isInView = useInView(ref, { once: true });
+    79→  const [count, setCount] = useState(0);
+    80→
+    81→  useEffect(() => {
+    82→    if (!isInView) return;
+    83→    let start = 0;
+    84→    const end = target;
+    85→    const duration = 1500;
+    86→    const stepTime = 30;
+    87→    const steps = duration / stepTime;
+    88→    const increment = end / steps;
+    89→
+    90→    const timer = setInterval(() => {
+    91→      start += increment;
+    92→      if (start >= end) {
+    93→        setCount(end);
+    94→        clearInterval(timer);
+    95→      } else {
+    96→        setCount(Math.floor(start));
+    97→      }
+    98→    }, stepTime);
+    99→    return () => clearInterval(timer);
+   100→  }, [isInView, target]);
+   101→
+   102→  return <span ref={ref}>{count}{suffix}</span>;
+   103→}
+   104→
+   105→function StatCard({ icon, value, suffix, label }: { icon: React.ReactNode; value: number; suffix: string; label: string }) {
+   106→  return (
+   107→    <div className="flex items-center gap-3 bg-white/70 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/50 shadow-sm">
+   108→      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+   109→        {icon}
+   110→      </div>
+   111→      <div>
+   112→        <p className="text-xl font-bold text-primary">
+   113→          <AnimatedCounter target={value} suffix={suffix} />
+   114→        </p>
+   115→        <p className="text-xs text-muted-foreground font-medium">{label}</p>
+   116→      </div>
+   117→    </div>
+   118→  );
+   119→}
+   120→
+   121→export default function Home() {
+   122→  const [activeTab, setActiveTab] = useState<TabId>('medicamentos');
+   123→  const [mobileOpen, setMobileOpen] = useState(false);
+   124→
+   125→  const handleTabChange = useCallback((tab: TabId) => {
+   126→    setActiveTab(tab);
+   127→    setMobileOpen(false);
+   128→    window.scrollTo({ top: 400, behavior: 'smooth' });
+   129→  }, []);
+   130→
+   131→  const handlePrint = useCallback(() => {
+   132→    window.print();
+   133→  }, []);
+   134→
+   135→  return (
+   136→    <div className="min-h-screen flex flex-col">
+   137→      {/* ========== HEADER ========== */}
+   138→      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/85 border-b border-primary/10 shadow-sm">
+   139→        <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
+   140→          <button
+   141→            onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setActiveTab('medicamentos'); }}
+   142→            className="flex items-center gap-2.5 group"
+   143→          >
+   144→            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
+   145→              <HeartPulse size={20} color="white" weight="outline" />
+   146→            </div>
+   147→            <div className="flex flex-col">
+   148→              <span className="text-lg font-bold text-foreground leading-tight">VetCalc CR</span>
+   149→              <span className="text-[10px] text-muted-foreground leading-tight tracking-wide uppercase">Veterinaria Costa Rica</span>
+   150→            </div>
+   151→          </button>
+   152→
+   153→          {/* Desktop nav tabs */}
+   154→          <div className="hidden md:flex gap-1 bg-muted/50 rounded-xl p-1">
+   155→            {TABS.map((tab) => (
+   156→              <button
+   157→                key={tab.id}
+   158→                onClick={() => handleTabChange(tab.id)}
+   159→                className={`relative flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+   160→                  activeTab === tab.id
+   161→                    ? 'text-primary-foreground bg-primary shadow-sm'
+   162→                    : 'text-muted-foreground hover:text-foreground hover:bg-white/60'
+   163→                }`}
+   164→              >
+   165→                {tab.icon}
+   166→                {tab.label}
+   167→              </button>
+   168→            ))}
+   169→          </div>
+   170→
+   171→          {/* Print + Mobile menu */}
+   172→          <div className="flex items-center gap-2">
+   173→            <Button
+   174→              variant="ghost"
+   175→              size="icon"
+   176→              onClick={handlePrint}
+   177→              className="hidden md:flex no-print"
+   178→              title="Imprimir resultado"
+   179→            >
+   180→              <Printer size={18} weight="outline" className="text-muted-foreground" />
+   181→            </Button>
+   182→            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+   183→              <SheetTrigger asChild>
+   184→                <Button variant="ghost" size="icon" className="md:hidden">
+   185→                  <Menu size={24} weight="outline" />
+   186→                  <span className="sr-only">Menú</span>
+   187→                </Button>
+   188→              </SheetTrigger>
+   189→              <SheetContent side="right" className="w-72">
+   190→                <SheetHeader>
+   191→                  <SheetTitle className="flex items-center gap-2 text-primary">
+   192→                    <HeartPulse size={22} weight="outline" color="oklch(0.55 0.15 165)" />
+   193→                    VetCalc CR
+   194→                  </SheetTitle>
+   195→                </SheetHeader>
+   196→                <nav className="flex flex-col gap-1 mt-6">
+   197→                  {TABS.map((tab) => (
+   198→                    <SheetClose asChild key={tab.id}>
+   199→                      <button
+   200→                        onClick={() => handleTabChange(tab.id)}
+   201→                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+   202→                          activeTab === tab.id
+   203→                            ? 'bg-primary text-primary-foreground'
+   204→                            : 'hover:bg-muted'
+   205→                        }`}
+   206→                      >
+   207→                        {tab.icon}
+   208→                        <div className="text-left">
+   209→                          <div>{tab.label}</div>
+   210→                          <div className={`text-xs mt-0.5 ${activeTab === tab.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+   211→                            {tab.desc}
+   212→                          </div>
+   213→                        </div>
+   214→                      </button>
+   215→                    </SheetClose>
+   216→                  ))}
+   217→                </nav>
+   218→              </SheetContent>
+   219→            </Sheet>
+   220→          </div>
+   221→        </nav>
+   222→      </header>
+   223→
+   224→      <main className="flex-1">
+   225→        {/* ========== HERO SECTION ========== */}
+   226→        <section className="vet-gradient heartbeat-line relative overflow-hidden">
+   227→          <div className="absolute inset-0 hospital-stripe" />
+   228→          <div className="container relative mx-auto px-4 py-10 md:py-16 lg:py-20">
+   229→            <div className="grid md:grid-cols-2 gap-8 items-center">
+   230→              <div>
+   231→                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium mb-4">
+   232→                  <Star size={14} weight="fill" color="oklch(0.75 0.15 85)" />
+   233→                  Herramienta profesional veterinaria
+   234→                </div>
+   235→                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold text-foreground leading-[1.1]">
+   236→                  <SlotText
+   237→                    text="Calculadora Veterinaria"
+   238→                    options={{ rollBy: 'word', stagger: 60, duration: 350 }}
+   239→                  />
+   240→                </h1>
+   241→                <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-lg leading-relaxed">
+   242→                  Calcule con precisión dosis de medicamentos y alimentación para{' '}
+   243→                  <strong className="text-foreground">perros y gatos</strong>.{' '}
+   244→                  Base de datos actualizada con los fármacos de uso común en Costa Rica.
+   245→                </p>
+   246→                <div className="mt-6 flex flex-wrap gap-3">
+   247→                  <Button
+   248→                    size="lg"
+   249→                    onClick={() => handleTabChange('medicamentos')}
+   250→                    className="bg-primary hover:bg-primary/90 text-primary-foreground vet-pulse rounded-xl shadow-lg shadow-primary/20"
+   251→                  >
+   252→                    <span className="flex items-center gap-2">
+   253→                      <Stethoscope size={18} weight="outline" />
+   254→                      Comenzar
+   255→                    </span>
+   256→                  </Button>
+   257→                  <Button
+   258→                    size="lg"
+   259→                    variant="outline"
+   260→                    onClick={() => handleTabChange('acerca')}
+   261→                    className="rounded-xl border-primary/20 hover:bg-primary/5"
+   262→                  >
+   263→                    Más información
+   264→                  </Button>
+   265→                </div>
+   266→              </div>
+   267→
+   268→              {/* Hero images */}
+   269→              <div className="relative flex justify-center items-end min-h-[240px] md:min-h-[340px] lg:min-h-[380px]">
+   270→                <div className="absolute inset-0 flex items-center justify-center">
+   271→                  <div className="w-64 h-64 md:w-80 md:h-80 rounded-full bg-primary/5 blur-3xl" />
+   272→                </div>
+   273→                <img
+   274→                  src="/images/image-DAl3X5KYHo7tfhJ37GYdi3IFMbtgDy.png"
+   275→                  alt="Gatito lindo"
+   276→                  className="w-40 sm:w-48 md:w-60 lg:w-64 vet-float relative z-10 drop-shadow-lg"
+   277→                />
+   278→                <img
+   279→                  src="/images/image-mq50sdliTKLbR8pLTjQHnMsozKTjol.png"
+   280→                  alt="Pastor Alemán"
+   281→                  className="w-40 sm:w-48 md:w-60 lg:w-64 vet-float absolute right-4 md:right-0 bottom-0 drop-shadow-lg"
+   282→                  style={{ animationDelay: '1s' }}
+   283→                />
+   284→              </div>
+   285→            </div>
+   286→          </div>
+   287→        </section>
+   288→
+   289→        {/* ========== QUICK INFO BAR ========== */}
+   290→        <div className="quick-info-bar no-print">
+   291→          <div className="container mx-auto px-4 py-4">
+   292→            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+   293→              <StatCard
+   294→                icon={<Pill size={20} color="oklch(0.55 0.15 165)" weight="outline" />}
+   295→                value={27} suffix="" label="Medicamentos"
+   296→              />
+   297→              <StatCard
+   298→                icon={<Shield size={20} color="oklch(0.6 0.12 145)" weight="outline" />}
+   299→                value={8} suffix="" label="Categorías terapéuticas"
+   300→              />
+   301→              <StatCard
+   302→                icon={<Paw size={20} color="oklch(0.65 0.2 30)" weight="outline" />}
+   303→                value={2} suffix="" label="Especies (perros y gatos)"
+   304→              />
+   305→              <StatCard
+   306→                icon={<Clock size={20} color="oklch(0.7 0.15 75)" weight="outline" />}
+   307→                value={3} suffix="" label="Calculadoras disponibles"
+   308→              />
+   309→            </div>
+   310→          </div>
+   311→        </div>
+   312→
+   313→        {/* ========== MAIN CONTENT TABS ========== */}
+   314→        <AnimatePresence mode="wait">
+   315→          {activeTab === 'medicamentos' && (
+   316→            <motion.section
+   317→              key="medicamentos"
+   318→              id="medicamentos"
+   319→              className="py-10 md:py-14 relative"
+   320→              {...sectionVariants}
+   321→            >
+   322→              <div className="container mx-auto px-4">
+   323→                <div className="text-center mb-8">
+   324→                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+   325→                    <Pill size={28} color="oklch(0.55 0.15 165)" weight="outline" />
+   326→                    <SlotText
+   327→                      text="Calculadora de Medicamentos"
+   328→                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
+   329→                    />
+   330→                  </h2>
+   331→                  <p className="mt-2 text-muted-foreground max-w-md mx-auto">
+   332→                    Seleccione un medicamento y calcule la dosis exacta para su paciente
+   333→                  </p>
+   334→                </div>
+   335→                <div className="max-w-2xl mx-auto">
+   336→                  <MedicationCalculator />
+   337→                </div>
+   338→              </div>
+   339→              <img
+   340→                src="/images/image-SNWiaDnaZNy4wyUYuQkRujeWhGg8dB.png"
+   341→                alt=""
+   342→                className="absolute top-20 right-4 w-28 opacity-15 vet-float hidden lg:block"
+   343→                aria-hidden="true"
+   344→              />
+   345→            </motion.section>
+   346→          )}
+   347→
+   348→          {activeTab === 'modo-libre' && (
+   349→            <motion.section
+   350→              key="modo-libre"
+   351→              id="modo-libre"
+   352→              className="py-10 md:py-14 section-alt"
+   353→              {...sectionVariants}
+   354→            >
+   355→              <div className="container relative mx-auto px-4">
+   356→                <div className="text-center mb-8">
+   357→                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+   358→                    <Calculator size={28} color="oklch(0.55 0.15 165)" weight="outline" />
+   359→                    <SlotText
+   360→                      text="Modo Libre"
+   361→                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
+   362→                    />
+   363→                  </h2>
+   364→                  <p className="mt-2 text-muted-foreground max-w-md mx-auto">
+   365→                    Ingrese cualquier dosis personalizada por kilogramo de peso
+   366→                  </p>
+   367→                </div>
+   368→                <div className="max-w-2xl mx-auto">
+   369→                  <FreeModeCalculator />
+   370→                </div>
+   371→              </div>
+   372→              <img
+   373→                src="/images/image-ly2ke4dipmCnYtX9BC9iqRGJSIcsV8.png"
+   374→                alt=""
+   375→                className="absolute bottom-16 left-4 w-24 opacity-15 vet-float hidden lg:block"
+   376→                style={{ animationDelay: '2s' }}
+   377→                aria-hidden="true"
+   378→              />
+   379→            </motion.section>
+   380→          )}
+   381→
+   382→          {activeTab === 'alimentos' && (
+   383→            <motion.section
+   384→              key="alimentos"
+   385→              id="alimentos"
+   386→              className="py-10 md:py-14 relative"
+   387→              {...sectionVariants}
+   388→            >
+   389→              <div className="container mx-auto px-4">
+   390→                <div className="text-center mb-8">
+   391→                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+   392→                    <Scale size={28} color="oklch(0.55 0.15 165)" weight="outline" />
+   393→                    <SlotText
+   394→                      text="Calculadora de Alimentos"
+   395→                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
+   396→                    />
+   397→                  </h2>
+   398→                  <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
+   399→                    Calcule la cantidad diaria de alimento según peso, actividad y número de comidas.
+   400→                    Incluye equivalencias en onzas y tazas.
+   401→                  </p>
+   402→                </div>
+   403→                <div className="max-w-2xl mx-auto">
+   404→                  <FoodCalculator />
+   405→                </div>
+   406→              </div>
+   407→              <img
+   408→                src="/images/image-m4itMs7R4FPhQzkRJCPAY1oHA04XQw.png"
+   409→                alt=""
+   410→                className="absolute top-20 right-8 w-28 opacity-15 vet-float hidden lg:block"
+   411→                style={{ animationDelay: '1.5s' }}
+   412→                aria-hidden="true"
+   413→              />
+   414→            </motion.section>
+   415→          )}
+   416→
+   417→          {activeTab === 'acerca' && (
+   418→            <motion.section
+   419→              key="acerca"
+   420→              id="acerca"
+   421→              className="py-10 md:py-14 section-alt"
+   422→              {...sectionVariants}
+   423→            >
+   424→              <div className="container relative mx-auto px-4">
+   425→                <div className="max-w-4xl mx-auto text-center">
+   426→                  <img
+   427→                    src="/images/image-ViY6rawiI2uiV9tsy3QGZXdyngtXrC.png"
+   428→                    alt="Doctor veterinario"
+   429→                    className="w-36 mx-auto mb-4 drop-shadow-lg"
+   430→                  />
+   431→                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+   432→                    <MedicalKit size={28} color="oklch(0.55 0.15 165)" weight="outline" />
+   433→                    <SlotText
+   434→                      text="Acerca de VetCalc CR"
+   435→                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
+   436→                    />
+   437→                  </h2>
+   438→                  <p className="mt-4 text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+   439→                    VetCalc CR es una herramienta de apoyo diseñada para profesionales veterinarios en Costa Rica.
+   440→                    Permite calcular con precisión las dosis de medicamentos de uso común en medicina veterinaria
+   441→                    para perros y gatos, así como la cantidad diaria de alimento basada en requerimientos energéticos.
+   442→                  </p>
+   443→
+   444→                  {/* Feature cards */}
+   445→                  <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+   446→                    <Card className="vet-card-hover overflow-hidden">
+   447→                      <div className="h-1.5 bg-gradient-to-r from-primary to-primary/40" />
+   448→                      <CardContent className="p-5 text-center">
+   449→                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+   450→                          <Pill size={24} color="oklch(0.55 0.15 165)" weight="outline" />
+   451→                        </div>
+   452→                        <h3 className="font-bold">27 Medicamentos</h3>
+   453→                        <p className="text-sm text-muted-foreground mt-1">
+   454→                          Base de datos con dosificaciones verificadas para la práctica veterinaria en CR
+   455→                        </p>
+   456→                      </CardContent>
+   457→                    </Card>
+   458→                    <Card className="vet-card-hover overflow-hidden">
+   459→                      <div className="h-1.5 bg-gradient-to-r from-chart-3 to-chart-3/40" />
+   460→                      <CardContent className="p-5 text-center">
+   461→                        <div className="w-12 h-12 rounded-xl bg-chart-3/10 flex items-center justify-center mx-auto mb-3">
+   462→                          <Shield size={24} color="oklch(0.6 0.12 145)" weight="outline" />
+   463→                        </div>
+   464→                        <h3 className="font-bold">8 Categorías</h3>
+   465→                        <p className="text-sm text-muted-foreground mt-1">
+   466→                          Desde anestésicos hasta analgésicos — cobertura terapéutica completa
+   467→                        </p>
+   468→                      </CardContent>
+   469→                    </Card>
+   470→                    <Card className="vet-card-hover overflow-hidden">
+   471→                      <div className="h-1.5 bg-gradient-to-r from-chart-2 to-chart-2/40" />
+   472→                      <CardContent className="p-5 text-center">
+   473→                        <div className="w-12 h-12 rounded-xl bg-chart-2/10 flex items-center justify-center mx-auto mb-3">
+   474→                          <Scale size={24} color="oklch(0.65 0.2 30)" weight="outline" />
+   475→                        </div>
+   476→                        <h3 className="font-bold">Alimentación RER/DER</h3>
+   477→                        <p className="text-sm text-muted-foreground mt-1">
+   478→                          Cálculo basado en estándares veterinarios con soporte para onzas y tazas
+   479→                        </p>
+   480→                      </CardContent>
+   481→                    </Card>
+   482→                  </div>
+   483→
+   484→                  {/* Legal Disclaimer */}
+   485→                  <div className="mt-8">
+   486→                    <Alert variant="destructive" className="text-left">
+   487→                      <Syringe size={18} weight="outline" />
+   488→                      <AlertTitle className="flex items-center gap-2">
+   489→                        <ClipboardText size={16} weight="outline" />
+   490→                        Aviso Legal Importante
+   491→                      </AlertTitle>
+   492→                      <AlertDescription className="text-sm mt-2 leading-relaxed">
+   493→                        Esta herramienta es <strong>solo de referencia</strong> y no sustituye el criterio
+   494→                        clínico profesional. Las dosis mostradas se basan en formularios veterinarios estándar,
+   495→                        pero cada paciente es único. Siempre verifique la dosificación con las guías
+   496→                        actualizadas, considere la condición clínica individual, y siga los protocolos
+   497→                        establecidos por el <strong>Colegio de Médicos Veterinarios de Costa Rica</strong>.
+   498→                        El uso de esta herramienta es responsabilidad exclusiva del profesional que la consulta.
+   499→                      </AlertDescription>
+   500→                    </Alert>
+   501→                  </div>
+   502→                </div>
+   503→              </div>
+   504→            </motion.section>
+   505→          )}
+   506→        </AnimatePresence>
+   507→      </main>
+   508→
+   509→      {/* ========== FOOTER ========== */}
+   510→      <footer className="footer-wave bg-[#115459] text-white pt-12 pb-8 mt-auto no-print">
+   511→        <div className="container mx-auto px-4">
+   512→          <div className="grid md:grid-cols-3 gap-8">
+   513→            <div>
+   514→              <div className="flex items-center gap-2.5 mb-3">
+   515→                <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center">
+   516→                  <HeartPulse size={20} weight="outline" color="white" />
+   517→                </div>
+   518→                <div>
+   519→                  <span className="font-bold text-lg">VetCalc CR</span>
+   520→                  <p className="text-[10px] text-teal-300 uppercase tracking-wider">Veterinaria Costa Rica</p>
+   521→                </div>
+   522→              </div>
+   523→              <p className="text-teal-200/80 text-sm leading-relaxed">
+   524→                Herramienta profesional para el cálculo de dosis de medicamentos y
+   525→                alimentación en pequeños animales.
+   526→              </p>
+   527→            </div>
+   528→            <div>
+   529→              <h3 className="font-bold text-sm uppercase tracking-wider text-teal-300 mb-3">Recursos</h3>
+   530→              <ul className="space-y-2.5">
+   531→                <li>
+   532→                  <button
+   533→                    onClick={() => handleTabChange('medicamentos')}
+   534→                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2"
+   535→                  >
+   536→                    <Pill size={14} weight="outline" />
+   537→                    Calculadora de Medicamentos
+   538→                  </button>
+   539→                </li>
+   540→                <li>
+   541→                  <button
+   542→                    onClick={() => handleTabChange('alimentos')}
+   543→                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2"
+   544→                  >
+   545→                    <Scale size={14} weight="outline" />
+   546→                    Calculadora de Alimentos
+   547→                  </button>
+   548→                </li>
+   549→                <li>
+   550→                  <button
+   551→                    onClick={() => handleTabChange('modo-libre')}
+   552→                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2"
+   553→                  >
+   554→                    <Calculator size={14} weight="outline" />
+   555→                    Modo Libre
+   556→                  </button>
+   557→                </li>
+   558→              </ul>
+   559→            </div>
+   560→            <div>
+   561→              <h3 className="font-bold text-sm uppercase tracking-wider text-teal-300 mb-3">Información</h3>
+   562→              <ul className="space-y-2.5">
+   563→                <li>
+   564→                  <button
+   565→                    onClick={() => handleTabChange('acerca')}
+   566→                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2"
+   567→                  >
+   568→                    <CircleInfo size={14} weight="outline" />
+   569→                    Acerca de
+   570→                  </button>
+   571→                </li>
+   572→                <li>
+   573→                  <button
+   574→                    onClick={handlePrint}
+   575→                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2"
+   576→                  >
+   577→                    <Printer size={14} weight="outline" />
+   578→                    Imprimir resultado
+   579→                  </button>
+   580→                </li>
+   581→              </ul>
+   582→            </div>
+   583→          </div>
+   584→          <div className="border-t border-white/15 mt-8 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-teal-300/70">
+   585→            <p>© 2025 VetCalc CR — Herramienta de referencia para veterinarios en Costa Rica</p>
+   586→            <p className="flex items-center gap-1.5">
+   587→              <Shield size={12} weight="outline" />
+   588→              Solo para uso profesional veterinario
+   589→            </p>
+   590→          </div>
+   591→        </div>
+   592→      </footer>
+   593→    </div>
+   594→  );
+   595→}
+   596→

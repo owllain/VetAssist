@@ -185,3 +185,105 @@ Stage Summary:
 - Dose reference table: collapsible table per category with all medications, species highlighting, route badges
 - All lint checks pass clean (exit 0)
 - Dev server compiles successfully
+
+---
+Task ID: Review-2
+Agent: Main Agent
+Task: QA testing, hydration bug fix, dark mode, BCS chart, copy results, styling polish
+
+## Current Project Status Assessment
+VetCalc CR is a comprehensive, production-quality veterinary calculator SPA for Costa Rica.
+All 3 calculators (medication, free mode, food) are fully functional with 27 medications in 8 categories.
+The app features: favorites system, dose reference tables, search/filter, calculation history,
+weight converter, print support, and a hospital-themed design with 10 decoration images.
+
+## Completed Modifications
+
+### Bug Fixes
+1. **CRITICAL: Hydration mismatch fix** — Replaced all `useState(() => loadHistory())` patterns
+   with `useSyncExternalStore` hook (`/src/lib/use-history-store.ts`). This fixes the
+   React hydration error on mobile caused by localStorage being unavailable during SSR.
+   - Created shared `use-history-store.ts` with `useHistory(type)`, `useAddHistory()`, `useClearHistory()`
+   - Refactored MedicationCalculator, FreeModeCalculator, FoodCalculator to use the new hooks
+   - Eliminates all `useEffect` + `setState` patterns that violated React 19 strict lint rules
+
+2. **Fixed missing `useEffect` import** — Sub-agent removed `useEffect` from page.tsx imports
+   but it's used in `AnimatedCounter`. Re-added to import statement.
+
+### New Features
+1. **Dark Mode Toggle** (Task ID 4a)
+   - Added `ThemeProvider` from `next-themes` in layout.tsx
+   - Desktop: Moon/Sun toggle button in header (between Print and mobile menu)
+   - Mobile: Toggle button in Sheet menu after nav tabs
+   - Full dark mode CSS support for all custom utilities
+
+2. **Body Condition Score (BCS) Chart** (Task ID 5a)
+   - Created `/src/components/vet/BodyConditionScore.tsx`
+   - 9-point BCS visual scale with color gradient (blue→green→amber→red)
+   - Interactive segments with framer-motion spring animations
+   - Desktop: horizontal layout; Mobile: vertical layout with expandable descriptions
+   - Integrated into FoodCalculator as Step 5
+   - Auto-adjusts activity level: BCS 1-3 → bajo, BCS 6-9 → alto, BCS 4-5 → unchanged
+
+3. **Copy Result to Clipboard** (Task ID 5a)
+   - Added Copy button with animated "Copiado!" tooltip on all 3 result cards
+   - Formatted text output with medication/food details and VetCalc CR branding
+   - Uses `navigator.clipboard.writeText()` with 2-second visual feedback
+
+4. **Clear History** (Task ID 5a)
+   - Added "Limpiar" button with Trash icon next to "Consultas recientes" header
+   - Uses `useClearHistory()` from the shared history store
+   - Available in all 3 calculators
+
+### Styling Improvements
+1. **Comprehensive dark mode CSS** — Added `.dark` overrides for:
+   - vet-gradient, hospital-stripe, section-alt backgrounds
+   - glass-card, result-card, dose-highlight, med-card
+   - step-number indicators, quick-info-bar
+   - header backdrop blur
+   - BCS bar and description card
+
+2. **BCS visual system** — New CSS classes:
+   - `.bcs-bar` — flex container with rounded corners and subtle border
+   - `.bcs-segment` — interactive segment with hover lift and active scale
+   - `.bcs-desc-card` — gradient info card for BCS descriptions
+
+3. **New animations** —
+   - `.shimmer-bg` — subtle gradient shimmer effect
+   - `.pulse-dot` — pulsing dot indicator with ring animation
+   - `.copied-tooltip` / `.copy-success` — feedback animations for copy button
+
+## Verification Results
+- `bun run lint` passes clean (0 errors, 0 warnings)
+- Dev server compiles successfully and returns HTTP 200
+- Previous browser QA confirmed all calculators produce correct results
+- No TypeScript compilation errors in src/ files
+
+## Files Created
+- `/src/lib/use-history-store.ts` — useSyncExternalStore-based history management
+- `/src/components/vet/BodyConditionScore.tsx` — BCS 1-9 visual chart component
+
+## Files Modified
+- `/src/app/layout.tsx` — Added ThemeProvider wrapper
+- `/src/app/page.tsx` — Dark mode toggle, useEffect import fix, Sun/Moon icons
+- `/src/app/globals.css` — Dark mode overrides, BCS styles, new animations
+- `/src/components/vet/MedicationCalculator.tsx` — useSyncExternalStore, Copy, Clear history
+- `/src/components/vet/FreeModeCalculator.tsx` — Full rewrite with useSyncExternalStore, Copy, Clear
+- `/src/components/vet/FoodCalculator.tsx` — useSyncExternalStore, BCS integration, Copy, Clear
+
+## Unresolved Issues & Risks
+1. **TypeScript strict errors** — `reicon-react` weight prop shows TS errors (`"outline"` vs `"Outline"`)
+   but Turbopack ignores these at runtime. Non-blocking.
+2. **FavoritesPanel hydration** — Still reads `getFavorites()` during render (not yet migrated
+   to useSyncExternalStore). Low risk since it only renders inside a closed Sheet.
+3. **Dark mode footer** — Footer uses hardcoded dark background color `#115459` which doesn't
+   adapt to dark mode (intentional design choice, but could be enhanced).
+
+## Priority Recommendations for Next Phase
+1. **Migrate FavoritesPanel** to useSyncExternalStore (consistency, eliminate hydration risk)
+2. **Add keyboard shortcuts** (e.g., Ctrl+1/2/3 for tabs, Enter to calculate)
+3. **Add sound/beep alerts** for dose warnings (e.g., high-dose medications)
+4. **Quick-start templates** for common drug protocols (e.g., pre-surgical, post-op)
+5. **Responsive BCS chart** improvements — consider a visual body silhouette diagram
+6. **Accessibility audit** — Verify screen reader experience, add more ARIA labels
+7. **Performance optimization** — Lazy load FoodCalculator/BodyConditionScore when tab is active

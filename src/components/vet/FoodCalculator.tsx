@@ -1,17 +1,19 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Cat, Scale, Paw, CircleInfo, AlertTriangle,
-  Calculator, Heart, Printer, Repeat, Clock,
+  Cat, Scale, CircleInfo, AlertTriangle,
+  Calculator, Printer, Repeat, Clock,
+  Copy, Trash,
 } from 'reicon-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { FoodCalculationResult, PetType, ActivityLevel } from '@/lib/food-data';
+import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-store';
+import BodyConditionScore from './BodyConditionScore';
 
 const ACTIVITY_LEVELS: { value: ActivityLevel; label: string; emoji: string; desc: string }[] = [
   { value: 'bajo', label: 'Bajo', emoji: '🛋️', desc: 'Sedentario' },
@@ -19,20 +21,11 @@ const ACTIVITY_LEVELS: { value: ActivityLevel; label: string; emoji: string; des
   { value: 'alto', label: 'Alto', emoji: '🏋️', desc: 'Muy activo' },
 ];
 
-interface HistoryEntry {
-  type: string;
-  timestamp: number;
-  summary: string;
-}
-const STORAGE_KEY = 'vetcalc-history';
-function loadHistory(): HistoryEntry[] {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
-}function saveHistory(entry: HistoryEntry) {
-  const h = loadHistory();
-  h.unshift(entry);
-  if (h.length > 20) h.pop();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(h));
-}
+const ACTIVITY_LABEL_MAP: Record<ActivityLevel, string> = {
+  bajo: 'Bajo (sedentario)',
+  normal: 'Normal (moderada)',
+  alto: 'Alto (muy activo)',
+};
 
 function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
   return (
@@ -54,7 +47,11 @@ export default function FoodCalculator() {
   const [error, setError] = useState<string | null>(null);
   const [converterInput, setConverterInput] = useState('');
   const [converterUnit, setConverterUnit] = useState<'kg' | 'lb' | 'oz'>('kg');
-  const [history, setHistory] = useState<HistoryEntry[]>(() => loadHistory());
+  const [bcs, setBcs] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
+  const history = useHistory('food');
+  const addHistory = useAddHistory();
+  const clearHistory = useClearHistory();
 
   // Weight converter
   const convertedWeight = useMemo(() => {
@@ -73,6 +70,18 @@ export default function FoodCalculator() {
     }
   }, [weight, weightUnit, converterInput]);
 
+  // BCS change handler
+  const handleBcsChange = useCallback((score: number) => {
+    setBcs(score);
+    setResult(null);
+    if (score >= 1 && score <= 3) {
+      setActivity('bajo');
+    } else if (score >= 6 && score <= 9) {
+      setActivity('alto');
+    }
+    // BCS 4-5 leaves activity as selected
+  }, []);
+
   const handleCalculate = async () => {
     const w = parseFloat(weight);
     if (!w || w <= 0) { setError('Ingrese un peso válido mayor a 0'); return; }
@@ -90,11 +99,10 @@ export default function FoodCalculator() {
       if (!res.ok) { setError(data.error || 'Error al calcular la alimentación'); return; }
 
       setResult(data);
-      saveHistory({
+      addHistory({
         type: 'food', timestamp: Date.now(),
         summary: `Alimento | ${petType} ${data.weightKg}kg | ${data.dailyGrams.recommended}g/día`,
       });
-      setHistory(loadHistory());
     } catch {
       setError('Error de conexión. Intente de nuevo.');
     } finally {
@@ -102,17 +110,33 @@ export default function FoodCalculator() {
     }
   };
 
+  const effectiveActivity = bcs !== null && bcs >= 1 && bcs <= 3
+    ? 'bajo'
+    : bcs !== null && bcs >= 6 && bcs <= 9
+      ? 'alto'
+      : activity;
+
   return (
     <div className="space-y-6">
       {/* Recent History */}
-      {history.filter(h => h.type === 'food').length > 0 && !result && (
+      {history.length > 0 && !result && (
         <div className="no-print">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock size={16} weight="outline" className="text-muted-foreground" />
-            <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2">
+              <Clock size={16} weight="outline" className="text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
+            </div>
+            <button
+              onClick={clearHistory}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+              title="Limpiar historial"
+            >
+              <Trash size={12} weight="outline" />
+              Limpiar
+            </button>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
-            {history.filter(h => h.type === 'food').slice(0, 4).map((h, i) => (
+            {history.slice(0, 4).map((h, i) => (
               <div key={i} className="flex-shrink-0 bg-muted/60 rounded-lg px-3 py-1.5 text-xs text-muted-foreground border border-border/50">
                 {h.summary}
               </div>
@@ -213,14 +237,14 @@ export default function FoodCalculator() {
         <div className="grid grid-cols-3 gap-3">
           {ACTIVITY_LEVELS.map((lvl) => (
             <button key={lvl.value}
-              onClick={() => { setActivity(lvl.value); setResult(null); }}
+              onClick={() => { setActivity(lvl.value); setResult(null); setBcs(null); }}
               className={`p-3 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-1.5 ${
-                activity === lvl.value
+                effectiveActivity === lvl.value
                   ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
                   : 'border-border hover:border-primary/30'
               }`}>
               <span className="text-2xl">{lvl.emoji}</span>
-              <span className={`font-semibold text-sm ${activity === lvl.value ? 'text-primary' : 'text-foreground'}`}>
+              <span className={`font-semibold text-sm ${effectiveActivity === lvl.value ? 'text-primary' : 'text-foreground'}`}>
                 {lvl.label}
               </span>
               <span className="text-[10px] text-muted-foreground">{lvl.desc}</span>
@@ -245,6 +269,26 @@ export default function FoodCalculator() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Step 5: BCS */}
+      <div>
+        <StepHeading num={5}>Condición Corporal (Opcional)</StepHeading>
+        <BodyConditionScore value={bcs} onChange={handleBcsChange} />
+        {bcs && (bcs <= 3 || bcs >= 6) && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-2 flex items-start gap-2 text-xs text-muted-foreground bg-primary/5 border border-primary/10 rounded-lg px-3 py-2"
+          >
+            <CircleInfo size={13} weight="outline" color="oklch(0.55 0.15 165)" className="mt-0.5 flex-shrink-0" />
+            <span>
+              {bcs <= 3
+                ? `BCS ${bcs}/9 detectado: la actividad se ajustó automáticamente a «Bajo» para aumentar la ingesta calórica recomendada.`
+                : `BCS ${bcs}/9 detectado: la actividad se ajustó automáticamente a «Alto» para reducir la ingesta calórica recomendada.`}
+            </span>
+          </motion.div>
+        )}
       </div>
 
       {/* Calculate Button */}
@@ -286,10 +330,35 @@ export default function FoodCalculator() {
                     </div>
                     Alimentación Diaria
                   </CardTitle>
-                  <Button variant="ghost" size="icon" onClick={() => window.print()}
-                    className="no-print h-8 w-8 text-muted-foreground hover:text-primary">
-                    <Printer size={16} weight="outline" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost" size="icon"
+                      onClick={() => {
+                        const text = `VetCalc CR\nAlimentación Diaria\nEspecie: ${petType} | Peso: ${result.weightKg}kg\nGramos/día: ${result.dailyGrams.recommended}g (${result.dailyGrams.min}-${result.dailyGrams.max}g)\nOnzas/día: ${result.dailyOunces}oz\nTazas/día: ${result.dailyCups}\nComidas/día: ${result.mealsPerDay} (${result.perMealGrams.recommended}g/comida)\nActividad: ${ACTIVITY_LABEL_MAP[effectiveActivity]}\n---\nCalculado con VetCalc CR`;
+                        navigator.clipboard.writeText(text);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }}
+                      className="no-print h-8 w-8 text-muted-foreground hover:text-primary relative"
+                      title="Copiar resultado"
+                    >
+                      <Copy size={16} weight={copied ? 'fill' : 'outline'} />
+                      {copied && (
+                        <motion.span
+                          initial={{ opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute -top-7 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-semibold px-2 py-0.5 rounded-md whitespace-nowrap"
+                        >
+                          Copiado!
+                        </motion.span>
+                      )}
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => window.print()}
+                      className="no-print h-8 w-8 text-muted-foreground hover:text-primary">
+                      <Printer size={16} weight="outline" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-5">

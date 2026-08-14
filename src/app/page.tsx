@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTheme } from 'next-themes';
+
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { SlotText } from 'slot-text/react';
 import {
@@ -18,8 +19,10 @@ import {
   CircleInfo,
   ClipboardText,
   Star,
-  Clock, Sun, Moon,
+  Clock,
   Printer,
+  Sun,
+  Moon,
 } from 'reicon-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -119,9 +122,9 @@ function StatCard({ icon, value, suffix, label }: { icon: React.ReactNode; value
 }
 
 export default function Home() {
-  const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<TabId>('medicamentos');
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   const handleTabChange = useCallback((tab: TabId) => {
     setActiveTab(tab);
@@ -133,11 +136,8 @@ export default function Home() {
     window.print();
   }, []);
 
-  const isDark = theme === 'dark';
-  const toggleTheme = useCallback(() => setTheme(isDark ? 'light' : 'dark'), [isDark, setTheme]);
-
   return (
-    <div className={`min-h-screen flex flex-col ${isDark ? 'dark' : ''}`}>
+    <div className="min-h-screen flex flex-col">
       {/* ========== HEADER ========== */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-white/85 border-b border-primary/10 shadow-sm">
         <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -183,6 +183,15 @@ export default function Home() {
             >
               <Printer size={18} weight="outline" className="text-muted-foreground" />
             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="no-print"
+              title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            >
+              {theme === 'dark' ? <Sun size={18} weight="outline" /> : <Moon size={18} weight="outline" />}
+            </Button>
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
@@ -218,6 +227,15 @@ export default function Home() {
                       </button>
                     </SheetClose>
                   ))}
+                  <div className="border-t border-border mt-2 pt-2">
+                    <button
+                      onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); setMobileOpen(false); }}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors hover:bg-muted w-full"
+                    >
+                      {theme === 'dark' ? <Sun size={18} weight="outline" /> : <Moon size={18} weight="outline" />}
+                      {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+                    </button>
+                  </div>
                 </nav>
               </SheetContent>
             </Sheet>
