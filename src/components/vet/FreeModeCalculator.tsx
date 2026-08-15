@@ -228,7 +228,7 @@ export default function FreeModeCalculator() {
                   <Button
                     variant="ghost" size="icon"
                     onClick={() => {
-                      const text = `VetCalc CR\nModo Libre\nEspecie: ${animalType} | Peso: ${result.weightKg}kg\nDosis: ${dosePerKg}${doseUnit} × ${result.weightKg}kg = ${result.total} ${result.unit}\n---\nCalculado con VetCalc CR`;
+                      const text = `VetAssist\nModo Libre\nEspecie: ${animalType} | Peso: ${result.weightKg}kg\nDosis: ${dosePerKg}${doseUnit} × ${result.weightKg}kg = ${result.total} ${result.unit}\n---\nCalculado con VetAssist`;
                       navigator.clipboard.writeText(text);
                       setCopied(true);
                       addToast('Resultado copiado al portapapeles', 'success');

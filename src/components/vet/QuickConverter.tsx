@@ -84,12 +84,67 @@ function sigFigs(n: number, figs = 4): string {
   return n.toExponential(figs - 1);
 }
 
-function computeResult(inputVal: string, conversion: Conversion, swapped: boolean): string {
-  const num = parseFloat(inputVal);
+function computeResult(inputVal: string, conversion: Conversion, swapped: boolean, categoryId: CategoryId): string {
+  const raw = inputVal.trim();
+  const num = parseFloat(raw.replace(',', '.'));
   if (isNaN(num)) return '';
-  if (conversion.fromUnit === '°C' && conversion.toUnit === '°F') {
-    return swapped ? sigFigs((num - 32) * 5 / 9) : sigFigs(num * 9 / 5 + 32);
+
+  // Determine the actual source and target units depending on swap
+  const fromUnit = swapped ? conversion.toUnit : conversion.fromUnit;
+  const toUnit = swapped ? conversion.fromUnit : conversion.toUnit;
+
+  // Temperature special-casing
+  if (categoryId === 'temperatura') {
+    if (fromUnit === '°C' && toUnit === '°F') return sigFigs(num * 9 / 5 + 32);
+    if (fromUnit === '°F' && toUnit === '°C') return sigFigs((num - 32) * 5 / 9);
+    return '';
   }
+
+  // Unit maps to a common base for robust bidirectional conversion
+  const weightToGram: Record<string, number> = {
+    kg: 1000,
+    g: 1,
+    mg: 0.001,
+    mcg: 0.000001,
+    lb: 453.59237,
+    oz: 28.349523125,
+  };
+
+  const volumeToMl: Record<string, number> = {
+    'mL': 1,
+    'L': 1000,
+    'cc': 1,
+    'fl oz': 29.5735,
+    'tsp': 4.92892,
+    'tbsp': 14.7868,
+  };
+
+  if (categoryId === 'peso') {
+    const fFrom = weightToGram[fromUnit];
+    const fTo = weightToGram[toUnit];
+    if (fFrom == null || fTo == null) return '';
+    const inGrams = num * fFrom;
+    return sigFigs(inGrams / fTo);
+  }
+
+  if (categoryId === 'volumen') {
+    const fFrom = volumeToMl[fromUnit];
+    const fTo = volumeToMl[toUnit];
+    if (fFrom == null || fTo == null) return '';
+    const inMl = num * fFrom;
+    return sigFigs(inMl / fTo);
+  }
+
+  // Concentration: fall back to explicit factor when provided
+  if (categoryId === 'concentracion') {
+    if (conversion.factor && conversion.factor !== 0) {
+      const factor = swapped ? 1 / conversion.factor : conversion.factor;
+      return sigFigs(num * factor);
+    }
+    return '';
+  }
+
+  // Generic fallback
   const factor = swapped ? 1 / conversion.factor : conversion.factor;
   return sigFigs(num * factor);
 }
@@ -102,12 +157,14 @@ export default function QuickConverter() {
   const [convIdx, setConvIdx] = useState(0);
   const { toast } = useToast();
 
+  const [sourceUnit, setSourceUnit] = useState<string>('kg');
+  const [results, setResults] = useState<Record<string, string>>({});
+
   const category = CATEGORIES.find(c => c.id === activeCategory)!;
   const conversion = category.conversions[convIdx] || category.conversions[0];
-  const inputVal = swapped ? rightValue : leftValue;
-  const result = computeResult(inputVal, conversion, swapped);
-  const displayFrom = swapped ? conversion.toUnit : conversion.fromUnit;
-  const displayTo = swapped ? conversion.fromUnit : conversion.toUnit;
+  const inputVal = leftValue;
+
+  // sourceUnit is initialized on category change via handleCategoryChange
 
   function handleCategoryChange(catId: CategoryId) {
     setActiveCategory(catId);
@@ -115,19 +172,92 @@ export default function QuickConverter() {
     setLeftValue('');
     setRightValue('');
     setSwapped(false);
+    setResults({});
+    setSourceUnit(CATEGORIES.find(c => c.id === catId)!.conversions[0].fromUnit);
   }
 
   function handleSwap() {
+    // Preserve existing input values when swapping directions
+    const lv = leftValue;
+    const rv = rightValue;
     setSwapped(s => !s);
-    setLeftValue('');
-    setRightValue('');
+    setLeftValue(rv);
+    setRightValue(lv);
   }
 
   function handleCopy() {
-    if (result) {
-      navigator.clipboard.writeText(result);
-      toast({ title: 'Copiado', description: `${result} copiado al portapapeles` });
+    if (rightValue) {
+      navigator.clipboard.writeText(rightValue);
+      toast({ title: 'Copiado', description: `${rightValue} copiado al portapapeles` });
     }
+  }
+
+  // Helper maps for conversions
+  const weightToGram: Record<string, number> = {
+    kg: 1000,
+    g: 1,
+    mg: 0.001,
+    mcg: 0.000001,
+    lb: 453.59237,
+    oz: 28.349523125,
+  };
+
+  const volumeToMl: Record<string, number> = {
+    'mL': 1,
+    'L': 1000,
+    'cc': 1,
+    'fl oz': 29.5735,
+    'tsp': 4.92892,
+    'tbsp': 14.7868,
+  };
+
+  function convertBetween(num: number, fromUnit: string, toUnit: string, categoryId: CategoryId): string {
+    if (categoryId === 'temperatura') {
+      if (fromUnit === toUnit) return sigFigs(num);
+      if (fromUnit === '°C' && toUnit === '°F') return sigFigs(num * 9 / 5 + 32);
+      if (fromUnit === '°F' && toUnit === '°C') return sigFigs((num - 32) * 5 / 9);
+      return '';
+    }
+    if (categoryId === 'peso') {
+      const fFrom = weightToGram[fromUnit];
+      const fTo = weightToGram[toUnit];
+      if (fFrom == null || fTo == null) return '';
+      const inGrams = num * fFrom;
+      return sigFigs(inGrams / fTo);
+    }
+    if (categoryId === 'volumen') {
+      const fFrom = volumeToMl[fromUnit];
+      const fTo = volumeToMl[toUnit];
+      if (fFrom == null || fTo == null) return '';
+      const inMl = num * fFrom;
+      return sigFigs(inMl / fTo);
+    }
+    if (categoryId === 'concentracion') {
+      if (fromUnit === toUnit) return sigFigs(num);
+      const direct = category.conversions.find(c => c.fromUnit === fromUnit && c.toUnit === toUnit);
+      if (direct) return sigFigs(num * direct.factor);
+      const inverse = category.conversions.find(c => c.fromUnit === toUnit && c.toUnit === fromUnit);
+      if (inverse) return sigFigs(num / inverse.factor);
+      return '';
+    }
+    return '';
+  }
+
+  function computeAll() {
+    const raw = inputVal.trim();
+    const num = parseFloat(raw.replace(',', '.'));
+    if (isNaN(num)) {
+      setResults({});
+      return;
+    }
+    const units = Array.from(new Set(category.conversions.flatMap(c => [c.fromUnit, c.toUnit])));
+    const map: Record<string, string> = {};
+    for (const u of units) {
+      map[u] = convertBetween(num, sourceUnit || units[0], u, category.id) || '';
+    }
+    setResults(map);
+    const primaryTarget = category.conversions.find(c => c.fromUnit === (sourceUnit || ''))?.toUnit || units.find(u => u !== (sourceUnit || '')) || '';
+    if (primaryTarget) setRightValue(map[primaryTarget] || '');
   }
 
   return (
@@ -153,7 +283,7 @@ export default function QuickConverter() {
       {/* Conversion Selector */}
       {category.conversions.length > 1 && (
         <div className="flex justify-center">
-          <Select value={String(convIdx)} onValueChange={v => { setConvIdx(Number(v)); setLeftValue(''); setRightValue(''); }}>
+          <Select value={String(convIdx)} onValueChange={v => { const idx = Number(v); setConvIdx(idx); setLeftValue(''); setRightValue(''); setSourceUnit(category.conversions[idx].fromUnit); setResults({}); }}>
             <SelectTrigger className="w-64 glass-card">
               <SelectValue />
             </SelectTrigger>
@@ -172,54 +302,59 @@ export default function QuickConverter() {
           <div className="grid grid-cols-[1fr_auto_1fr] gap-0 items-center">
             {/* Left Input */}
             <div className="p-4">
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">De ({displayFrom})</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Valor</label>
               <Input
                 type="number"
                 inputMode="decimal"
-                value={swapped ? (result || '') : leftValue}
-                onChange={e => { setLeftValue(e.target.value); setRightValue(''); }}
+                value={leftValue}
+                onChange={e => { setLeftValue(e.target.value); setRightValue(''); setResults({}); }}
                 placeholder="0"
                 className="text-lg font-semibold h-12 input-focus-glow text-center"
-                readOnly={swapped}
               />
+              <div className="mt-2">
+                <Select value={sourceUnit} onValueChange={v => setSourceUnit(String(v))}>
+                  <SelectTrigger className="w-40 glass-card">
+                    <SelectValue placeholder="Unidad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from(new Set(category.conversions.flatMap(c => [c.fromUnit, c.toUnit]))).map((u, i) => (
+                      <SelectItem key={i} value={u}>{u}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            {/* Swap Button */}
+            {/* Convert Button */}
             <div className="px-2">
               <Button
                 variant="ghost"
-                size="icon"
-                onClick={handleSwap}
-                className="rounded-full w-10 h-10 hover:bg-primary/10 transition-colors"
-                title="Intercambiar unidades"
+                onClick={computeAll}
+                className="rounded-full px-3 py-2 hover:bg-primary/10 transition-colors flex items-center gap-2"
+                title="Convertir"
               >
-                <motion.div
-                  animate={{ rotate: swapped ? 180 : 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Repeat size={18} weight="Outline" className="text-primary" />
-                </motion.div>
+                <Repeat size={18} weight="Outline" className="text-primary" />
+                <span className="text-sm font-medium">Convertir</span>
               </Button>
             </div>
 
-            {/* Right Input (Result) */}
+            {/* Right Input (Primary Result) */}
             <div className="p-4">
-              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">A ({displayTo})</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Resultado</label>
               <div className="relative">
                 <Input
-                  type="number"
+                  type="text"
                   inputMode="decimal"
-                  value={!swapped ? (result || '') : rightValue}
-                  onChange={e => { setRightValue(e.target.value); setLeftValue(''); }}
+                  value={rightValue}
                   placeholder="0"
                   className="text-lg font-semibold h-12 input-focus-glow text-center result-glow pr-10"
-                  readOnly={!swapped}
+                  readOnly
                 />
-                {result && (
+                {rightValue && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={handleCopy}
+                    onClick={() => { navigator.clipboard.writeText(rightValue); toast({ title: 'Copiado', description: `${rightValue} copiado al portapapeles` }); }}
                     className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 hover:bg-primary/10"
                     title="Copiar resultado"
                   >
@@ -228,6 +363,34 @@ export default function QuickConverter() {
                 )}
               </div>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Results — equivalencias calculadas */}
+      <Card className="glass-card overflow-hidden">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <CircleInfo size={14} weight="Outline" className="text-primary" />
+            Resultados — {category.label}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-2 text-sm">
+            {Object.keys(results).length === 0 && (
+              <div className="text-muted-foreground">Presiona "Convertir" para ver equivalencias</div>
+            )}
+            {Object.entries(results).map(([u, v]) => (
+              <div key={u} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/10">
+                <div className="font-medium">{u}</div>
+                <div className="flex items-center gap-2">
+                  <div className="font-mono">{v}</div>
+                  <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(v); toast({ title: 'Copiado', description: `${v} copiado` }); }}>
+                    <Copy size={14} weight="Outline" className="text-muted-foreground" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>

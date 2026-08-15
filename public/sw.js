@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vetcalc-cr-v2.2';
+const CACHE_NAME = 'vetassist-v2.2';
 
 const PRECACHE_URLS = [
   '/',
@@ -138,7 +138,7 @@ async function staleWhileRevalidate(request) {
     return new Response(
       '<!DOCTYPE html>' +
         '<html lang="es"><head><meta charset="utf-8">' +
-        '<title>Sin Conexión - VetCalc CR</title>' +
+        '<title>Sin Conexión - VetAssist</title>' +
         '<meta name="viewport" content="width=device-width,initial-scale=1">' +
         '<style>' +
         'body{font-family:system-ui,sans-serif;display:flex;justify-content:center;align-items:center;' +
@@ -147,7 +147,7 @@ async function staleWhileRevalidate(request) {
         'p{color:#0d9488;max-width:320px}' +
         '</style></head>' +
         '<body><div><h1>🐕 Sin Conexión</h1>' +
-        '<p>VetCalc CR no está disponible sin conexión en este momento. ' +
+        '<p>VetAssist no está disponible sin conexión en este momento. ' +
         'Por favor verifica tu conexión a internet.</p></div></body></html>',
       {
         status: 503,

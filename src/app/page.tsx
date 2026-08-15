@@ -58,8 +58,8 @@ const FreeModeCalculator = dynamic(() => import('@/components/vet/FreeModeCalcul
 const FoodCalculator = dynamic(() => import('@/components/vet/FoodCalculator'), { loading: () => <TabSkeleton />, ssr: false });
 const IVFluidCalculator = dynamic(() => import('@/components/vet/IVFluidCalculator'), { loading: () => <TabSkeleton />, ssr: false });
 const DoseSchedule = dynamic(() => import('@/components/vet/DoseSchedule'), { loading: () => <TabSkeleton />, ssr: false });
-const DataManager = dynamic(() => import('@/components/vet/DataManager'), { ssr: false });
-const ClinicalNotes = dynamic(() => import('@/components/vet/ClinicalNotes'), { ssr: false });
+const DataManager = dynamic(() => import('@/components/vet/DataManager'), { loading: () => <TabSkeleton />, ssr: false });
+const ClinicalNotes = dynamic(() => import('@/components/vet/ClinicalNotes'), { loading: () => <TabSkeleton />, ssr: false });
 const EmergencyReference = dynamic(() => import('@/components/vet/EmergencyReference'), { loading: () => <TabSkeleton />, ssr: false });
 const QuickConverter = dynamic(() => import('@/components/vet/QuickConverter'), { loading: () => <TabSkeleton />, ssr: false });
 
@@ -652,11 +652,15 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Local Data Manager Drawer */}
-      <DataManager open={dataManagerOpen} onOpenChange={setDataManagerOpen} />
+      {/* Local Data Manager Drawer (lazy render to show loading fallback inside sheet) */}
+      {dataManagerOpen && (
+        <DataManager open={dataManagerOpen} onOpenChange={setDataManagerOpen} />
+      )}
 
-      {/* Clinical Notes Drawer */}
-      <ClinicalNotes open={clinicalNotesOpen} onOpenChange={setClinicalNotesOpen} />
+      {/* Clinical Notes Drawer (lazy render) */}
+      {clinicalNotesOpen && (
+        <ClinicalNotes open={clinicalNotesOpen} onOpenChange={setClinicalNotesOpen} />
+      )}
 
       {/* Floating Clinical Notes FAB */}
       <button

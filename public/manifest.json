@@ -1,6 +1,6 @@
 {
-  "name": "VetCalc CR - Calculadora Veterinaria",
-  "short_name": "VetCalc CR",
+  "name": "VetAssist - Calculadora Veterinaria",
+  "short_name": "VetAssist",
   "description": "Calculadora de dosis veterinarias para perros y gatos en Costa Rica",
   "start_url": "/",
   "display": "standalone",

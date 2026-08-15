@@ -88,7 +88,7 @@ export default function DataManager({ open, onOpenChange }: DataManagerProps) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'vetcalc-cr-backup.json';
+      a.download = 'vetassist-backup.json';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -159,7 +159,7 @@ export default function DataManager({ open, onOpenChange }: DataManagerProps) {
       } catch (err) {
         toast({
           title: 'Error al importar',
-          description: err instanceof Error ? err.message : 'El archivo no es un respaldo válido de VetCalc CR.',
+          description: err instanceof Error ? err.message : 'El archivo no es un respaldo válido de VetAssist.',
           variant: 'destructive',
         });
       }
@@ -192,8 +192,8 @@ export default function DataManager({ open, onOpenChange }: DataManagerProps) {
             Gestor de Datos
           </SheetTitle>
           <SheetDescription>
-            Exporte, importe o elimine sus datos almacenados en VetCalc CR.
-          </SheetDescription>
+              Exporte, importe o elimine sus datos almacenados en VetAssist.
+            </SheetDescription>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">

@@ -969,7 +969,7 @@ export default function IVFluidCalculator() {
 
                 {/* ── Print-friendly result summary ── */}
                 <div className="print-only text-sm space-y-1 p-3 border border-border rounded-lg">
-                  <div className="font-bold">VetCalc CR — Tasa IV</div>
+                  <div className="font-bold">VetAssist — Tasa IV</div>
                   <div>Especie: {result.species} | Peso: {result.weightKg} kg</div>
                   <div>Tasa total: {result.totalHourly} mL/hr ({result.totalDaily} mL/día)</div>
                   <div>Gotas/min: {result.dropsPerMinute} ({dripSet} gotas/mL)</div>

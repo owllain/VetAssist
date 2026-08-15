@@ -33,6 +33,7 @@ export default function FavoritesPanel({
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen ?? internalOpen;
   const setOpen = externalOnOpenChange ?? setInternalOpen;
+  const isControlled = externalOpen !== undefined || externalOnOpenChange !== undefined;
   const favorites = useFavorites();
   const removeFav = useRemoveFavorite();
 
@@ -43,21 +44,23 @@ export default function FavoritesPanel({
 
   return (
     <>
-      {/* FAB — mismo right-5 y w-12 h-12 que el FAB de Notas para alinearse en columna */}
-      <motion.div
-        className="fixed bottom-6 right-5 z-50"
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <Button
-          onClick={() => setOpen(true)}
-          size="icon"
-          className="w-12 h-12 rounded-full shadow-lg shadow-primary/30 bg-primary hover:bg-primary/90 text-primary-foreground"
+      {/* FAB — solo renderizar si el panel NO está controlado externamente */}
+      {!isControlled && (
+        <motion.div
+          className="fixed bottom-6 right-5 z-50"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <Star size={22} weight="Fill" />
-          <span className="sr-only">Favoritos</span>
-        </Button>
-      </motion.div>
+          <Button
+            onClick={() => setOpen(true)}
+            size="icon"
+            className="w-12 h-12 rounded-full shadow-lg shadow-primary/30 bg-primary hover:bg-primary/90 text-primary-foreground"
+          >
+            <Star size={22} weight="Fill" />
+            <span className="sr-only">Favoritos</span>
+          </Button>
+        </motion.div>
+      )}
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="p-0">

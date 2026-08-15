@@ -199,7 +199,7 @@ export default function DoseSchedule() {
     const freqLabel = FREQUENCY_OPTIONS.find((f) => f.value === frequency)?.label || frequency;
     const st = formatTime(Math.floor(startMinutes24 / 60), startMinutes24 % 60);
 
-    let text = `📅 Horario de Medicación - VetCalc CR\n`;
+    let text = `📅 Horario de Medicación - VetAssist\n`;
     text += `Frecuencia: ${freqLabel} | Inicio: ${st} | Duración: ${duration} día(s)\n`;
     text += `${'─'.repeat(40)}\n`;
 
@@ -467,8 +467,13 @@ export default function DoseSchedule() {
 
         {/* Generate Button */}
         <Button
-          onClick={handleGenerate}
-          disabled={!canGenerate}
+          onClick={() => {
+            if (!canGenerate) {
+              toast({ title: 'Completar datos', description: 'Agregue al menos un medicamento con dosis y asegure una frecuencia válida.' });
+              return;
+            }
+            handleGenerate();
+          }}
           className="w-full h-10 gap-2 hover-tap neon-border"
         >
           <Calendar size={16} weight="Outline" />

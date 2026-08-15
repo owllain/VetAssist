@@ -438,12 +438,23 @@ export default function MedicationCalculator({ onOpenNotes }: MedicationCalculat
                 const isAvailableForSpecies = med.species.includes(animalType);
 
                 return (
-                  <button
+                  <div
                     key={med.id}
-                    disabled={!isAvailableForSpecies}
+                    role="button"
+                    tabIndex={isAvailableForSpecies ? 0 : -1}
+                    aria-disabled={!isAvailableForSpecies}
                     onClick={() => {
+                      if (!isAvailableForSpecies) return;
                       setSelectedMedication(med);
                       setResult(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (!isAvailableForSpecies) return;
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedMedication(med);
+                        setResult(null);
+                      }
                     }}
                     className={`p-3 rounded-xl border text-left transition-all flex items-start justify-between gap-2 relative ${
                       isSelected
@@ -476,7 +487,14 @@ export default function MedicationCalculator({ onOpenNotes }: MedicationCalculat
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleFav(med.id, med.categoryId);
+                        // toggle favorite expects a FavoriteMed object
+                        toggleFav({
+                          medicationId: med.id,
+                          name: med.name,
+                          genericName: med.genericName,
+                          category: med.category,
+                          species: med.species,
+                        });
                         addToast(
                           isFav ? `${med.name} eliminado de favoritos` : `${med.name} añadido a favoritos`,
                           isFav ? 'info' : 'success'
@@ -487,7 +505,7 @@ export default function MedicationCalculator({ onOpenNotes }: MedicationCalculat
                     >
                       <Star size={14} weight={isFav ? 'Fill' : 'Outline'} className={isFav ? 'text-amber-500' : ''} />
                     </button>
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -604,7 +622,7 @@ export default function MedicationCalculator({ onOpenNotes }: MedicationCalculat
                 </div>
 
                 {/* Concentration Calculator */}
-                <ConcentrationCalculator calculatedDose={result.calculatedDose.recommended} />
+                <ConcentrationCalculator result={result} />
 
                 {/* Administration Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
