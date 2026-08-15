@@ -17,21 +17,24 @@ const geistMono = Geist_Mono({
 
 export const viewport: Viewport = {
   themeColor: "#0d9488",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export const metadata: Metadata = {
-  title: "VetCalc CR - Calculadora Veterinaria Costa Rica",
+  title: "VetAssist — Asistente para cálculos de uso veterinario",
   description:
-    "Herramienta profesional para cálculo de dosis de medicamentos y alimentación para perros y gatos en Costa Rica",
+    "Herramienta de apoyo para el cálculo con precisión de dosis de medicamentos y alimentación para animales menores.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "VetCalc CR",
+    title: "VetAssist",
   },
   icons: {
-    icon: "/favicon.ico",
-    apple: "/favicon.ico",
+    icon: "/images/image-nOUH6YKKp7g0jxLsV9hiwFszoZaMyR.png",
+    apple: "/images/image-nOUH6YKKp7g0jxLsV9hiwFszoZaMyR.png",
   },
 };
 
@@ -45,9 +48,10 @@ export default function RootLayout({
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="VetCalc CR" />
+        <meta name="apple-mobile-web-app-title" content="VetAssist" />
         <meta name="theme-color" content="#0d9488" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <link rel="icon" href="/images/image-nOUH6YKKp7g0jxLsV9hiwFszoZaMyR.png" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

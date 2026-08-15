@@ -1,13 +1,9 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTheme } from 'next-themes';
-
-import { motion, AnimatePresence, useInView } from 'framer-motion';
-import { useKeyboardShortcuts } from '@/lib/use-keyboard-shortcuts';
-import { SlotText } from 'slot-text/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  HeartPulse,
   Pill,
   Stethoscope,
   Shield,
@@ -16,11 +12,8 @@ import {
   Menu,
   Scale,
   MedicalKit,
-  Paw,
   CircleInfo,
   ClipboardText,
-  Star,
-  Clock,
   Printer,
   Sun,
   Moon,
@@ -60,6 +53,7 @@ const TabSkeleton = () => (
 );
 
 const MedicationCalculator = dynamic(() => import('@/components/vet/MedicationCalculator'), { loading: () => <TabSkeleton />, ssr: false });
+const FrequentProtocols = dynamic(() => import('@/components/vet/FrequentProtocols'), { loading: () => <TabSkeleton />, ssr: false });
 const FreeModeCalculator = dynamic(() => import('@/components/vet/FreeModeCalculator'), { loading: () => <TabSkeleton />, ssr: false });
 const FoodCalculator = dynamic(() => import('@/components/vet/FoodCalculator'), { loading: () => <TabSkeleton />, ssr: false });
 const IVFluidCalculator = dynamic(() => import('@/components/vet/IVFluidCalculator'), { loading: () => <TabSkeleton />, ssr: false });
@@ -69,7 +63,16 @@ const ClinicalNotes = dynamic(() => import('@/components/vet/ClinicalNotes'), { 
 const EmergencyReference = dynamic(() => import('@/components/vet/EmergencyReference'), { loading: () => <TabSkeleton />, ssr: false });
 const QuickConverter = dynamic(() => import('@/components/vet/QuickConverter'), { loading: () => <TabSkeleton />, ssr: false });
 
-type TabId = 'medicamentos' | 'modo-libre' | 'conversor' | 'alimentos' | 'fluidos' | 'horarios' | 'emergencias' | 'acerca';
+type TabId =
+  | 'medicamentos'
+  | 'protocolos'
+  | 'modo-libre'
+  | 'conversor'
+  | 'alimentos'
+  | 'fluidos'
+  | 'horarios'
+  | 'emergencias'
+  | 'acerca';
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode; desc: string }[] = [
   {
@@ -77,6 +80,12 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; desc: string }[] 
     label: 'Medicamentos',
     icon: <Pill size={16} weight="Outline" />,
     desc: '27 medicamentos en 8 categorías',
+  },
+  {
+    id: 'protocolos',
+    label: 'Protocolos Frecuentes',
+    icon: <ClipboardText size={16} weight="Outline" />,
+    desc: 'Protocolos anestésicos, analgésicos y clínicos',
   },
   {
     id: 'modo-libre',
@@ -122,54 +131,22 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; desc: string }[] 
   },
 ];
 
-const sectionVariants = {
-  initial: { opacity: 0, y: 20 },
+const tabVariants = {
+  initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -20 },
-  transition: { duration: 0.3 },
+  exit: { opacity: 0, y: -12 },
+  transition: { duration: 0.2 },
 };
-
-function AnimatedCounter({ target, suffix = '' }: { target: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true });
-  const [count, setCount] = useState(0);
-
-  useEffect(() => {
-    if (!isInView) return;
-    let start = 0;
-    const end = target;
-    const duration = 1500;
-    const stepTime = 30;
-    const steps = duration / stepTime;
-    const increment = end / steps;
-
-    const timer = setInterval(() => {
-      start += increment;
-      if (start >= end) {
-        setCount(end);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(start));
-      }
-    }, stepTime);
-    return () => clearInterval(timer);
-  }, [isInView, target]);
-
-  return <span ref={ref}>{count}{suffix}</span>;
-}
 
 function StatCard({ icon, value, suffix, label }: { icon: React.ReactNode; value: number; suffix: string; label: string }) {
   return (
-    <div className="group flex items-center gap-3 bg-card/70 backdrop-blur-sm rounded-xl px-4 py-3 border border-border/50 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-300 hover-lift relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-primary/40 via-chart-3/40 to-primary/40" aria-hidden="true" />
-      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+    <div className="flex items-center gap-3 bg-card/80 backdrop-blur-sm rounded-xl px-4 py-3 border border-border/50 shadow-sm transition-all duration-200">
+      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
         {icon}
       </div>
       <div>
-        <p className="text-xl font-bold">
-          <span className="gradient-text">
-            <AnimatedCounter target={value} suffix={suffix} />
-          </span>
+        <p className="text-xl font-bold text-foreground">
+          {value}{suffix}
         </p>
         <p className="text-xs text-muted-foreground font-medium">{label}</p>
       </div>
@@ -185,25 +162,6 @@ export default function Home() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const { theme, setTheme } = useTheme();
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0 });
-
-  // Update tab indicator position
-  useEffect(() => {
-    const idx = TABS.findIndex(t => t.id === activeTab);
-    const btn = tabRefs.current[idx];
-    if (btn) {
-      const parent = btn.parentElement;
-      if (parent) {
-        const parentRect = parent.getBoundingClientRect();
-        const btnRect = btn.getBoundingClientRect();
-        setIndicatorStyle({
-          left: btnRect.left - parentRect.left,
-          width: btnRect.width,
-        });
-      }
-    }
-  }, [activeTab]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -219,30 +177,18 @@ export default function Home() {
   const handleTabChange = useCallback((tab: TabId) => {
     setActiveTab(tab);
     setMobileOpen(false);
-    window.scrollTo({ top: 400, behavior: 'smooth' });
+    const mainElement = document.getElementById('main-calculator-area');
+    if (mainElement) {
+      mainElement.scrollIntoView({ behavior: 'smooth' });
+    }
   }, []);
 
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
 
-  // Keyboard shortcuts
-  const shortcuts = useMemo(() => ({
-    'ctrl+1': () => handleTabChange('medicamentos'),
-    'ctrl+2': () => handleTabChange('modo-libre'),
-    'ctrl+3': () => handleTabChange('conversor'),
-    'ctrl+4': () => handleTabChange('alimentos'),
-    'ctrl+5': () => handleTabChange('fluidos'),
-    'ctrl+6': () => handleTabChange('horarios'),
-    'ctrl+7': () => handleTabChange('emergencias'),
-    'ctrl+8': () => handleTabChange('acerca'),
-    'ctrl+p': handlePrint,
-    'ctrl+d': () => setTheme(theme === 'dark' ? 'light' : 'dark'),
-  }), [handleTabChange, handlePrint, theme, setTheme]);
-  useKeyboardShortcuts(shortcuts);
-
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       {/* Scroll progress bar */}
       <div
         className="scroll-progress-bar no-print"
@@ -254,112 +200,128 @@ export default function Home() {
           zIndex: 60,
           background: 'linear-gradient(90deg, oklch(0.55 0.15 165), oklch(0.6 0.12 145))',
           width: `${scrollProgress}%`,
-          transition: 'width 0.1s linear',
           pointerEvents: 'none',
         }}
       />
+
       {/* ========== HEADER ========== */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-background/85 border-b border-primary/10 shadow-sm">
-        <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-background/90 border-b border-border/40 shadow-xs">
+        <nav className="container mx-auto px-4 py-2 flex items-center justify-between">
           <button
-            onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setActiveTab('medicamentos'); }}
-            className="flex items-center gap-2.5 group"
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              setActiveTab('medicamentos');
+            }}
+            className="flex items-center gap-2.5 text-left group"
           >
-            <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-              <HeartPulse size={20} color="white" weight="Outline" />
+            {/* Custom Logo Image instead of Heart Icon */}
+            <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105">
+              <img
+                src="/images/image-6YCD688sjOC1kmBZgegAoQNGOCBOuQ.png"
+                alt="VetAssist Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-bold text-foreground leading-tight text-gradient-animate">VetCalc CR</span>
-              <span className="text-[10px] text-muted-foreground leading-tight tracking-wide uppercase">Veterinaria Costa Rica</span>
+              <span className="text-xl font-black tracking-tight text-foreground leading-none">
+                VetAssist
+              </span>
+              <span className="text-[10px] text-muted-foreground font-medium tracking-wide uppercase mt-0.5">
+                Asistente para cálculos de uso veterinario
+              </span>
             </div>
           </button>
 
-          {/* Desktop nav tabs with sliding indicator */}
-          <div className="hidden md:flex gap-1 bg-muted/50 rounded-xl p-1 border border-border/30 tab-indicator-track relative">
-            <motion.div
-              className="tab-indicator"
-              animate={indicatorStyle}
-              transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            />
-            {TABS.map((tab, idx) => (
-              <button
-                key={tab.id}
-                ref={(el) => { tabRefs.current[idx] = el; }}
-                onClick={() => handleTabChange(tab.id)}
-                className={`relative z-10 flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
-                  activeTab === tab.id
-                    ? 'text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {tab.icon}
-                <span className="hidden xl:inline">{tab.label}</span>
-                <kbd className="hidden lg:inline text-[9px] ml-1 px-1 py-0.5 rounded bg-foreground/5 text-muted-foreground font-mono">
-                  Ctrl+{TABS.indexOf(tab) + 1}
-                </kbd>
-              </button>
-            ))}
+          {/* Desktop Nav Tabs (Fast, Snappy) */}
+          <div className="hidden lg:flex items-center gap-1 bg-muted/50 rounded-xl p-1 border border-border/40">
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {/* Print + Mobile menu */}
-          <div className="flex items-center gap-2">
+          {/* Action Buttons & Mobile Menu Toggle */}
+          <div className="flex items-center gap-1.5">
             <Button
               variant="ghost"
               size="icon"
               onClick={handlePrint}
-              className="hidden md:flex no-print"
+              className="hidden sm:flex w-9 h-9 rounded-xl no-print text-muted-foreground hover:text-foreground"
               title="Imprimir resultado"
             >
-              <Printer size={18} weight="Outline" className="text-muted-foreground" />
+              <Printer size={18} weight="Outline" />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="no-print"
+              className="w-9 h-9 rounded-xl no-print text-muted-foreground hover:text-foreground"
               title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
             >
               {theme === 'dark' ? <Sun size={18} weight="Outline" /> : <Moon size={18} weight="Outline" />}
             </Button>
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu size={24} weight="Outline" />
+                <Button variant="ghost" size="icon" className="lg:hidden w-9 h-9 rounded-xl">
+                  <Menu size={22} weight="Outline" />
                   <span className="sr-only">Menú</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-72">
-                <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2 text-primary">
-                    <HeartPulse size={22} weight="Outline" color="oklch(0.55 0.15 165)" />
-                    VetCalc CR
-                  </SheetTitle>
+              <SheetContent side="right" className="w-80 p-5">
+                <SheetHeader className="pb-3 border-b border-border/40 text-left">
+                  <div className="flex items-center gap-2.5">
+                    <img
+                      src="/images/image-6YCD688sjOC1kmBZgegAoQNGOCBOuQ.png"
+                      alt="VetAssist Logo"
+                      className="w-9 h-9 object-contain rounded-lg"
+                    />
+                    <SheetTitle className="text-xl font-bold text-foreground">
+                      VetAssist
+                    </SheetTitle>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Asistente para cálculos de uso veterinario</p>
                 </SheetHeader>
-                <nav className="flex flex-col gap-1 mt-6">
+                <nav className="flex flex-col gap-1 mt-4 overflow-y-auto max-h-[calc(100vh-140px)]">
                   {TABS.map((tab) => (
                     <SheetClose asChild key={tab.id}>
                       <button
                         onClick={() => handleTabChange(tab.id)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                           activeTab === tab.id
-                            ? 'bg-primary text-primary-foreground'
-                            : 'hover:bg-muted'
+                            ? 'bg-primary text-primary-foreground font-semibold shadow-xs'
+                            : 'hover:bg-muted text-foreground'
                         }`}
                       >
-                        {tab.icon}
-                        <div className="text-left">
-                          <div>{tab.label}</div>
-                          <div className={`text-xs mt-0.5 ${activeTab === tab.id ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                        <span className="flex-shrink-0">{tab.icon}</span>
+                        <div className="text-left min-w-0 flex-1">
+                          <div className="leading-tight truncate">{tab.label}</div>
+                          <div className={`text-[11px] truncate mt-0.5 ${activeTab === tab.id ? 'text-primary-foreground/75' : 'text-muted-foreground'}`}>
                             {tab.desc}
                           </div>
                         </div>
                       </button>
                     </SheetClose>
                   ))}
-                  <div className="border-t border-border mt-2 pt-2">
+                  <div className="border-t border-border mt-3 pt-3">
                     <button
-                      onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); setMobileOpen(false); }}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors hover:bg-muted w-full"
+                      onClick={() => {
+                        setTheme(theme === 'dark' ? 'light' : 'dark');
+                        setMobileOpen(false);
+                      }}
+                      className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium hover:bg-muted text-foreground w-full"
                     >
                       {theme === 'dark' ? <Sun size={18} weight="Outline" /> : <Moon size={18} weight="Outline" />}
                       {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
@@ -370,684 +332,471 @@ export default function Home() {
             </Sheet>
           </div>
         </nav>
+
+        {/* Mobile Horizontal Quick Tab Bar */}
+        <div className="lg:hidden flex overflow-x-auto gap-1 px-4 py-2 border-t border-border/30 bg-muted/30 no-scrollbar">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex-shrink-0 ${
+                  isActive
+                    ? 'bg-primary text-primary-foreground shadow-xs'
+                    : 'bg-card border border-border/60 text-muted-foreground'
+                }`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </header>
 
       <main className="flex-1">
         {/* ========== HERO SECTION ========== */}
-        <section className="vet-gradient heartbeat-line particles-bg hero-vignette wave-bottom relative overflow-hidden">
-          {/* Morph blobs */}
-          <div className="morph-blob" style={{ top: '10%', left: '5%', background: 'oklch(0.55 0.15 165)' }} />
-          <div className="morph-blob" style={{ top: '40%', right: '8%', background: 'oklch(0.6 0.12 145)', animationDelay: '-4s', width: '160px', height: '160px' }} />
-          <div className="morph-blob" style={{ bottom: '10%', left: '40%', background: 'oklch(0.65 0.2 30)', animationDelay: '-8s', width: '140px', height: '140px', opacity: 0.05 }} />
-          <div className="absolute inset-0 hospital-stripe" />
-          <div className="container relative mx-auto px-4 py-10 md:py-16 lg:py-20">
+        <section className="vet-gradient relative overflow-hidden border-b border-border/30">
+          <div className="container mx-auto px-4 py-8 md:py-12 lg:py-16">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
-                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium mb-4">
-                  <Star size={14} weight="Fill" color="oklch(0.75 0.15 85)" />
-                  Herramienta profesional veterinaria
-                </div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.25rem] font-extrabold text-foreground leading-[1.1]">
-                  <SlotText
-                    text="Calculadora Veterinaria"
-                    options={{ rollBy: 'word', stagger: 60, duration: 350 }}
-                  />
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground leading-[1.1] tracking-tight">
+                  Asistente para cálculos de uso veterinario
                 </h1>
-                <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-lg leading-relaxed">
-                  Calcule con precisión dosis de medicamentos y alimentación para{' '}
-                  <strong className="text-foreground">perros y gatos</strong>.{' '}
-                  Base de datos actualizada con los fármacos de uso común en Costa Rica.
+                <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-lg leading-relaxed">
+                  Herramienta de apoyo para el cálculo con precisión de dosis de medicamentos y alimentación para animales menores.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <div className="relative inline-block">
-                    <span className="absolute -inset-1.5 rounded-xl bg-primary/25 blur-md -z-10 breathe" aria-hidden="true" />
-                    <Button
-                      size="lg"
-                      onClick={() => handleTabChange('medicamentos')}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground vet-pulse ripple-btn rounded-xl shadow-lg shadow-primary/20"
-                    >
-                      <span className="flex items-center gap-2">
-                        <Stethoscope size={18} weight="Outline" />
-                        Comenzar
-                      </span>
-                    </Button>
-                  </div>
+                  <Button
+                    size="lg"
+                    onClick={() => handleTabChange('medicamentos')}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-md shadow-primary/20 h-12 px-6"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Stethoscope size={18} weight="Outline" />
+                      Comenzar Cálculo
+                    </span>
+                  </Button>
                   <Button
                     size="lg"
                     variant="outline"
-                    onClick={() => handleTabChange('acerca')}
-                    className="rounded-xl border-primary/20 hover:bg-primary/5"
+                    onClick={() => handleTabChange('protocolos')}
+                    className="rounded-xl border-border hover:bg-muted font-semibold h-12 px-5"
                   >
-                    Más información
+                    <ClipboardText size={18} weight="Outline" className="mr-1.5" />
+                    Protocolos Frecuentes
                   </Button>
                 </div>
               </div>
 
-              {/* Hero images */}
-              <div className="relative flex justify-center items-end min-h-[240px] md:min-h-[340px] lg:min-h-[380px]">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-64 h-64 md:w-80 md:h-80 rounded-full bg-primary/5 blur-3xl" />
-                </div>
+              {/* Single Hero Image - Optimized, Larger, Clean */}
+              <div className="flex justify-center items-center">
                 <img
-                  src="/images/image-DAl3X5KYHo7tfhJ37GYdi3IFMbtgDy.png"
-                  alt="Gatito lindo"
-                  className="w-40 sm:w-48 md:w-60 lg:w-64 vet-float relative z-10 drop-shadow-lg"
-                />
-                <img
-                  src="/images/image-mq50sdliTKLbR8pLTjQHnMsozKTjol.png"
-                  alt="Pastor Alemán"
-                  className="w-40 sm:w-48 md:w-60 lg:w-64 vet-float absolute right-4 md:right-0 bottom-0 drop-shadow-lg"
-                  style={{ animationDelay: '1s' }}
+                  src="/images/image-m4itMs7R4FPhQzkRJCPAY1oHA04XQw.png"
+                  alt="Atención veterinaria canina"
+                  className="w-56 sm:w-64 md:w-80 lg:w-96 h-auto drop-shadow-xl rounded-2xl object-contain"
                 />
               </div>
             </div>
           </div>
         </section>
 
-        {/* Section divider */}
-        <div className="section-divider no-print" aria-hidden="true" />
-
-        {/* ========== QUICK INFO BAR ========== */}
-        <div className="quick-info-bar no-print vet-texture gradient-mesh">
+        {/* ========== QUICK INFO STATS BAR ========== */}
+        <div className="quick-info-bar no-print border-b border-border/40 bg-muted/20">
           <div className="container mx-auto px-4 py-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <StatCard
                 icon={<Pill size={20} color="oklch(0.55 0.15 165)" weight="Outline" />}
                 value={27} suffix="" label="Medicamentos"
               />
               <StatCard
                 icon={<ClipboardText size={20} color="oklch(0.6 0.12 145)" weight="Outline" />}
-                value={6} suffix="" label="Protocolos rápidos"
+                value={6} suffix="" label="Protocolos clínicos"
               />
               <StatCard
                 icon={<Shield size={20} color="oklch(0.7 0.15 75)" weight="Outline" />}
-                value={21} suffix="" label="Interacciones registradas"
+                value={21} suffix="" label="Interacciones evaluadas"
               />
               <StatCard
                 icon={<Database size={20} color="oklch(0.55 0.2 290)" weight="Outline" />}
-                value={14} suffix="" label="Herramientas integradas"
+                value={100} suffix="%" label="Privacidad local (Offline)"
               />
             </div>
           </div>
         </div>
 
-        {/* ========== MAIN CONTENT TABS ========== */}
-        <AnimatePresence mode="wait">
-          {activeTab === 'medicamentos' && (
-            <motion.section
-              key="medicamentos"
-              id="medicamentos"
-              className="py-10 md:py-14 relative"
-              {...sectionVariants}
-            >
-              <div className="container mx-auto px-4">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
-                    <Pill size={28} color="oklch(0.55 0.15 165)" weight="Outline" />
-                    <SlotText
-                      text="Calculadora de Medicamentos"
-                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
-                    />
-                  </h2>
-                  <p className="mt-2 text-muted-foreground max-w-md mx-auto">
-                    Seleccione un medicamento y calcule la dosis exacta para su paciente
-                  </p>
-                </div>
-                <div className="max-w-2xl mx-auto">
-                  <MedicationCalculator />
-                </div>
-              </div>
-              <img
-                src="/images/image-SNWiaDnaZNy4wyUYuQkRujeWhGg8dB.png"
-                alt=""
-                className="absolute top-20 right-4 w-28 opacity-15 vet-float hidden lg:block"
-                aria-hidden="true"
-              />
-            </motion.section>
-          )}
-
-          {activeTab === 'modo-libre' && (
-            <motion.section
-              key="modo-libre"
-              id="modo-libre"
-              className="py-10 md:py-14 section-alt"
-              {...sectionVariants}
-            >
-              <div className="container relative mx-auto px-4">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
-                    <Calculator size={28} color="oklch(0.55 0.15 165)" weight="Outline" />
-                    <SlotText
-                      text="Modo Libre"
-                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
-                    />
-                  </h2>
-                  <p className="mt-2 text-muted-foreground max-w-md mx-auto">
-                    Ingrese cualquier dosis personalizada por kilogramo de peso
-                  </p>
-                </div>
-                <div className="max-w-2xl mx-auto">
-                  <FreeModeCalculator />
-                </div>
-              </div>
-              <img
-                src="/images/image-ly2ke4dipmCnYtX9BC9iqRGJSIcsV8.png"
-                alt=""
-                className="absolute bottom-16 left-4 w-24 opacity-15 vet-float hidden lg:block"
-                style={{ animationDelay: '2s' }}
-                aria-hidden="true"
-              />
-            </motion.section>
-          )}
-
-          {activeTab === 'conversor' && (
-            <motion.section
-              key="conversor"
-              id="conversor"
-              className="py-10 md:py-14 relative gradient-mesh"
-              {...sectionVariants}
-            >
-              <div className="container mx-auto px-4">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
-                    <Repeat size={28} color="oklch(0.55 0.15 165)" weight="Outline" />
-                    <SlotText
-                      text="Conversor Rápido de Unidades"
-                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
-                    />
-                  </h2>
-                  <p className="mt-2 text-muted-foreground max-w-md mx-auto">
-                    Convierta rápidamente entre unidades de peso, volumen, temperatura y concentración
-                  </p>
-                </div>
-                <div className="max-w-2xl mx-auto">
-                  <QuickConverter />
-                </div>
-              </div>
-            </motion.section>
-          )}
-
-          {activeTab === 'alimentos' && (
-            <motion.section
-              key="alimentos"
-              id="alimentos"
-              className="py-10 md:py-14 relative"
-              {...sectionVariants}
-            >
-              <div className="container mx-auto px-4">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
-                    <Scale size={28} color="oklch(0.55 0.15 165)" weight="Outline" />
-                    <SlotText
-                      text="Calculadora de Alimentos"
-                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
-                    />
-                  </h2>
-                  <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
-                    Calcule la cantidad diaria de alimento según peso, actividad y número de comidas.
-                    Incluye equivalencias en onzas y tazas.
-                  </p>
-                </div>
-                <div className="max-w-2xl mx-auto">
-                  <FoodCalculator />
-                </div>
-              </div>
-              <img
-                src="/images/image-75mXdfvt3lvbs8fSCmASg9n6biV6Q5.png"
-                alt=""
-                className="absolute top-20 left-4 w-28 opacity-15 vet-float hidden lg:block"
-                style={{ animationDelay: '1.5s' }}
-                aria-hidden="true"
-              />
-            </motion.section>
-          )}
-
-          {activeTab === 'fluidos' && (
-            <motion.section
-              key="fluidos"
-              id="fluidos"
-              className="py-10 md:py-14 relative gradient-mesh"
-              {...sectionVariants}
-            >
-              <div className="container mx-auto px-4">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
-                    <Drop size={28} color="oklch(0.55 0.15 165)" weight="Outline" />
-                    <SlotText
-                      text="Calculadora de Fluidoterapia IV"
-                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
-                    />
-                  </h2>
-                  <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
-                    Calcule la tasa de infusión, gotas por minuto y volumen diario de fluidos IV para pequeños animales.
-                  </p>
-                </div>
-                <div className="max-w-2xl mx-auto">
-                  <IVFluidCalculator />
-                </div>
-              </div>
-            </motion.section>
-          )}
-
-          {activeTab === 'horarios' && (
-            <motion.section
-              key="horarios"
-              id="horarios"
-              className="py-10 md:py-14 section-alt"
-              {...sectionVariants}
-            >
-              <div className="container mx-auto px-4">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
-                    <CalendarCheck size={28} color="oklch(0.55 0.15 165)" weight="Outline" />
-                    <SlotText
-                      text="Generador de Horarios"
-                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
-                    />
-                  </h2>
-                  <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
-                    Genere horarios de administración de medicamentos con seguimiento de dosis por día.
-                  </p>
-                </div>
-                <div className="max-w-4xl mx-auto">
-                  <DoseSchedule />
-                </div>
-              </div>
-            </motion.section>
-          )}
-
-          {activeTab === 'emergencias' && (
-            <motion.section
-              key="emergencias"
-              id="emergencias"
-              className="py-10 md:py-14 relative gradient-mesh"
-              {...sectionVariants}
-            >
-              <div className="container mx-auto px-4">
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
-                    <Warning size={28} color="oklch(0.6 0.2 25)" weight="Outline" />
-                    <SlotText
-                      text="Referencia de Emergencias"
-                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
-                    />
-                  </h2>
-                  <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
-                    Fichas rápidas de fármacos críticos para emergencias veterinarias en perros y gatos
-                  </p>
-                </div>
-                <EmergencyReference />
-              </div>
-            </motion.section>
-          )}
-
-          {activeTab === 'acerca' && (
-            <motion.section
-              key="acerca"
-              id="acerca"
-              className="py-10 md:py-14 section-alt"
-              {...sectionVariants}
-            >
-              <div className="container relative mx-auto px-4">
-                <div className="max-w-4xl mx-auto text-center">
-                  <img
-                    src="/images/image-ViY6rawiI2uiV9tsy3QGZXdyngtXrC.png"
-                    alt="Doctor veterinario"
-                    className="w-36 mx-auto mb-4 drop-shadow-lg"
-                  />
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
-                    <MedicalKit size={28} color="oklch(0.55 0.15 165)" weight="Outline" />
-                    <SlotText
-                      text="Acerca de VetCalc CR"
-                      options={{ rollBy: 'word', stagger: 50, duration: 300 }}
-                    />
-                  </h2>
-                  <p className="mt-4 text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                    VetCalc CR es una herramienta de apoyo diseñada para profesionales veterinarios en Costa Rica.
-                    Permite calcular con precisión las dosis de medicamentos de uso común en medicina veterinaria
-                    para perros y gatos, así como la cantidad diaria de alimento basada en requerimientos energéticos.
-                  </p>
-
-                  {/* Feature cards */}
-                  <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-in">
-                    <div style={{ '--i': 0 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
-                      <div className="h-1.5 bg-gradient-to-r from-primary to-primary/40" />
-                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-primary/5 to-transparent pointer-events-none" aria-hidden="true" />
-                      <CardContent className="p-5 text-center relative z-10">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                          <Pill size={24} color="oklch(0.55 0.15 165)" weight="Outline" />
-                        </div>
-                        <h3 className="font-bold">27 Medicamentos</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Base de datos con dosificaciones verificadas para la práctica veterinaria en CR
-                        </p>
-                      </CardContent>
-                    </Card>
-                    </div>
-                    <div style={{ '--i': 1 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
-                      <div className="h-1.5 bg-gradient-to-r from-chart-3 to-chart-3/40" />
-                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-chart-3/5 to-transparent pointer-events-none" aria-hidden="true" />
-                      <CardContent className="p-5 text-center relative z-10">
-                        <div className="w-12 h-12 rounded-xl bg-chart-3/10 flex items-center justify-center mx-auto mb-3">
-                          <Shield size={24} color="oklch(0.6 0.12 145)" weight="Outline" />
-                        </div>
-                        <h3 className="font-bold">8 Categorías</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Desde anestésicos hasta analgésicos — cobertura terapéutica completa
-                        </p>
-                      </CardContent>
-                    </Card>
-                    </div>
-                    <div style={{ '--i': 2 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
-                      <div className="h-1.5 bg-gradient-to-r from-chart-2 to-chart-2/40" />
-                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-chart-2/5 to-transparent pointer-events-none" aria-hidden="true" />
-                      <CardContent className="p-5 text-center relative z-10">
-                        <div className="w-12 h-12 rounded-xl bg-chart-2/10 flex items-center justify-center mx-auto mb-3">
-                          <Scale size={24} color="oklch(0.65 0.2 30)" weight="Outline" />
-                        </div>
-                        <h3 className="font-bold">Alimentación RER/DER</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Cálculo basado en estándares veterinarios con soporte para onzas y tazas
-                        </p>
-                      </CardContent>
-                    </Card>
-                    </div>
-                    <div style={{ '--i': 3 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
-                      <div className="h-1.5 bg-gradient-to-r from-amber-400 to-amber-400/40" />
-                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-amber-400/5 to-transparent pointer-events-none" aria-hidden="true" />
-                      <CardContent className="p-5 text-center relative z-10">
-                        <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center mx-auto mb-3">
-                          <ClipboardText size={24} color="oklch(0.7 0.18 75)" weight="Outline" />
-                        </div>
-                        <h3 className="font-bold">6 Protocolos Rápidos</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Pre-quirúrgicos, desparasitación, analgesia post-op y más — listos para usar
-                        </p>
-                      </CardContent>
-                    </Card>
-                    </div>
-                    <div style={{ '--i': 4 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
-                      <div className="h-1.5 bg-gradient-to-r from-red-400 to-red-400/40" />
-                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-red-400/5 to-transparent pointer-events-none" aria-hidden="true" />
-                      <CardContent className="p-5 text-center relative z-10">
-                        <div className="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center mx-auto mb-3">
-                          <Syringe size={24} color="oklch(0.6 0.2 25)" weight="Outline" />
-                        </div>
-                        <h3 className="font-bold">Verificador de Interacciones</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Detecte interacciones medicamentosas peligrosas antes de prescribir
-                        </p>
-                      </CardContent>
-                    </Card>
-                    </div>
-                    <div style={{ '--i': 5 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
-                      <div className="h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-400/40" />
-                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-emerald-400/5 to-transparent pointer-events-none" aria-hidden="true" />
-                      <CardContent className="p-5 text-center relative z-10">
-                        <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center mx-auto mb-3">
-                          <HeartPulse size={24} color="oklch(0.65 0.2 145)" weight="Outline" />
-                        </div>
-                        <h3 className="font-bold">BCS + Herramientas</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Condición corporal, conversor de peso, historial y atajos de teclado
-                        </p>
-                      </CardContent>
-                    </Card>
-                    </div>
-                    <div style={{ '--i': 6 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
-                      <div className="h-1.5 bg-gradient-to-r from-violet-400 to-violet-400/40" />
-                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-violet-400/5 to-transparent pointer-events-none" aria-hidden="true" />
-                      <CardContent className="p-5 text-center relative z-10">
-                        <div className="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-950/30 flex items-center justify-center mx-auto mb-3">
-                          <Database size={24} color="oklch(0.55 0.2 290)" weight="Outline" />
-                        </div>
-                        <h3 className="font-bold">Gestor de Datos</h3>
-                        <p className="text-sm text-muted-foreground mt-1 mb-3">
-                          Exporte, importe o elimine sus favoritos e historial de consultas
-                        </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setDataManagerOpen(true)}
-                          className="gap-1.5 text-xs"
-                        >
-                          <Database size={14} weight="Outline" />
-                          Abrir Gestor
-                        </Button>
-                      </CardContent>
-                    </Card>
-                    </div>
-                    <div style={{ '--i': 7 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
-                      <div className="h-1.5 bg-gradient-to-r from-sky-400 to-sky-400/40" />
-                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-sky-400/5 to-transparent pointer-events-none" aria-hidden="true" />
-                      <CardContent className="p-5 text-center relative z-10">
-                        <div className="w-12 h-12 rounded-xl bg-sky-50 dark:bg-sky-950/30 flex items-center justify-center mx-auto mb-3">
-                          <Drop size={24} color="oklch(0.55 0.15 230)" weight="Outline" />
-                        </div>
-                        <h3 className="font-bold">Fluidoterapia IV</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Tasa de infusión, gotas por minuto y corrección de deshidratación
-                        </p>
-                      </CardContent>
-                    </Card>
-                    </div>
-                    <div style={{ '--i': 8 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
-                      <div className="h-1.5 bg-gradient-to-r from-orange-400 to-orange-400/40" />
-                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-orange-400/5 to-transparent pointer-events-none" aria-hidden="true" />
-                      <CardContent className="p-5 text-center relative z-10">
-                        <div className="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-950/30 flex items-center justify-center mx-auto mb-3">
-                          <CalendarCheck size={24} color="oklch(0.65 0.2 55)" weight="Outline" />
-                        </div>
-                        <h3 className="font-bold">Horarios de Medicación</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Generador de horarios con seguimiento diario y alertas sonoras
-                        </p>
-                      </CardContent>
-                    </Card>
-                    </div>
-                    <div style={{ '--i': 9 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
-                      <div className="h-1.5 bg-gradient-to-r from-red-500 to-red-400/40" />
-                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-red-500/5 to-transparent pointer-events-none" aria-hidden="true" />
-                      <CardContent className="p-5 text-center relative z-10">
-                        <div className="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center mx-auto mb-3">
-                          <Warning size={24} color="oklch(0.6 0.2 25)" weight="Outline" />
-                        </div>
-                        <h3 className="font-bold">Referencia de Emergencias</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          8 fármacos críticos con dosis rápidas para anafilaxia, convulsiones y shock
-                        </p>
-                      </CardContent>
-                    </Card>
-                    </div>
-                    <div style={{ '--i': 10 } as React.CSSProperties}>
-                    <Card className="vet-card-hover-enhanced hover-lift tilt-3d overflow-hidden neon-border relative card-shine-hover">
-                      <div className="h-1.5 bg-gradient-to-r from-violet-400 to-violet-400/40" />
-                      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-violet-400/5 to-transparent pointer-events-none" aria-hidden="true" />
-                      <CardContent className="p-5 text-center relative z-10">
-                        <div className="w-12 h-12 rounded-xl bg-violet-50 dark:bg-violet-950/30 flex items-center justify-center mx-auto mb-3">
-                          <Repeat size={24} color="oklch(0.55 0.2 290)" weight="Outline" />
-                        </div>
-                        <h3 className="font-bold">Conversor Rápido</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Peso, volumen, temperatura y concentración — conversiones instantáneas
-                        </p>
-                      </CardContent>
-                    </Card>
-                    </div>
+        {/* ========== MAIN TAB CONTENT AREA ========== */}
+        <div id="main-calculator-area" className="py-8 md:py-12">
+          <AnimatePresence mode="wait">
+            {activeTab === 'medicamentos' && (
+              <motion.section key="medicamentos" id="medicamentos" {...tabVariants}>
+                <div className="container mx-auto px-4">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                      <Pill size={26} color="oklch(0.55 0.15 165)" weight="Outline" />
+                      Calculadora de Medicamentos
+                    </h2>
+                    <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
+                      Seleccione especie, peso y fármaco para calcular dosis mínimas, recomendadas y máximas
+                    </p>
                   </div>
-
-                  {/* Legal Disclaimer */}
-                  <div className="mt-8">
-                    <Alert variant="destructive" className="text-left">
-                      <Syringe size={18} weight="Outline" />
-                      <AlertTitle className="flex items-center gap-2">
-                        <ClipboardText size={16} weight="Outline" />
-                        Aviso Legal Importante
-                      </AlertTitle>
-                      <AlertDescription className="text-sm mt-2 leading-relaxed">
-                        Esta herramienta es <strong>solo de referencia</strong> y no sustituye el criterio
-                        clínico profesional. Las dosis mostradas se basan en formularios veterinarios estándar,
-                        pero cada paciente es único. Siempre verifique la dosificación con las guías
-                        actualizadas, considere la condición clínica individual, y siga los protocolos
-                        establecidos por el <strong>Colegio de Médicos Veterinarios de Costa Rica</strong>.
-                        El uso de esta herramienta es responsabilidad exclusiva del profesional que la consulta.
-                      </AlertDescription>
-                    </Alert>
+                  <div className="max-w-2xl mx-auto">
+                    <MedicationCalculator onOpenNotes={() => setClinicalNotesOpen(true)} />
                   </div>
                 </div>
-              </div>
-            </motion.section>
-          )}
-        </AnimatePresence>
+              </motion.section>
+            )}
+
+            {activeTab === 'protocolos' && (
+              <motion.section key="protocolos" id="protocolos" {...tabVariants}>
+                <div className="container mx-auto px-4">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                      <ClipboardText size={26} color="oklch(0.55 0.15 165)" weight="Outline" />
+                      Protocolos de Uso Frecuente
+                    </h2>
+                    <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
+                      Cálculo simultáneo de todos los medicamentos de protocolos anestésicos, post-op y terapéuticos
+                    </p>
+                  </div>
+                  <div className="max-w-3xl mx-auto">
+                    <FrequentProtocols />
+                  </div>
+                </div>
+              </motion.section>
+            )}
+
+            {activeTab === 'modo-libre' && (
+              <motion.section key="modo-libre" id="modo-libre" {...tabVariants}>
+                <div className="container mx-auto px-4">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                      <Calculator size={26} color="oklch(0.55 0.15 165)" weight="Outline" />
+                      Modo Libre
+                    </h2>
+                    <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
+                      Ingrese cualquier dosis personalizada por kilogramo de peso corporal
+                    </p>
+                  </div>
+                  <div className="max-w-2xl mx-auto">
+                    <FreeModeCalculator />
+                  </div>
+                </div>
+              </motion.section>
+            )}
+
+            {activeTab === 'conversor' && (
+              <motion.section key="conversor" id="conversor" {...tabVariants}>
+                <div className="container mx-auto px-4">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                      <Repeat size={26} color="oklch(0.55 0.15 165)" weight="Outline" />
+                      Conversor Rápido de Unidades
+                    </h2>
+                    <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
+                      Conversión instantánea entre peso, volumen, concentraciones y diluciones
+                    </p>
+                  </div>
+                  <div className="max-w-2xl mx-auto">
+                    <QuickConverter />
+                  </div>
+                </div>
+              </motion.section>
+            )}
+
+            {activeTab === 'alimentos' && (
+              <motion.section key="alimentos" id="alimentos" {...tabVariants}>
+                <div className="container mx-auto px-4">
+                  <div className="text-center mb-4">
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                      <Scale size={26} color="oklch(0.55 0.15 165)" weight="Outline" />
+                      Calculadora de Alimentos
+                    </h2>
+                    <div className="my-3 flex justify-center">
+                      <img
+                        src="/images/image-75mXdfvt3lvbs8fSCmASg9n6biV6Q5.png"
+                        alt="Nutrición canina y felina"
+                        className="w-28 sm:w-36 h-auto drop-shadow-md rounded-xl object-contain"
+                      />
+                    </div>
+                    <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto">
+                      Calcule la cantidad diaria de alimento según peso, actividad y número de comidas con soporte para onzas y tazas
+                    </p>
+                  </div>
+                  <div className="max-w-2xl mx-auto">
+                    <FoodCalculator />
+                  </div>
+                </div>
+              </motion.section>
+            )}
+
+            {activeTab === 'fluidos' && (
+              <motion.section key="fluidos" id="fluidos" {...tabVariants}>
+                <div className="container mx-auto px-4">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                      <Drop size={26} color="oklch(0.55 0.15 165)" weight="Outline" />
+                      Calculadora de Fluidoterapia IV
+                    </h2>
+                    <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto">
+                      Tasa de infusión, corrección de deshidratación, pérdidas y gotas por minuto
+                    </p>
+                  </div>
+                  <div className="max-w-2xl mx-auto">
+                    <IVFluidCalculator />
+                  </div>
+                </div>
+              </motion.section>
+            )}
+
+            {activeTab === 'horarios' && (
+              <motion.section key="horarios" id="horarios" {...tabVariants}>
+                <div className="container mx-auto px-4">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                      <CalendarCheck size={26} color="oklch(0.55 0.15 165)" weight="Outline" />
+                      Generador de Horarios de Medicación
+                    </h2>
+                    <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto">
+                      Planifique el calendario de tomas y seguimiento de administración
+                    </p>
+                  </div>
+                  <div className="max-w-4xl mx-auto">
+                    <DoseSchedule />
+                  </div>
+                </div>
+              </motion.section>
+            )}
+
+            {activeTab === 'emergencias' && (
+              <motion.section key="emergencias" id="emergencias" {...tabVariants}>
+                <div className="container mx-auto px-4">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                      <Warning size={26} color="oklch(0.6 0.2 25)" weight="Outline" />
+                      Referencia de Emergencias
+                    </h2>
+                    <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto">
+                      Fichas rápidas de fármacos críticos para soporte vital en caninos y felinos
+                    </p>
+                  </div>
+                  <EmergencyReference />
+                </div>
+              </motion.section>
+            )}
+
+            {activeTab === 'acerca' && (
+              <motion.section key="acerca" id="acerca" {...tabVariants}>
+                <div className="container mx-auto px-4">
+                  <div className="max-w-3xl mx-auto text-center space-y-6">
+                    <img
+                      src="/images/image-ViY6rawiI2uiV9tsy3QGZXdyngtXrC.png"
+                      alt="Doctor veterinario"
+                      className="w-32 mx-auto drop-shadow-md rounded-2xl"
+                    />
+                    <div>
+                      <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
+                        <MedicalKit size={26} color="oklch(0.55 0.15 165)" weight="Outline" />
+                        Acerca de VetAssist
+                      </h2>
+                    </div>
+
+                    <div className="text-left space-y-4 bg-card rounded-2xl p-5 sm:p-7 border border-border shadow-xs text-sm sm:text-base leading-relaxed text-muted-foreground">
+                      <p>
+                        VetAssist es una herramienta de apoyo diseñada para profesionales veterinarios en Costa Rica. Permite calcular con precisión las dosis de medicamentos de uso común en medicina veterinaria para perros y gatos, así como la cantidad diaria de alimento basada en requerimientos energéticos.
+                      </p>
+                      <p>
+                        Esta herramienta está dirigida a los profesionales en medicina veterinaria, como un apoyo estratégico a sus conocimientos. Permite calcular con precisión las dosis de medicamentos de uso común en medicina veterinaria para perros y gatos, así como la cantidad diaria de alimento basada en requerimientos energéticos.
+                      </p>
+                    </div>
+
+                    {/* Data Manager Open Trigger */}
+                    <div className="flex justify-center pt-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setDataManagerOpen(true)}
+                        className="rounded-xl gap-2 text-xs"
+                      >
+                        <Database size={15} weight="Outline" />
+                        Abrir Gestor de Datos Locales
+                      </Button>
+                    </div>
+
+                    {/* Legal Disclaimer Box */}
+                    <div className="text-left space-y-6">
+                      <Alert variant="destructive" className="rounded-2xl p-5">
+                        <AlertTitle className="flex items-center gap-2 text-base font-bold">
+                          <ClipboardText size={18} weight="Outline" />
+                          Aviso Legal Importante
+                        </AlertTitle>
+                        <AlertDescription className="text-xs sm:text-sm mt-2 leading-relaxed text-destructive-foreground/90">
+                          Esta herramienta es solo de referencia y no sustituye el criterio clínico profesional. Las dosis mostradas se basan en formularios veterinarios estándar, pero cada paciente es único. Siempre verifique la dosificación con las guías actualizadas, considere la condición clínica individual, y siga los protocolos establecidos por el Colegio de Médicos Veterinarios de Costa Rica. El uso de esta herramienta es responsabilidad exclusiva del profesional que la consulta, es importante tener en cuenta que está herramienta está dirigida a profesionales formados en medicina veterinaria y no al público general, no automedique a su mascota.
+                        </AlertDescription>
+                      </Alert>
+
+                      {/* Image below Legal Disclaimer - Centered, Reasonable Size, Non-transparent */}
+                      <div className="flex justify-center pt-2">
+                        <img
+                          src="/images/image-sRbFNlfdBngPHNF1Qansq4jMo87xtP.png"
+                          alt="Atención médica veterinaria responsable"
+                          className="w-48 sm:w-60 md:w-72 h-auto drop-shadow-md rounded-2xl object-contain"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.section>
+            )}
+          </AnimatePresence>
+        </div>
       </main>
 
-      {/* Data Manager Sheet */}
+      {/* Local Data Manager Drawer */}
       <DataManager open={dataManagerOpen} onOpenChange={setDataManagerOpen} />
 
-      {/* Clinical Notes Panel */}
+      {/* Clinical Notes Drawer */}
       <ClinicalNotes open={clinicalNotesOpen} onOpenChange={setClinicalNotesOpen} />
 
       {/* Floating Clinical Notes FAB */}
-      <AnimatePresence>
-        <motion.button
-          initial={{ opacity: 0, scale: 0.8, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8, y: 10 }}
-          transition={{ duration: 0.2 }}
-          onClick={() => setClinicalNotesOpen(true)}
-          className="no-print fab fixed bottom-20 right-5 z-50"
-          title="Notas Clínicas"
-          aria-label="Abrir notas clínicas"
-        >
-          <Notebook size={24} weight="Outline" />
-        </motion.button>
-      </AnimatePresence>
+      <button
+        onClick={() => setClinicalNotesOpen(true)}
+        className="no-print fab fixed bottom-20 right-5 z-50 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+        title="Notas Clínicas Rápidas"
+        aria-label="Abrir notas clínicas"
+      >
+        <Notebook size={22} weight="Outline" />
+      </button>
 
       {/* Scroll to top button */}
-      <AnimatePresence>
-        {showScrollTop && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: 10 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="no-print fixed bottom-20 left-5 z-50 w-11 h-11 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 flex items-center justify-center hover:bg-primary/90 transition-colors"
-            title="Volver arriba"
-            aria-label="Volver arriba"
-          >
-            <ArrowUp size={20} weight="Outline" />
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* Section divider before footer */}
-      <div className="section-divider no-print" aria-hidden="true" />
+      {showScrollTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="no-print fixed bottom-20 left-5 z-50 w-11 h-11 rounded-full bg-card border border-border text-foreground shadow-md flex items-center justify-center hover:bg-muted transition-colors"
+          title="Volver arriba"
+          aria-label="Volver arriba"
+        >
+          <ArrowUp size={18} weight="Outline" />
+        </button>
+      )}
 
       {/* ========== FOOTER ========== */}
-      <footer className="footer-wave bg-[#115459] text-white pt-12 pb-8 mt-auto no-print inner-shadow-glow">
+      <footer className="bg-[#115459] text-white pt-10 pb-8 mt-auto no-print">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-3 gap-8 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Col 1: Brand */}
             <div>
               <div className="flex items-center gap-2.5 mb-3">
-                <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center">
-                  <HeartPulse size={20} weight="Outline" color="white" />
+                <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center bg-white/10">
+                  <img
+                    src="/images/image-6YCD688sjOC1kmBZgegAoQNGOCBOuQ.png"
+                    alt="VetAssist Logo"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div>
-                  <span className="font-bold text-lg">VetCalc CR</span>
-                  <p className="text-[10px] text-teal-300 uppercase tracking-wider">Veterinaria Costa Rica</p>
+                  <span className="font-bold text-base">VetAssist</span>
+                  <p className="text-[10px] text-teal-300 uppercase tracking-wider">Asistente para cálculos de uso veterinario</p>
                 </div>
               </div>
-              <p className="text-teal-200/80 text-sm leading-relaxed">
-                Herramienta profesional para el cálculo de dosis de medicamentos y
-                alimentación en pequeños animales.
+              <p className="text-teal-100/80 text-xs sm:text-sm leading-relaxed">
+                Herramienta de apoyo para el cálculo con precisión de dosis de medicamentos y alimentación para animales menores.
               </p>
             </div>
+
+            {/* Col 2: Recursos */}
             <div>
-              <h3 className="font-bold text-sm uppercase tracking-wider text-teal-300 mb-3">Recursos</h3>
-              <ul className="space-y-2.5">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-teal-300 mb-3">
+                Recursos
+              </h3>
+              <ul className="space-y-2 text-xs sm:text-sm">
                 <li>
                   <button
                     onClick={() => handleTabChange('medicamentos')}
-                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2 animated-underline"
+                    className="text-teal-100/80 hover:text-white transition-colors"
                   >
-                    <Pill size={14} weight="Outline" />
-                    <span>Calculadora de Medicamentos</span>
+                    Calculadora de Medicamentos
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => handleTabChange('protocolos')}
+                    className="text-teal-100/80 hover:text-white transition-colors"
+                  >
+                    Protocolos de Uso Frecuente
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => handleTabChange('alimentos')}
-                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2 animated-underline"
+                    className="text-teal-100/80 hover:text-white transition-colors"
                   >
-                    <Scale size={14} weight="Outline" />
-                    <span>Calculadora de Alimentos</span>
+                    Calculadora de Alimentos
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => handleTabChange('fluidos')}
+                    className="text-teal-100/80 hover:text-white transition-colors"
+                  >
+                    Fluidoterapia IV
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => handleTabChange('modo-libre')}
-                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2 animated-underline"
+                    className="text-teal-100/80 hover:text-white transition-colors"
                   >
-                    <Calculator size={14} weight="Outline" />
-                    <span>Modo Libre</span>
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => handleTabChange('conversor')}
-                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2 animated-underline"
-                  >
-                    <Repeat size={14} weight="Outline" />
-                    <span>Conversor de Unidades</span>
+                    Modo Libre
                   </button>
                 </li>
               </ul>
             </div>
+
+            {/* Col 3: Información */}
             <div>
-              <h3 className="font-bold text-sm uppercase tracking-wider text-teal-300 mb-3">Información</h3>
-              <ul className="space-y-2.5">
+              <h3 className="font-bold text-xs uppercase tracking-wider text-teal-300 mb-3">
+                Información
+              </h3>
+              <ul className="space-y-2 text-xs sm:text-sm">
                 <li>
                   <button
                     onClick={() => handleTabChange('acerca')}
-                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2 animated-underline"
+                    className="text-teal-100/80 hover:text-white transition-colors"
                   >
-                    <CircleInfo size={14} weight="Outline" />
-                    <span>Acerca de</span>
+                    Acerca de la herramienta
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => handleTabChange('emergencias')}
+                    className="text-teal-100/80 hover:text-white transition-colors"
+                  >
+                    Referencia de Emergencias
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={handlePrint}
-                    className="text-teal-200/80 hover:text-white transition-colors text-sm flex items-center gap-2 animated-underline"
+                    className="text-teal-100/80 hover:text-white transition-colors"
                   >
-                    <Printer size={14} weight="Outline" />
-                    <span>Imprimir resultado</span>
+                    Imprimir resultado
                   </button>
                 </li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-white/15 mt-8 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-teal-300/70">
-            <div className="flex items-center gap-3">
-              <p>© 2025 VetCalc CR — Herramienta de referencia para veterinarios en Costa Rica</p>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 text-teal-300 text-[10px] font-mono font-semibold tracking-wider">
+
+          {/* Bottom Copyright & Professional Credits */}
+          <div className="border-t border-white/15 mt-8 pt-5 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs text-teal-200/80">
+            <div className="flex items-center gap-2 flex-wrap text-center sm:text-left">
+              <span>© 2026 VetAssist — Herramienta de referencia para veterinarios en Costa Rica</span>
+              <span className="inline-flex items-center px-1.5 py-0.2 rounded bg-white/10 text-[10px] font-mono">
                 v2.2
               </span>
             </div>
-            <p className="flex items-center gap-1.5">
-              <Shield size={12} weight="Outline" />
-              Solo para uso profesional veterinario
+            <p className="font-medium text-teal-100">
+              Elaborado por Ing. Alvaro Enrique Cascante Moraga, CPIC#12549
             </p>
           </div>
         </div>

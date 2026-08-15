@@ -42,9 +42,11 @@ const DOSE_UNITS = [
 
 function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
   return (
-    <div className="relative pl-8">
-      <span className="step-number absolute left-0 top-0.5">{num}</span>
-      <h3 className="text-sm sm:text-base font-semibold flex items-center gap-2">{children}</h3>
+    <div className="flex items-center gap-2.5 mb-2.5">
+      <span className="w-6 h-6 rounded-lg bg-primary/15 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">
+        {num}
+      </span>
+      <h3 className="text-sm sm:text-base font-semibold text-foreground flex items-center gap-2">{children}</h3>
     </div>
   );
 }

@@ -25,6 +25,7 @@ import {
   Copy,
   Trash,
   User,
+  Notebook,
 } from 'reicon-react';
 import AnimalIcon, { AnimalBadge } from './AnimalIcon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,7 +45,6 @@ import type { FavoriteMed } from '@/lib/favorites';
 import { useToggleFavorite, useFavorites } from '@/lib/use-favorites-store';
 import FavoritesPanel from './FavoritesPanel';
 import DoseReferenceTable from './DoseReferenceTable';
-import ProtocolTemplates from './ProtocolTemplates';
 import DrugInteractionChecker from './DrugInteractionChecker';
 import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-store';
 import PatientProfiles from './PatientProfiles';
@@ -73,19 +73,24 @@ interface CalcResult {
   notes: string;
 }
 
-
+interface MedicationCalculatorProps {
+  onOpenNotes?: () => void;
+}
 
 function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
   return (
-    <div className="relative pl-8">
-      {/* Timeline dot + vertical line */}
-      <span className="step-number absolute left-0 top-0.5">{num}</span>
-      <h3 className="text-sm sm:text-base font-semibold flex items-center gap-2">{children}</h3>
+    <div className="flex items-center gap-2.5 mb-2.5">
+      <span className="w-6 h-6 rounded-lg bg-primary/15 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">
+        {num}
+      </span>
+      <h3 className="text-sm sm:text-base font-semibold text-foreground flex items-center gap-2">
+        {children}
+      </h3>
     </div>
   );
 }
 
-export default function MedicationCalculator() {
+export default function MedicationCalculator({ onOpenNotes }: MedicationCalculatorProps) {
   const [animalType, setAnimalType] = useState<AnimalType>('perro');
   const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg');
@@ -104,7 +109,7 @@ export default function MedicationCalculator() {
   const clearHistory = useClearHistory();
   const toggleFav = useToggleFavorite();
   const favorites = useFavorites();
-  const favIdSet = new Set(favorites.map(f => f.medicationId));
+  const favIdSet = new Set(favorites.map((f) => f.medicationId));
   const { addToast } = useVetToast();
 
   const handleSelectFavorite = useCallback((fav: FavoriteMed) => {
@@ -116,8 +121,6 @@ export default function MedicationCalculator() {
       setResult(null);
     }
   }, []);
-
-
 
   const filteredMedications = useMemo(() => {
     if (!selectedCategory) return [];
@@ -162,14 +165,12 @@ export default function MedicationCalculator() {
       }
 
       setResult(data);
-      // Save to history
       const unit = data.calculatedDose.unit.split('/')[0];
       addHistory({
         type: 'medication',
         timestamp: Date.now(),
         summary: `${data.medication.name} | ${animalType} ${data.weightKg}kg | ${data.calculatedDose.recommended}${unit}`,
       });
-      // history auto-updates via useSyncExternalStore
     } catch {
       setError('Error de conexión. Intente de nuevo.');
     } finally {
@@ -185,13 +186,63 @@ export default function MedicationCalculator() {
 
   return (
     <div className="glass-card rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5">
+      {/* Top Quick Actions Bar (Favoritos, Notas Rápidas, Pacientes) */}
+      <div className="flex items-center justify-between gap-2 pb-3 border-b border-border/40 no-print">
+        <div className="flex items-center gap-2">
+          <Pill size={18} color="oklch(0.55 0.15 165)" weight="Outline" />
+          <span className="text-sm font-bold text-foreground">Dosificación de Fármacos</span>
+        </div>
+
+        {/* Square Rounded Action Toolbar */}
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowFavorites(true)}
+            className="w-9 h-9 rounded-xl border border-border/80 bg-card hover:bg-muted/80 shadow-sm transition-all"
+            title="Medicamentos Favoritos"
+            aria-label="Abrir favoritos"
+          >
+            <Star size={16} weight="Fill" className="text-amber-500" />
+          </Button>
+
+          {onOpenNotes && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onOpenNotes}
+              className="w-9 h-9 rounded-xl border border-border/80 bg-card hover:bg-muted/80 shadow-sm transition-all"
+              title="Notas Clínicas Rápidas"
+              aria-label="Abrir notas clínicas"
+            >
+              <Notebook size={16} weight="Outline" className="text-primary" />
+            </Button>
+          )}
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowPatientPanel(!showPatientPanel)}
+            className={`w-9 h-9 rounded-xl border shadow-sm transition-all ${
+              showPatientPanel
+                ? 'bg-primary/10 border-primary/40 text-primary'
+                : 'border-border/80 bg-card hover:bg-muted/80 text-foreground'
+            }`}
+            title="Gestión de Pacientes"
+            aria-label="Perfiles de pacientes"
+          >
+            <User size={16} weight={showPatientPanel ? 'Fill' : 'Outline'} />
+          </Button>
+        </div>
+      </div>
+
       {/* Recent History */}
       {history.length > 0 && !result && (
         <div className="no-print">
           <div className="flex items-center justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
-              <Clock size={16} weight="Outline" className="text-muted-foreground" />
-              <span className="text-sm font-medium text-muted-foreground">Consultas recientes</span>
+              <Clock size={15} weight="Outline" className="text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground">Consultas recientes</span>
             </div>
             <button
               onClick={clearHistory}
@@ -222,15 +273,19 @@ export default function MedicationCalculator() {
           {(['perro', 'gato'] as const).map((type) => (
             <button
               key={type}
-              onClick={() => { setAnimalType(type); setSelectedMedication(null); setResult(null); }}
-              className={`p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
+              onClick={() => {
+                setAnimalType(type);
+                setSelectedMedication(null);
+                setResult(null);
+              }}
+              className={`p-3.5 sm:p-4 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-2 ${
                 animalType === type
-                  ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
-                  : 'border-border hover:border-primary/30'
+                  ? 'border-primary bg-primary/5 shadow-sm shadow-primary/10'
+                  : 'border-border hover:border-primary/30 bg-card'
               }`}
             >
               <AnimalIcon type={type} size={36} active={animalType === type} />
-              <span className={`font-semibold ${animalType === type ? 'text-primary' : 'text-muted-foreground'}`}>
+              <span className={`font-semibold text-sm ${animalType === type ? 'text-primary' : 'text-muted-foreground'}`}>
                 {type === 'perro' ? 'Perro' : 'Gato'}
               </span>
             </button>
@@ -241,22 +296,25 @@ export default function MedicationCalculator() {
       {/* Step 2: Weight */}
       <div>
         <StepHeading num={2}>Peso del Animal</StepHeading>
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-2.5 items-center">
           <Input
             type="number"
             placeholder="Ej: 5"
             value={weight}
-            onChange={(e) => { setWeight(e.target.value); setResult(null); }}
+            onChange={(e) => {
+              setWeight(e.target.value);
+              setResult(null);
+            }}
             min="0.1"
             step="0.1"
-            className="flex-1 h-12 text-lg"
+            className="flex-1 h-11 text-base sm:text-lg"
           />
           <div className="flex rounded-lg border border-border overflow-hidden">
             {(['kg', 'lb'] as const).map((u) => (
               <button
                 key={u}
                 onClick={() => setWeightUnit(u)}
-                className={`px-4 py-3 text-sm font-semibold transition-colors ${
+                className={`px-3.5 py-2.5 text-xs sm:text-sm font-semibold transition-colors ${
                   weightUnit === u ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-muted'
                 }`}
               >
@@ -264,15 +322,6 @@ export default function MedicationCalculator() {
               </button>
             ))}
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            className={`h-12 w-12 flex-shrink-0 transition-colors ${showPatientPanel ? 'bg-primary/10 border-primary/30' : ''}`}
-            onClick={() => setShowPatientPanel(!showPatientPanel)}
-            title="Perfiles de pacientes"
-          >
-            <User size={18} weight={showPatientPanel ? 'Fill' : 'Outline'} className={showPatientPanel ? 'text-primary' : ''} />
-          </Button>
         </div>
       </div>
 
@@ -303,39 +352,10 @@ export default function MedicationCalculator() {
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Protocol Quick Templates */}
-      {!selectedCategory && !result && (
-        <div>
-          <ProtocolTemplates
-            animalType={animalType}
-            onSelectProtocol={(protocol) => {
-              if (protocol.drugs.length > 0) {
-                const firstDrug = medications.find((m) => m.id === protocol.drugs[0].medicationId);
-                if (firstDrug) {
-                  setSelectedCategory(firstDrug.categoryId);
-                  setSelectedMedication(firstDrug);
-                }
-              }
-            }}
-          />
-        </div>
-      )}
-
       {/* Step 3: Category Selection */}
       <div>
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <StepHeading num={3}>Categoría de Medicamento</StepHeading>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowFavorites(true)}
-            className="flex-shrink-0 gap-1.5 text-xs no-print"
-          >
-            <Star size={14} weight="Fill" className="text-amber-500" />
-            Favoritos
-          </Button>
-        </div>
-        <div className="flex flex-wrap gap-2 no-print">
+        <StepHeading num={3}>Categoría de Medicamentos</StepHeading>
+        <div className="flex flex-wrap gap-1.5 sm:gap-2 no-print">
           {medicationCategories.map((cat) => (
             <button
               key={cat.id}
@@ -345,10 +365,10 @@ export default function MedicationCalculator() {
                 setResult(null);
                 setSearchQuery('');
               }}
-              className={`flex items-center gap-2 px-3 py-2 rounded-full text-xs sm:text-sm font-medium border transition-all duration-200 ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-medium border transition-all duration-200 ${
                 selectedCategory === cat.id
-                  ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20'
-                  : 'bg-card border-border hover:border-primary/30 hover:bg-primary/5'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm shadow-primary/20'
+                  : 'bg-card border-border hover:border-primary/40 text-foreground'
               }`}
             >
               <span>{cat.icon}</span>
@@ -358,185 +378,151 @@ export default function MedicationCalculator() {
         </div>
       </div>
 
-      {/* Step 4: Medication List with Search */}
+      {/* Step 4: Medication Selection */}
       <AnimatePresence mode="wait">
-        {selectedCategory && filteredMedications.length > 0 && (
+        {selectedCategory && (
           <motion.div
             key={selectedCategory}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.2 }}
+            className="space-y-3"
           >
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <StepHeading num={4}>Seleccione un Medicamento</StepHeading>
-              <div className="relative w-40 flex-shrink-0 no-print">
-                <Search size={14} weight="Outline" className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  type="text"
-                  placeholder="Buscar..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-8 text-sm pl-8"
-                />
-              </div>
+            <div className="flex items-center justify-between gap-2">
+              <StepHeading num={4}>Seleccione el Medicamento</StepHeading>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowRefTable(!showRefTable)}
+                className="text-xs h-7 gap-1 text-muted-foreground"
+              >
+                <ClipboardList size={13} weight="Outline" />
+                {showRefTable ? 'Ocultar tabla' : 'Ver tabla de dosis'}
+              </Button>
             </div>
 
-            {/* Dose Reference Table - collapsible */}
-            <Collapsible open={showRefTable} onOpenChange={setShowRefTable} className="mb-3 no-print">
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-between gap-2 text-xs text-muted-foreground hover:text-foreground h-8 px-2"
-                >
-                  <span className="flex items-center gap-1.5">
-                    <ClipboardList size={14} weight="Outline" />
-                    Ver tabla de referencia
-                  </span>
-                  <motion.span
-                    animate={{ rotate: showRefTable ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <ChevronDown size={14} weight="Outline" />
-                  </motion.span>
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <DoseReferenceTable categoryId={selectedCategory} animalType={animalType} />
-                </motion.div>
-              </CollapsibleContent>
-            </Collapsible>
+            {/* Reference Table (collapsible) */}
+            {showRefTable && (
+              <DoseReferenceTable
+                category={selectedCategory}
+                species={animalType}
+                onSelectMedication={(med) => {
+                  setSelectedMedication(med);
+                  setResult(null);
+                  setShowRefTable(false);
+                }}
+              />
+            )}
 
-            <div className="grid gap-2.5 max-h-[400px] overflow-y-auto pr-1">
+            {/* Search Input */}
+            <div className="relative">
+              <Search
+                size={16}
+                weight="Outline"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                placeholder="Buscar por nombre genérico o comercial..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 h-10 text-sm"
+              />
+            </div>
+
+            {/* Medication List */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
               {filteredMedications.map((med) => {
-                const isAvailable = med.species.includes(animalType);
                 const isSelected = selectedMedication?.id === med.id;
-                const medIsFav = favIdSet.has(med.id);
+                const isFav = favIdSet.has(med.id);
+                const isAvailableForSpecies = med.species.includes(animalType);
 
                 return (
-                  <Card
+                  <button
                     key={med.id}
-                    className={`med-card cursor-pointer ${isSelected ? 'selected' : ''} ${
-                      !isAvailable ? 'opacity-40 pointer-events-none' : ''
-                    }`}
+                    disabled={!isAvailableForSpecies}
                     onClick={() => {
-                      if (!isAvailable) return;
-                      setSelectedMedication(isSelected ? null : med);
+                      setSelectedMedication(med);
                       setResult(null);
                     }}
+                    className={`p-3 rounded-xl border text-left transition-all flex items-start justify-between gap-2 relative ${
+                      isSelected
+                        ? 'border-primary bg-primary/10 shadow-sm'
+                        : isAvailableForSpecies
+                          ? 'border-border bg-card hover:border-primary/30'
+                          : 'border-border/40 bg-muted/30 opacity-40 cursor-not-allowed'
+                    }`}
                   >
-                    <CardContent className="p-3.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-bold text-sm">{med.name}</h4>
-                            {med.species.map((s) => (
-                              <Badge
-                                key={s}
-                                variant={s === animalType ? 'default' : 'secondary'}
-                                className="text-[10px] px-1.5 py-0 gap-1"
-                              >
-                                <AnimalBadge type={s} active={s === animalType} /> {s}
-                              </Badge>
-                            ))}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">{med.genericName}</p>
-                          <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                            <Badge variant="outline" className="text-[10px] font-semibold text-primary border-primary/30">
-                              {med.doseMin === med.doseMax
-                                ? `${med.doseMin} ${med.unit}`
-                                : `${med.doseMin}–${med.doseMax} ${med.unit}`}
-                            </Badge>
-                            {med.route.map((r) => (
-                              <Badge key={r} variant="secondary" className="text-[10px] px-1.5 py-0">
-                                {r}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1 flex-shrink-0 mt-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleFav(med);
-                            }}
-                            className={`p-1 rounded-md transition-all hover:bg-amber-100 dark:hover:bg-amber-900/30 ${
-                              medIsFav ? 'text-amber-500' : 'text-muted-foreground/30 hover:text-amber-400'
-                            }`}
-                            title={medIsFav ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                          >
-                            <Star size={16} weight={medIsFav ? 'fill' : 'outline'} />
-                          </button>
-                          <ChevronRight
-                            size={18} weight="Outline"
-                            className={`transition-all ${isSelected ? 'text-primary rotate-90' : 'text-muted-foreground/40'}`}
-                          />
-                        </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-semibold text-sm leading-tight text-foreground">
+                          {med.name}
+                        </span>
+                        {med.species.map((s) => (
+                          <AnimalBadge key={s} type={s} />
+                        ))}
                       </div>
-                    </CardContent>
-                  </Card>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {med.doseMin}-{med.doseMax} {med.unit}
+                      </p>
+                      {med.brandNames && med.brandNames.length > 0 && (
+                        <p className="text-[10px] text-muted-foreground/70 truncate mt-0.5">
+                          {med.brandNames.slice(0, 2).join(', ')}
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFav(med.id, med.categoryId);
+                        addToast(
+                          isFav ? `${med.name} eliminado de favoritos` : `${med.name} añadido a favoritos`,
+                          isFav ? 'info' : 'success'
+                        );
+                      }}
+                      className="text-muted-foreground hover:text-amber-500 transition-colors p-1"
+                      title={isFav ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                    >
+                      <Star size={14} weight={isFav ? 'Fill' : 'Outline'} className={isFav ? 'text-amber-500' : ''} />
+                    </button>
+                  </button>
                 );
               })}
             </div>
           </motion.div>
         )}
-        {selectedCategory && filteredMedications.length === 0 && (
-          <motion.div
-            key="empty"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="text-center py-8 text-muted-foreground"
-          >
-            <Search size={32} weight="Outline" className="mx-auto mb-2 opacity-30" />
-            <p className="text-sm">No se encontraron medicamentos</p>
-          </motion.div>
-        )}
       </AnimatePresence>
 
-      {/* Calculate Button */}
-      <AnimatePresence>
-        {selectedMedication && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-            className="flex flex-col items-center gap-3 no-print"
-          >
-            <Button
-              size="lg"
-              onClick={handleCalculate}
-              disabled={!canCalculate || loading}
-              className="vet-pulse text-lg px-8 py-6 bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg shadow-primary/20"
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <span className="animate-spin">⚙️</span>
-                  Calculando...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Calculator size={22} weight="Outline" />
-                  CALCULAR DOSIS
-                </span>
-              )}
-            </Button>
-            <p className="text-sm text-muted-foreground">
-              {selectedMedication.name} — {selectedMedication.genericName}
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Drug Interaction Checker */}
-      {selectedMedication && !result && (
-        <DrugInteractionChecker selectedMedicationId={selectedMedication.id} />
+      {/* Drug Interaction Warning */}
+      {selectedMedication && (
+        <DrugInteractionChecker currentMedicationId={selectedMedication.id} />
       )}
 
-      {/* Error */}
+      {/* Calculate Button */}
+      <div className="pt-2 no-print">
+        <Button
+          size="lg"
+          onClick={handleCalculate}
+          disabled={!canCalculate || loading}
+          className="w-full h-12 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl shadow-lg shadow-primary/20 transition-all"
+        >
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <span className="animate-spin">⚙️</span>
+              Calculando...
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <Calculator size={18} weight="Outline" />
+              CALCULAR DOSIS
+            </span>
+          )}
+        </Button>
+      </div>
+
+      {/* Error Message */}
       <AnimatePresence>
         {error && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
@@ -548,210 +534,106 @@ export default function MedicationCalculator() {
         )}
       </AnimatePresence>
 
-      {/* Result */}
+      {/* Calculation Result */}
       <AnimatePresence>
         {result && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
+            exit={{ opacity: 0, y: -10, scale: 0.98 }}
+            transition={{ duration: 0.25 }}
           >
-            <Card className="result-card shadow-lg card-shine result-glow">
-              <CardHeader className="pb-3">
+            <Card className="result-card shadow-lg card-shine result-glow border-primary/20">
+              <CardHeader className="pb-3 border-b border-primary/10">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-primary">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Stethoscope size={18} weight="Outline" />
-                    </div>
-                    Resultado del Cálculo
-                  </CardTitle>
-                  <div className="flex items-center gap-1">
-                    {result.medication.id && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          const med = medications.find((m) => m.id === result.medication.id);
-                          if (med) toggleFav(med);
-                        }}
-                        className={`no-print h-8 w-8 ${
-                          favIdSet.has(result.medication.id)
-                            ? 'text-amber-500'
-                            : 'text-muted-foreground/40 hover:text-amber-400'
-                        }`}
-                        title={
-                          favIdSet.has(result.medication.id)
-                            ? 'Quitar de favoritos'
-                            : 'Agregar a favoritos'
-                        }
-                      >
-                        <Star
-                          size={16}
-                          weight={favIdSet.has(result.medication.id) ? 'fill' : 'outline'}
-                        />
-                      </Button>
-                    )}
+                  <div>
+                    <CardTitle className="text-lg sm:text-xl font-bold text-primary flex items-center gap-2">
+                      <Pill size={20} weight="Outline" />
+                      {result.medication.name}
+                    </CardTitle>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {result.medication.genericName} • {result.medication.category}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 no-print">
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="w-8 h-8 rounded-lg"
                       onClick={() => {
-                        const unit = result.calculatedDose.unit.split('/')[0];
-                        const text = `VetCalc CR\nMedicamento: ${result.medication.name}\nEspecie: ${animalType} | Peso: ${result.weightKg}kg\nDosis recomendada: ${result.calculatedDose.recommended} ${unit}\nRango: ${result.calculatedDose.min}-${result.calculatedDose.max} ${unit}\nVía: ${result.routes.join(', ')}\nFrecuencia: ${result.frequency.join(', ')}\n---\nCalculado con VetCalc CR`;
+                        const text = `VetAssist\n${result.medication.name}\nPaciente: ${animalType} (${result.weightKg} kg)\nDosis Recomendada: ${result.calculatedDose.recommended} ${result.calculatedDose.unit}\nRango: ${result.calculatedDose.min} - ${result.calculatedDose.max} ${result.calculatedDose.unit}\nVía: ${result.routes.join(', ')}\nFrecuencia: ${result.frequency.join(', ')}\n---\nCalculado con VetAssist`;
                         navigator.clipboard.writeText(text);
                         setCopied(true);
-                        addToast('Resultado copiado al portapapeles', 'success');
+                        addToast('Dosis copiada al portapapeles', 'success');
                         setTimeout(() => setCopied(false), 2000);
                       }}
-                      className="no-print h-8 w-8 text-muted-foreground hover:text-primary relative"
                       title="Copiar resultado"
                     >
-                      <Copy size={16} weight={copied ? 'Fill' : 'Outline'} />
-                      {copied && (
-                        <motion.span
-                          initial={{ opacity: 0, y: 4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          className="absolute -top-7 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] font-semibold px-2 py-0.5 rounded-md whitespace-nowrap"
-                        >
-                          Copiado!
-                        </motion.span>
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => window.print()}
-                      className="no-print h-8 w-8 text-muted-foreground hover:text-primary"
-                      title="Imprimir"
-                    >
-                      <Printer size={16} weight="Outline" />
+                      <Copy size={16} weight="Outline" className={copied ? 'text-emerald-500' : ''} />
                     </Button>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Medication Info */}
-                <div className="dose-highlight p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Pill size={24} color="oklch(0.55 0.15 165)" weight="Outline" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-lg leading-tight">{result.medication.name}</h4>
-                      <p className="text-sm text-muted-foreground">{result.medication.genericName}</p>
-                    </div>
+
+              <CardContent className="p-4 sm:p-6 space-y-4">
+                {/* Dose Cards */}
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
+                  <div className="bg-muted/40 rounded-xl p-2.5 sm:p-3 border border-border/50">
+                    <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase">Mínima</span>
+                    <p className="text-base sm:text-xl font-bold text-foreground mt-0.5">
+                      {result.calculatedDose.min}
+                    </p>
+                    <span className="text-[10px] text-muted-foreground">{result.calculatedDose.unit}</span>
+                  </div>
+
+                  <div className="bg-primary/10 rounded-xl p-2.5 sm:p-3 border border-primary/30 ring-1 ring-primary/20">
+                    <span className="text-[10px] sm:text-xs font-bold text-primary uppercase">Recomendada</span>
+                    <p className="text-lg sm:text-2xl font-black text-primary mt-0.5">
+                      {result.calculatedDose.recommended}
+                    </p>
+                    <span className="text-[10px] font-semibold text-primary/80">{result.calculatedDose.unit}</span>
+                  </div>
+
+                  <div className="bg-muted/40 rounded-xl p-2.5 sm:p-3 border border-border/50">
+                    <span className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase">Máxima</span>
+                    <p className="text-base sm:text-xl font-bold text-foreground mt-0.5">
+                      {result.calculatedDose.max}
+                    </p>
+                    <span className="text-[10px] text-muted-foreground">{result.calculatedDose.unit}</span>
                   </div>
                 </div>
 
                 {/* Concentration Calculator */}
-                <ConcentrationCalculator result={result} />
+                <ConcentrationCalculator calculatedDose={result.calculatedDose.recommended} />
 
-                {/* Dose Results */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10 transition-transform duration-200 hover-scale-sm dose-accent-ring">
-                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Mínima</p>
-                    <p className="text-2xl font-extrabold text-primary mt-1 number-ticker">
-                      {result.calculatedDose.min}
-                    </p>
-                    <p className="text-xs text-muted-foreground font-medium">
-                      {result.calculatedDose.unit.split('/')[0]}
-                    </p>
-                  </div>
-                  <div className="bg-accent/10 rounded-xl p-3 text-center border border-accent/20 transition-transform duration-200 hover-scale-sm ring-2 ring-accent/15 dose-accent-ring">
-                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Recomendada</p>
-                    <p className="text-2xl font-extrabold text-accent mt-1 number-ticker">
-                      {result.calculatedDose.recommended}
-                    </p>
-                    <p className="text-xs text-muted-foreground font-medium">
-                      {result.calculatedDose.unit.split('/')[0]}
-                    </p>
-                  </div>
-                  <div className="bg-primary/5 rounded-xl p-3 text-center border border-primary/10 transition-transform duration-200 hover-scale-sm dose-accent-ring">
-                    <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Máxima</p>
-                    <p className="text-2xl font-extrabold text-primary mt-1 number-ticker">
-                      {result.calculatedDose.max}
-                    </p>
-                    <p className="text-xs text-muted-foreground font-medium">
-                      {result.calculatedDose.unit.split('/')[0]}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <Syringe size={14} color="oklch(0.55 0.15 165)" weight="Outline" />
-                      <p className="font-semibold text-xs uppercase tracking-wider">Vía de Administración</p>
-                    </div>
+                {/* Administration Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs">
+                  <div className="bg-card rounded-xl p-3 border border-border/60">
+                    <span className="font-semibold text-foreground block mb-1">Vías de Administración:</span>
                     <div className="flex gap-1 flex-wrap">
                       {result.routes.map((r) => (
-                        <Badge key={r} variant="outline" className="text-xs font-medium">
+                        <Badge key={r} variant="secondary" className="text-xs">
                           {r}
                         </Badge>
                       ))}
                     </div>
                   </div>
-                  <div className="bg-muted/50 rounded-lg p-3">
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <HeartPulse size={14} color="oklch(0.55 0.15 165)" weight="Outline" />
-                      <p className="font-semibold text-xs uppercase tracking-wider">Frecuencia</p>
+
+                  <div className="bg-card rounded-xl p-3 border border-border/60">
+                    <span className="font-semibold text-foreground block mb-1">Frecuencia Habitual:</span>
+                    <div className="space-y-0.5 text-muted-foreground">
+                      {result.frequency.map((f) => (
+                        <p key={f}>{f}</p>
+                      ))}
                     </div>
-                    {result.frequency.map((f) => (
-                      <p key={f} className="text-muted-foreground text-xs">{f}</p>
-                    ))}
                   </div>
                 </div>
 
-                {/* Weight note */}
-                <p className="text-xs text-muted-foreground bg-muted/30 rounded-md px-3 py-2 flex items-center gap-1.5">
-                  <CircleInfo size={13} weight="Outline" />
-                  <span>Peso utilizado: <strong>{result.weightKg} kg</strong></span>
-                </p>
-
-                {/* Dose Range Validation */}
-                {(() => {
-                  const validation = validateDose({ weightKg: result.weightKg, animalType });
-                  const IconComponent = validation.icon === 'Warning' ? Warning : validation.icon === 'AlertTriangle' ? AlertTriangle : CircleInfo;
-                  return (
-                    <Alert className={validation.colorClass}>
-                      <IconComponent
-                        size={18}
-                        weight="Outline"
-                        className={
-                          validation.status === 'warning'
-                            ? 'text-red-600 dark:text-red-400'
-                            : validation.status === 'caution'
-                              ? 'text-amber-600 dark:text-amber-400'
-                              : 'text-emerald-600 dark:text-emerald-400'
-                        }
-                      />
-                      <AlertDescription
-                        className={`text-sm leading-relaxed ${
-                          validation.status === 'warning'
-                            ? 'text-red-800 dark:text-red-200'
-                            : validation.status === 'caution'
-                              ? 'text-amber-800 dark:text-amber-200'
-                              : 'text-emerald-800 dark:text-emerald-200'
-                        }`}
-                      >
-                        {validation.message}
-                        {validation.status !== 'normal' && (
-                          <span className="block mt-1.5 text-xs opacity-75 font-medium">
-                            Ajuste la dosis según criterio clínico profesional
-                          </span>
-                        )}
-                      </AlertDescription>
-                    </Alert>
-                  );
-                })()}
-
                 {/* Notes Warning */}
                 {result.notes && (
-                  <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-950/30">
-                    <AlertTriangle size={18} weight="Outline" className="text-amber-600" />
-                    <AlertDescription className="text-amber-800 dark:text-amber-200 text-sm leading-relaxed">
+                  <Alert className="border-amber-300 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-200">
+                    <AlertTriangle size={16} weight="Outline" className="text-amber-600 mt-0.5 flex-shrink-0" />
+                    <AlertDescription className="text-xs leading-relaxed">
                       {result.notes}
                     </AlertDescription>
                   </Alert>
@@ -759,14 +641,14 @@ export default function MedicationCalculator() {
 
                 {/* Brand Names */}
                 {result.medication.brandNames && result.medication.brandNames.length > 0 && (
-                  <div className="bg-muted/30 rounded-lg p-3">
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <Shield size={14} color="oklch(0.55 0.15 165)" weight="Outline" />
-                      <p className="text-xs font-semibold uppercase tracking-wider">Nombres Comerciales en CR</p>
-                    </div>
+                  <div className="bg-muted/30 rounded-xl p-3 border border-border/40">
+                    <p className="text-xs font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
+                      <Shield size={13} color="oklch(0.55 0.15 165)" weight="Outline" />
+                      Nombres Comerciales en Costa Rica:
+                    </p>
                     <div className="flex gap-1 flex-wrap">
                       {result.medication.brandNames.map((b) => (
-                        <Badge key={b} variant="secondary" className="text-xs font-medium">
+                        <Badge key={b} variant="secondary" className="text-xs">
                           {b}
                         </Badge>
                       ))}
@@ -774,11 +656,11 @@ export default function MedicationCalculator() {
                   </div>
                 )}
 
-                <div className="flex gap-2 no-print">
-                  <Button variant="outline" onClick={handleReset} className="flex-1">
+                <div className="flex gap-2 no-print pt-2">
+                  <Button variant="outline" onClick={handleReset} className="flex-1 rounded-xl">
                     Calcular Otro Medicamento
                   </Button>
-                  <Button variant="outline" onClick={() => window.print()} className="px-4">
+                  <Button variant="outline" onClick={() => window.print()} className="px-4 rounded-xl">
                     <Printer size={16} weight="Outline" className="mr-1.5" />
                     Imprimir
                   </Button>
