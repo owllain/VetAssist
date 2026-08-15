@@ -661,7 +661,7 @@ export default function Home() {
       {/* Floating Clinical Notes FAB */}
       <button
         onClick={() => setClinicalNotesOpen(true)}
-        className="no-print fab fixed bottom-20 right-5 z-50 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
+        className="no-print fixed bottom-20 right-5 z-50 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform"
         title="Notas Clínicas Rápidas"
         aria-label="Abrir notas clínicas"
       >

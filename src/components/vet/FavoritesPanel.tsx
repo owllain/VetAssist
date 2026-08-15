@@ -43,18 +43,18 @@ export default function FavoritesPanel({
 
   return (
     <>
-      {/* FAB */}
+      {/* FAB — mismo right-5 y w-12 h-12 que el FAB de Notas para alinearse en columna */}
       <motion.div
-        className="fixed bottom-6 right-6 z-50"
-        whileHover={{ scale: 1.1 }}
+        className="fixed bottom-6 right-5 z-50"
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
         <Button
           onClick={() => setOpen(true)}
           size="icon"
-          className="h-14 w-14 rounded-full shadow-lg shadow-primary/30 bg-primary hover:bg-primary/90 text-primary-foreground"
+          className="w-12 h-12 rounded-full shadow-lg shadow-primary/30 bg-primary hover:bg-primary/90 text-primary-foreground"
         >
-          <Star size={24} weight="Fill" />
+          <Star size={22} weight="Fill" />
           <span className="sr-only">Favoritos</span>
         </Button>
       </motion.div>

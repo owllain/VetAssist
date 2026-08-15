@@ -113,9 +113,19 @@
   --sidebar-ring: oklch(0.55 0.15 165);
 }
 
-/* Smooth scrolling */
+/* Smooth scrolling + prevent horizontal layout shift from scrollbar */
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
+  /* Always reserve scrollbar space to avoid width layout shifts */
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+body {
+  overflow-x: hidden;
+  min-width: 0;
+  width: 100%;
 }
 
 @layer base {
