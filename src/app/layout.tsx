@@ -23,7 +23,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "VetAssist — Asistente para cálculos de uso veterinario",
+  title: "VetAssist",
   description:
     "Herramienta de apoyo para el cálculo con precisión de dosis de medicamentos y alimentación para animales menores.",
   manifest: "/manifest.json",

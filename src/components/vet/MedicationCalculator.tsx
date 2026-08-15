@@ -193,17 +193,17 @@ export default function MedicationCalculator({ onOpenNotes }: MedicationCalculat
           <span className="text-sm font-bold text-foreground">Dosificación de Fármacos</span>
         </div>
 
-        {/* Square Rounded Action Toolbar */}
+        {/* Square Rounded Action Toolbar — uniform w-9 h-9, centered icons, no layout-affecting transitions */}
         <div className="flex items-center gap-1.5">
           <Button
             variant="outline"
             size="icon"
             onClick={() => setShowFavorites(true)}
-            className="w-9 h-9 rounded-xl border border-border/80 bg-card hover:bg-muted/80 shadow-sm transition-all"
+            className="flex items-center justify-center w-9 h-9 rounded-xl border border-border/80 bg-card hover:bg-muted/80 transition-colors"
             title="Medicamentos Favoritos"
             aria-label="Abrir favoritos"
           >
-            <Star size={16} weight="Fill" className="text-amber-500" />
+            <Star size={16} weight="Outline" className="text-amber-500" />
           </Button>
 
           {onOpenNotes && (
@@ -211,7 +211,7 @@ export default function MedicationCalculator({ onOpenNotes }: MedicationCalculat
               variant="outline"
               size="icon"
               onClick={onOpenNotes}
-              className="w-9 h-9 rounded-xl border border-border/80 bg-card hover:bg-muted/80 shadow-sm transition-all"
+              className="flex items-center justify-center w-9 h-9 rounded-xl border border-border/80 bg-card hover:bg-muted/80 transition-colors"
               title="Notas Clínicas Rápidas"
               aria-label="Abrir notas clínicas"
             >
@@ -223,7 +223,7 @@ export default function MedicationCalculator({ onOpenNotes }: MedicationCalculat
             variant="outline"
             size="icon"
             onClick={() => setShowPatientPanel(!showPatientPanel)}
-            className={`w-9 h-9 rounded-xl border shadow-sm transition-all ${
+            className={`flex items-center justify-center w-9 h-9 rounded-xl border transition-colors ${
               showPatientPanel
                 ? 'bg-primary/10 border-primary/40 text-primary'
                 : 'border-border/80 bg-card hover:bg-muted/80 text-foreground'
@@ -231,7 +231,7 @@ export default function MedicationCalculator({ onOpenNotes }: MedicationCalculat
             title="Gestión de Pacientes"
             aria-label="Perfiles de pacientes"
           >
-            <User size={16} weight={showPatientPanel ? 'Fill' : 'Outline'} />
+            <User size={16} weight="Outline" />
           </Button>
         </div>
       </div>
