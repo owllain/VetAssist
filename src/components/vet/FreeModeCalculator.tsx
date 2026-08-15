@@ -40,6 +40,38 @@ const DOSE_UNITS = [
   { value: 'mL/kg', label: 'mL/kg' },
 ];
 
+const CONCENTRATION_UNITS = [
+  { value: 'mg/mL', label: 'mg/mL' },
+  { value: 'mcg/mL', label: 'mcg/mL' },
+  { value: 'mg/tablet', label: 'mg/tableta' },
+  { value: 'mcg/drop', label: 'mcg/gota' },
+] as const;
+
+type ConcentrationUnit = (typeof CONCENTRATION_UNITS)[number]['value'];
+
+function getVolumeUnit(concUnit: ConcentrationUnit): string {
+  switch (concUnit) {
+    case 'mg/mL':
+    case 'mcg/mL':
+      return 'mL';
+    case 'mg/tablet':
+      return 'tabletas';
+    case 'mcg/drop':
+      return 'gotas';
+    default:
+      return 'mL';
+  }
+}
+
+function getDecimalPlaces(concUnit: ConcentrationUnit): number {
+  switch (concUnit) {
+    case 'mg/tablet':
+      return 1;
+    default:
+      return 2;
+  }
+}
+
 function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2.5 mb-2.5">
@@ -57,7 +89,9 @@ export default function FreeModeCalculator() {
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg');
   const [dosePerKg, setDosePerKg] = useState('');
   const [doseUnit, setDoseUnit] = useState('mg/kg');
-  const [result, setResult] = useState<{ total: number; unit: string; weightKg: number } | null>(null);
+  const [concentration, setConcentration] = useState('');
+  const [concentrationUnit, setConcentrationUnit] = useState<ConcentrationUnit>('mg/mL');
+  const [result, setResult] = useState<{ total: number; unit: string; weightKg: number; formula: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const history = useHistory('free');
   const addHistory = useAddHistory();
@@ -65,26 +99,54 @@ export default function FreeModeCalculator() {
   const [copied, setCopied] = useState(false);
   const { addToast } = useVetToast();
 
+  const requiresConcentration = doseUnit !== 'UI/kg' && doseUnit !== 'mL/kg';
+
   const handleCalculate = () => {
     setError(null);
     setResult(null);
 
     const w = parseFloat(weight);
     const d = parseFloat(dosePerKg);
+const c = parseFloat(concentration);
 
     if (!w || w <= 0) { setError('Ingrese un peso válido mayor a 0'); return; }
     if (!d || d <= 0) { setError('Ingrese una dosis por kg válida mayor a 0'); return; }
+    if (requiresConcentration && (!c || c <= 0)) {
+      setError('Ingrese una concentración válida mayor a 0');
+      return;
+    }
 
     const weightKg = weightUnit === 'lb' ? w * 0.453592 : w;
-    const total = Math.round(d * weightKg * 1000) / 1000;
-    const displayUnit = doseUnit.split('/')[0] || doseUnit;
+    const totalDose = d * weightKg;
+    const roundedWeightKg = Math.round(weightKg * 100) / 100;
 
-    setResult({ total, unit: displayUnit, weightKg: Math.round(weightKg * 100) / 100 });
+    let total = totalDose;
+    let displayUnit = doseUnit.split('/')[0] || doseUnit;
+    let formula = `${d} ${doseUnit} × ${roundedWeightKg} kg`;
+
+    if (requiresConcentration) {
+      let convertedDose = totalDose;
+
+      if (doseUnit.startsWith('mg')) {
+        convertedDose = concentrationUnit.startsWith('mcg') ? totalDose * 1000 : totalDose;
+      } else if (doseUnit.startsWith('mcg')) {
+        convertedDose = concentrationUnit.startsWith('mcg') ? totalDose : totalDose / 1000;
+      } else if (doseUnit.startsWith('g')) {
+        convertedDose = concentrationUnit.startsWith('mcg') ? totalDose * 1000000 : totalDose * 1000;
+      }
+
+      total = convertedDose / c;
+      displayUnit = getVolumeUnit(concentrationUnit);
+      formula = `${d} ${doseUnit} × ${roundedWeightKg} kg ÷ ${c} ${concentrationUnit}`;
+    }
+
+    const finalTotal = Math.round(total * 1000) / 1000;
+    setResult({ total: finalTotal, unit: displayUnit, weightKg: roundedWeightKg, formula });
 
     addHistory({
       type: 'free',
       timestamp: Date.now(),
-      summary: `Modo libre | ${animalType} ${weightKg.toFixed(1)}kg | ${d}${doseUnit} = ${total}${displayUnit}`,
+      summary: `Modo libre | ${animalType} ${weightKg.toFixed(1)}kg | ${d}${doseUnit} ${requiresConcentration ? `÷ ${c}${concentrationUnit}` : ''} = ${finalTotal}${displayUnit}`,
     });
   };
 
@@ -171,7 +233,7 @@ export default function FreeModeCalculator() {
             onChange={(e) => { setDosePerKg(e.target.value); setResult(null); }}
             min="0.001" step="0.1" className="flex-1 h-12 text-lg"
           />
-          <Select value={doseUnit} onValueChange={(val) => { setDoseUnit(val); setResult(null); }}>
+          <Select value={doseUnit} onValueChange={(val) => { setDoseUnit(val); setResult(null); setConcentration(''); if (val === 'UI/kg' || val === 'mL/kg') { setConcentrationUnit('mg/mL'); } }}>
             <SelectTrigger className="w-28 h-12">
               <SelectValue />
             </SelectTrigger>
@@ -183,6 +245,35 @@ export default function FreeModeCalculator() {
           </Select>
         </div>
       </div>
+
+      {requiresConcentration && (
+        <div>
+          <StepHeading num={4}>Concentración</StepHeading>
+          <div className="flex gap-3 items-center">
+            <Input
+              type="number" placeholder="Ej: 50" value={concentration}
+              onChange={(e) => { setConcentration(e.target.value); setResult(null); }}
+              min="0.001" step="0.1" className="flex-1 h-12 text-lg"
+            />
+            <Select value={concentrationUnit} onValueChange={(val) => { setConcentrationUnit(val as ConcentrationUnit); setResult(null); }}>
+              <SelectTrigger className="w-30 h-12">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CONCENTRATION_UNITS.map((u) => (
+                  <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
+      {!requiresConcentration && (
+        <div className="rounded-xl border border-dashed border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          La concentración no aplica para dosis en UI/kg o mL/kg.
+        </div>
+      )}
 
       {/* Calculate Button */}
       <div className="flex flex-col items-center gap-3 no-print">
@@ -228,7 +319,7 @@ export default function FreeModeCalculator() {
                   <Button
                     variant="ghost" size="icon"
                     onClick={() => {
-                      const text = `VetAssist\nModo Libre\nEspecie: ${animalType} | Peso: ${result.weightKg}kg\nDosis: ${dosePerKg}${doseUnit} × ${result.weightKg}kg = ${result.total} ${result.unit}\n---\nCalculado con VetAssist`;
+                      const text = `VetAssist\nModo Libre\nEspecie: ${animalType} | Peso: ${result.weightKg}kg\nFórmula: ${result.formula} = ${result.total} ${result.unit}\n---\nCalculado con VetAssist`;
                       navigator.clipboard.writeText(text);
                       setCopied(true);
                       addToast('Resultado copiado al portapapeles', 'success');
@@ -265,8 +356,8 @@ export default function FreeModeCalculator() {
                     </div>
                     <div className="bg-card/60 rounded-lg p-3 flex flex-col justify-center">
                       <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Fórmula</p>
-                      <p className="text-sm font-mono mt-2 font-medium">
-                        {dosePerKg} {doseUnit} × {result.weightKg} kg
+                      <p className="text-sm font-mono mt-2 font-medium break-all">
+                        {result.formula}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         = <strong className="text-foreground">{result.total} {result.unit}</strong>
