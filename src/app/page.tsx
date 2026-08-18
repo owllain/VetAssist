@@ -56,6 +56,7 @@ const MedicationCalculator = dynamic(() => import('@/components/vet/MedicationCa
 const FrequentProtocols = dynamic(() => import('@/components/vet/FrequentProtocols'), { loading: () => <TabSkeleton />, ssr: false });
 const FreeModeCalculator = dynamic(() => import('@/components/vet/FreeModeCalculator'), { loading: () => <TabSkeleton />, ssr: false });
 const FoodCalculator = dynamic(() => import('@/components/vet/FoodCalculator'), { loading: () => <TabSkeleton />, ssr: false });
+const EnergyCalculator = dynamic(() => import('@/components/vet/EnergyCalculator'), { loading: () => <TabSkeleton />, ssr: false });
 const IVFluidCalculator = dynamic(() => import('@/components/vet/IVFluidCalculator'), { loading: () => <TabSkeleton />, ssr: false });
 const DoseSchedule = dynamic(() => import('@/components/vet/DoseSchedule'), { loading: () => <TabSkeleton />, ssr: false });
 const DataManager = dynamic(() => import('@/components/vet/DataManager'), { loading: () => <TabSkeleton />, ssr: false });
@@ -64,29 +65,17 @@ const EmergencyReference = dynamic(() => import('@/components/vet/EmergencyRefer
 const QuickConverter = dynamic(() => import('@/components/vet/QuickConverter'), { loading: () => <TabSkeleton />, ssr: false });
 
 type TabId =
-  | 'medicamentos'
-  | 'protocolos'
   | 'modo-libre'
-  | 'conversor'
   | 'alimentos'
+  | 'medicamentos'
   | 'fluidos'
-  | 'horarios'
   | 'emergencias'
+  | 'protocolos'
+  | 'conversor'
+  | 'horarios'
   | 'acerca';
 
 const TABS: { id: TabId; label: string; icon: React.ReactNode; desc: string }[] = [
-  {
-    id: 'medicamentos',
-    label: 'Medicamentos',
-    icon: <Pill size={16} weight="Outline" />,
-    desc: '27 medicamentos en 8 categorías',
-  },
-  {
-    id: 'protocolos',
-    label: 'Protocolos Frecuentes',
-    icon: <ClipboardText size={16} weight="Outline" />,
-    desc: 'Protocolos anestésicos, analgésicos y clínicos',
-  },
   {
     id: 'modo-libre',
     label: 'Modo Libre',
@@ -94,16 +83,16 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; desc: string }[] 
     desc: 'Dosis personalizada por kg',
   },
   {
-    id: 'conversor',
-    label: 'Conversor',
-    icon: <Repeat size={16} weight="Outline" />,
-    desc: 'Conversión rápida de unidades',
+    id: 'alimentos',
+    label: 'Energía y Alimentación',
+    icon: <Scale size={16} weight="Outline" />,
+    desc: 'RER, MER y raciones de alimento',
   },
   {
-    id: 'alimentos',
-    label: 'Alimentos',
-    icon: <Scale size={16} weight="Outline" />,
-    desc: 'Ración diaria en gramos, onzas y tazas',
+    id: 'medicamentos',
+    label: 'Medicamentos Comunes',
+    icon: <Pill size={16} weight="Outline" />,
+    desc: '27 medicamentos en 8 categorías',
   },
   {
     id: 'fluidos',
@@ -112,16 +101,28 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode; desc: string }[] 
     desc: 'Tasa de infusión IV y gotas por minuto',
   },
   {
-    id: 'horarios',
-    label: 'Horarios',
-    icon: <CalendarCheck size={16} weight="Outline" />,
-    desc: 'Generador de horarios de medicación',
-  },
-  {
     id: 'emergencias',
     label: 'Emergencias',
     icon: <Warning size={16} weight="Outline" />,
     desc: 'Fármacos de emergencia rápida referencia',
+  },
+  {
+    id: 'protocolos',
+    label: 'Protocolos Frecuentes',
+    icon: <ClipboardText size={16} weight="Outline" />,
+    desc: 'Protocolos anestésicos, analgésicos y clínicos',
+  },
+  {
+    id: 'conversor',
+    label: 'Conversor',
+    icon: <Repeat size={16} weight="Outline" />,
+    desc: 'Conversión rápida de unidades',
+  },
+  {
+    id: 'horarios',
+    label: 'Horarios',
+    icon: <CalendarCheck size={16} weight="Outline" />,
+    desc: 'Generador de horarios de medicación',
   },
   {
     id: 'acerca',
@@ -155,7 +156,7 @@ function StatCard({ icon, value, suffix, label }: { icon: React.ReactNode; value
 }
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<TabId>('medicamentos');
+  const [activeTab, setActiveTab] = useState<TabId>('modo-libre');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dataManagerOpen, setDataManagerOpen] = useState(false);
   const [clinicalNotesOpen, setClinicalNotesOpen] = useState(false);
@@ -210,7 +211,7 @@ export default function Home() {
           <button
             onClick={() => {
               window.scrollTo({ top: 0, behavior: 'smooth' });
-              setActiveTab('medicamentos');
+              setActiveTab('modo-libre');
             }}
             className="flex items-center gap-2.5 text-left group"
           >
@@ -370,7 +371,7 @@ export default function Home() {
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Button
                     size="lg"
-                    onClick={() => handleTabChange('medicamentos')}
+                    onClick={() => handleTabChange('modo-libre')}
                     className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl shadow-md shadow-primary/20 h-12 px-6"
                   >
                     <span className="flex items-center gap-2">
@@ -401,30 +402,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-
-        {/* ========== QUICK INFO STATS BAR ========== */}
-        <div className="quick-info-bar no-print border-b border-border/40 bg-muted/20">
-          <div className="container mx-auto px-4 py-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <StatCard
-                icon={<Pill size={20} color="oklch(0.55 0.15 165)" weight="Outline" />}
-                value={27} suffix="" label="Medicamentos"
-              />
-              <StatCard
-                icon={<ClipboardText size={20} color="oklch(0.6 0.12 145)" weight="Outline" />}
-                value={6} suffix="" label="Protocolos clínicos"
-              />
-              <StatCard
-                icon={<Shield size={20} color="oklch(0.7 0.15 75)" weight="Outline" />}
-                value={21} suffix="" label="Interacciones evaluadas"
-              />
-              <StatCard
-                icon={<Database size={20} color="oklch(0.55 0.2 290)" weight="Outline" />}
-                value={100} suffix="%" label="Privacidad local (Offline)"
-              />
-            </div>
-          </div>
-        </div>
 
         {/* ========== MAIN TAB CONTENT AREA ========== */}
         <div id="main-calculator-area" className="py-8 md:py-12">
@@ -508,10 +485,10 @@ export default function Home() {
             {activeTab === 'alimentos' && (
               <motion.section key="alimentos" id="alimentos" {...tabVariants}>
                 <div className="container mx-auto px-4">
-                  <div className="text-center mb-4">
+                  <div className="text-center mb-6">
                     <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center justify-center gap-2">
                       <Scale size={26} color="oklch(0.55 0.15 165)" weight="Outline" />
-                      Calculadora de Alimentos
+                      Calculadora de Requerimientos Energéticos
                     </h2>
                     <div className="my-3 flex justify-center">
                       <img
@@ -521,11 +498,11 @@ export default function Home() {
                       />
                     </div>
                     <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto">
-                      Calcule la cantidad diaria de alimento según peso, actividad y número de comidas con soporte para onzas y tazas
+                      Calcula RER, MER, raciones de alimento y requerimientos de agua basados en BCS y criterios clínicos
                     </p>
                   </div>
-                  <div className="max-w-2xl mx-auto">
-                    <FoodCalculator />
+                  <div className="max-w-4xl mx-auto">
+                    <EnergyCalculator />
                   </div>
                 </div>
               </motion.section>

@@ -13,24 +13,12 @@ import { Collapsible, CollapsibleContent } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import type { FoodCalculationResult, PetType, ActivityLevel } from '@/lib/food-data';
+import type { FoodCalculationResult, PetType, DogCondition, DogAge, CatCondition, CatAge } from '@/lib/food-data';
 import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-store';
 import PatientProfiles from './PatientProfiles';
 import type { Patient } from '@/lib/use-patients-store';
 import BodyConditionScore from './BodyConditionScore';
 import { useVetToast } from './VetToast';
-
-const ACTIVITY_LEVELS: { value: ActivityLevel; label: string; emoji: string; desc: string }[] = [
-  { value: 'bajo', label: 'Bajo', emoji: '🛋️', desc: 'Sedentario' },
-  { value: 'normal', label: 'Normal', emoji: '🏃', desc: 'Actividad moderada' },
-  { value: 'alto', label: 'Alto', emoji: '🏋️', desc: 'Muy activo' },
-];
-
-const ACTIVITY_LABEL_MAP: Record<ActivityLevel, string> = {
-  bajo: 'Bajo (sedentario)',
-  normal: 'Normal (moderada)',
-  alto: 'Alto (muy activo)',
-};
 
 function StepHeading({ num, children }: { num: number; children: React.ReactNode }) {
   return (
@@ -47,7 +35,10 @@ export default function FoodCalculator() {
   const [petType, setPetType] = useState<PetType>('perro');
   const [weight, setWeight] = useState('');
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>('kg');
-  const [activity, setActivity] = useState<ActivityLevel>('normal');
+  const [dogAge, setDogAge] = useState<DogAge>('adulto');
+  const [dogCondition, setDogCondition] = useState<DogCondition>('castrado');
+  const [catAge, setCatAge] = useState<CatAge>('adulto');
+  const [catCondition, setCatCondition] = useState<CatCondition>('castrado');
   const [mealsPerDay, setMealsPerDay] = useState(2);
   const [result, setResult] = useState<FoodCalculationResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -83,11 +74,6 @@ export default function FoodCalculator() {
   const handleBcsChange = useCallback((score: number) => {
     setBcs(score);
     setResult(null);
-    if (score >= 1 && score <= 3) {
-      setActivity('bajo');
-    } else if (score >= 6 && score <= 9) {
-      setActivity('alto');
-    }
   }, []);
 
   const handleCalculate = async () => {
@@ -100,7 +86,14 @@ export default function FoodCalculator() {
       const res = await fetch('/api/calculate-food', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ petType, weight: w, weightUnit, mealsPerDay, activity }),
+        body: JSON.stringify({
+          petType,
+          weight: w,
+          weightUnit,
+          mealsPerDay,
+          ...(petType === 'perro' && { dogAge, dogCondition }),
+          ...(petType === 'gato' && { catAge, catCondition }),
+        }),
       });
 
       const data = await res.json();
@@ -117,12 +110,6 @@ export default function FoodCalculator() {
       setLoading(false);
     }
   };
-
-  const effectiveActivity = bcs !== null && bcs >= 1 && bcs <= 3
-    ? 'bajo'
-    : bcs !== null && bcs >= 6 && bcs <= 9
-      ? 'alto'
-      : activity;
 
   return (
     <div className="glass-card rounded-2xl p-4 sm:p-6 space-y-4 sm:space-y-5">
@@ -271,27 +258,110 @@ export default function FoodCalculator() {
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Step 3: Activity Level */}
-      <div>
-        <StepHeading num={3}>Nivel de Actividad</StepHeading>
-        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-          {ACTIVITY_LEVELS.map((lvl) => (
-            <button key={lvl.value}
-              onClick={() => { setActivity(lvl.value); setResult(null); setBcs(null); }}
-              className={`p-3 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-1.5 ${
-                effectiveActivity === lvl.value
-                  ? 'border-primary bg-primary/5 shadow-sm shadow-primary/10'
-                  : 'border-border hover:border-primary/30 bg-card'
-              }`}>
-              <span className="text-2xl">{lvl.emoji}</span>
-              <span className={`font-semibold text-xs sm:text-sm ${effectiveActivity === lvl.value ? 'text-primary' : 'text-foreground'}`}>
-                {lvl.label}
-              </span>
-              <span className="text-[10px] text-muted-foreground">{lvl.desc}</span>
-            </button>
-          ))}
+      {/* Step 3: Age & Condition - Dogs */}
+      {petType === 'perro' && (
+        <div className="space-y-4">
+          <div>
+            <StepHeading num={3}>Edad del Perro</StepHeading>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {[
+                { value: 'adulto', label: 'Adulto', emoji: '🐕' },
+                { value: 'cachorro_menor_4m', label: '<4 meses', emoji: '🐶' },
+                { value: 'cachorro_mayor_4m', label: '>4 meses', emoji: '🐕‍🦺' },
+              ].map((opt) => (
+                <button key={opt.value}
+                  onClick={() => { setDogAge(opt.value as DogAge); setResult(null); }}
+                  className={`p-3 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-1.5 ${
+                    dogAge === opt.value
+                      ? 'border-primary bg-primary/5 shadow-sm shadow-primary/10'
+                      : 'border-border hover:border-primary/30 bg-card'
+                  }`}>
+                  <span className="text-2xl">{opt.emoji}</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${dogAge === opt.value ? 'text-primary' : 'text-foreground'}`}>
+                    {opt.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <StepHeading num={3.5}>Condición del Perro</StepHeading>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {[
+                { value: 'entero', label: 'Entero', emoji: '🔵' },
+                { value: 'castrado', label: 'Castrado', emoji: '🟢' },
+                { value: 'obeso', label: 'Obeso', emoji: '⚠️' },
+              ].map((opt) => (
+                <button key={opt.value}
+                  onClick={() => { setDogCondition(opt.value as DogCondition); setResult(null); }}
+                  className={`p-3 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-1.5 ${
+                    dogCondition === opt.value
+                      ? 'border-primary bg-primary/5 shadow-sm shadow-primary/10'
+                      : 'border-border hover:border-primary/30 bg-card'
+                  }`}>
+                  <span className="text-2xl">{opt.emoji}</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${dogCondition === opt.value ? 'text-primary' : 'text-foreground'}`}>
+                    {opt.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Step 3: Age & Condition - Cats */}
+      {petType === 'gato' && (
+        <div className="space-y-4">
+          <div>
+            <StepHeading num={3}>Edad del Gato</StepHeading>
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              {[
+                { value: 'adulto', label: 'Adulto', emoji: '🐈' },
+                { value: 'gatito', label: 'Gatito', emoji: '🐱' },
+              ].map((opt) => (
+                <button key={opt.value}
+                  onClick={() => { setCatAge(opt.value as CatAge); setResult(null); }}
+                  className={`p-3 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-1.5 ${
+                    catAge === opt.value
+                      ? 'border-primary bg-primary/5 shadow-sm shadow-primary/10'
+                      : 'border-border hover:border-primary/30 bg-card'
+                  }`}>
+                  <span className="text-2xl">{opt.emoji}</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${catAge === opt.value ? 'text-primary' : 'text-foreground'}`}>
+                    {opt.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <StepHeading num={3.5}>Condición del Gato</StepHeading>
+            <div className="grid grid-cols-3 gap-2 sm:gap-3">
+              {[
+                { value: 'entero', label: 'Entero', emoji: '🔵' },
+                { value: 'castrado', label: 'Castrado', emoji: '🟢' },
+                { value: 'obeso', label: 'Obeso', emoji: '⚠️' },
+              ].map((opt) => (
+                <button key={opt.value}
+                  onClick={() => { setCatCondition(opt.value as CatCondition); setResult(null); }}
+                  className={`p-3 rounded-xl border-2 transition-all duration-200 flex flex-col items-center gap-1.5 ${
+                    catCondition === opt.value
+                      ? 'border-primary bg-primary/5 shadow-sm shadow-primary/10'
+                      : 'border-border hover:border-primary/30 bg-card'
+                  }`}>
+                  <span className="text-2xl">{opt.emoji}</span>
+                  <span className={`font-semibold text-xs sm:text-sm ${catCondition === opt.value ? 'text-primary' : 'text-foreground'}`}>
+                    {opt.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Step 4: Meals per Day */}
       <div>
@@ -313,9 +383,9 @@ export default function FoodCalculator() {
 
       {/* Step 5: BCS */}
       <div>
-        <StepHeading num={5}>Condición Corporal (Opcional)</StepHeading>
+        <StepHeading num={5}>Índice de Condición Corporal (Opcional)</StepHeading>
         <BodyConditionScore value={bcs} onChange={handleBcsChange} />
-        {bcs && (bcs <= 3 || bcs >= 6) && (
+        {bcs && (
           <motion.div
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
@@ -323,9 +393,7 @@ export default function FoodCalculator() {
           >
             <CircleInfo size={13} weight="Outline" color="oklch(0.55 0.15 165)" className="mt-0.5 flex-shrink-0" />
             <span>
-              {bcs <= 3
-                ? `BCS ${bcs}/9 detectado: la actividad se ajustó automáticamente a «Bajo» para aumentar la ingesta calórica recomendada.`
-                : `BCS ${bcs}/9 detectado: la actividad se ajustó automáticamente a «Alto» para reducir la ingesta calórica recomendada.`}
+              BCS {bcs}/9 registrado. La alimentación recomendada se basa en los criterios de edad y condición seleccionados.
             </span>
           </motion.div>
         )}
@@ -377,7 +445,7 @@ export default function FoodCalculator() {
                       variant="ghost" size="icon"
                       className="w-8 h-8 rounded-lg"
                       onClick={() => {
-                        const text = `VetAssist\nAlimentación Diaria\nEspecie: ${petType} | Peso: ${result.weightKg}kg\nGramos/día: ${result.dailyGrams.recommended}g (${result.dailyGrams.min}-${result.dailyGrams.max}g)\nOnzas/día: ${result.dailyOunces}oz\nTazas/día: ${result.dailyCups}\nComidas/día: ${result.mealsPerDay} (${result.perMealGrams.recommended}g/comida)\nActividad: ${ACTIVITY_LABEL_MAP[effectiveActivity]}\n---\nCalculado con VetAssist`;
+                        const text = `VetAssist\nAlimentación Diaria\nEspecie: ${petType} | Peso: ${result.weightKg}kg\nGramos/día: ${result.dailyGrams.recommended}g (${result.dailyGrams.min}-${result.dailyGrams.max}g)\nOnzas/día: ${result.dailyOunces}oz\nTazas/día: ${result.dailyCups}\nComidas/día: ${result.mealsPerDay} (${result.perMealGrams.recommended}g/comida)\nCondición: ${result.condition}\n---\nCalculado con VetAssist`;
                         navigator.clipboard.writeText(text);
                         setCopied(true);
                         addToast('Resultado copiado al portapapeles', 'success');
@@ -426,8 +494,12 @@ export default function FoodCalculator() {
                     <strong className="text-foreground">{result.rer} kcal/día</strong>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Requerimiento de Mantenimiento (DER):</span>
-                    <strong className="text-foreground">{result.der} kcal/día</strong>
+                    <span className="text-muted-foreground">Multiplicador MER ({result.merMultiplier}×):</span>
+                    <strong className="text-foreground">{result.condition}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Requerimiento Energético de Mantenimiento (MER):</span>
+                    <strong className="text-primary">{result.mer} kcal/día</strong>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Comidas programadas:</span>

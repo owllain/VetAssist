@@ -31,6 +31,7 @@ import { type AnimalType } from '@/lib/medications';
 import { validateDose } from '@/lib/dose-validation';
 import { useHistory, useAddHistory, useClearHistory } from '@/lib/use-history-store';
 import { useVetToast } from './VetToast';
+import { validateWeight, validateDose as validateDoseInput, validateConcentration, formatValidationErrors, formatValidationWarnings } from '@/lib/form-validation';
 
 const DOSE_UNITS = [
   { value: 'mg/kg', label: 'mg/kg' },
@@ -105,16 +106,56 @@ export default function FreeModeCalculator() {
     setError(null);
     setResult(null);
 
-    const w = parseFloat(weight);
-    const d = parseFloat(dosePerKg);
-const c = parseFloat(concentration);
-
-    if (!w || w <= 0) { setError('Ingrese un peso válido mayor a 0'); return; }
-    if (!d || d <= 0) { setError('Ingrese una dosis por kg válida mayor a 0'); return; }
-    if (requiresConcentration && (!c || c <= 0)) {
-      setError('Ingrese una concentración válida mayor a 0');
+    // Validar peso
+    const weightValidation = validateWeight(weight, animalType, 'Peso');
+    if (!weightValidation.isValid) {
+      setError(formatValidationErrors(weightValidation.errors));
+      addToast({
+        title: 'Error de Validación',
+        description: formatValidationErrors(weightValidation.errors),
+        variant: 'destructive',
+      });
       return;
     }
+
+    // Mostrar advertencias si existen
+    if (weightValidation.warnings.length > 0) {
+      addToast({
+        title: 'Advertencia',
+        description: formatValidationWarnings(weightValidation.warnings),
+        variant: 'default',
+      });
+    }
+
+    // Validar dosis por kg
+    const doseValidation = validateDoseInput(dosePerKg, 'Dosis por kg');
+    if (!doseValidation.isValid) {
+      setError(formatValidationErrors(doseValidation.errors));
+      addToast({
+        title: 'Error de Validación',
+        description: formatValidationErrors(doseValidation.errors),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validar concentración si es necesaria
+    if (requiresConcentration) {
+      const concValidation = validateConcentration(concentration, 'Concentración');
+      if (!concValidation.isValid) {
+        setError(formatValidationErrors(concValidation.errors));
+        addToast({
+          title: 'Error de Validación',
+          description: formatValidationErrors(concValidation.errors),
+          variant: 'destructive',
+        });
+        return;
+      }
+    }
+
+    const w = parseFloat(weight);
+    const d = parseFloat(dosePerKg);
+    const c = parseFloat(concentration);
 
     const weightKg = weightUnit === 'lb' ? w * 0.453592 : w;
     const totalDose = d * weightKg;

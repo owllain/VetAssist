@@ -33,6 +33,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { validateWeight, validateVolume, formatValidationErrors, formatValidationWarnings } from '@/lib/form-validation';
+import { useVetToast } from './VetToast';
 
 /* ─── Types ─────────────────────────────────────────────── */
 
@@ -344,15 +346,27 @@ export default function IVFluidCalculator() {
   }, [weight, species, method, dripSet, dehydration, ongoingLoss, surgeryRate]);
 
   const handleCalculate = () => {
-    const w = parseFloat(weight);
-    if (!w || w <= 0) {
-      setError('Ingrese un peso válido mayor a 0');
+    // Validar peso
+    const weightValidation = validateWeight(weight, species, 'Peso del paciente');
+    if (!weightValidation.isValid) {
+      setError(formatValidationErrors(weightValidation.errors));
+      addToast({
+        title: 'Error de Validación',
+        description: formatValidationErrors(weightValidation.errors),
+        variant: 'destructive',
+      });
       return;
     }
-    if (w > 200) {
-      setError('El peso máximo permitido es 200 kg');
-      return;
+
+    // Mostrar advertencias si existen
+    if (weightValidation.warnings.length > 0) {
+      addToast({
+        title: 'Advertencia',
+        description: formatValidationWarnings(weightValidation.warnings),
+        variant: 'default',
+      });
     }
+
     setError(null);
     setResult(calculatedResult);
   };

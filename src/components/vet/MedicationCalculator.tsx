@@ -52,6 +52,7 @@ import type { Patient } from '@/lib/use-patients-store';
 import { validateDose } from '@/lib/dose-validation';
 import ConcentrationCalculator from './ConcentrationCalculator';
 import { useVetToast } from './VetToast';
+import { validateWeight, formatValidationErrors, formatValidationWarnings } from '@/lib/form-validation';
 
 interface CalcResult {
   medication: {
@@ -140,7 +141,37 @@ export default function MedicationCalculator({ onOpenNotes }: MedicationCalculat
   const canCalculate = selectedMedication && weight && parseFloat(weight) > 0;
 
   const handleCalculate = async () => {
-    if (!selectedMedication || !weight) return;
+    if (!selectedMedication || !weight) {
+      setError('Seleccione un medicamento e ingrese el peso');
+      addToast({
+        title: 'Campos requeridos',
+        description: 'Seleccione un medicamento e ingrese el peso del paciente',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validar peso
+    const weightValidation = validateWeight(weight, animalType, 'Peso del paciente');
+    if (!weightValidation.isValid) {
+      setError(formatValidationErrors(weightValidation.errors));
+      addToast({
+        title: 'Error de Validación',
+        description: formatValidationErrors(weightValidation.errors),
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Mostrar advertencias si existen
+    if (weightValidation.warnings.length > 0) {
+      addToast({
+        title: 'Advertencia',
+        description: formatValidationWarnings(weightValidation.warnings),
+        variant: 'default',
+      });
+    }
+
     setLoading(true);
     setError(null);
     setResult(null);
@@ -161,6 +192,11 @@ export default function MedicationCalculator({ onOpenNotes }: MedicationCalculat
 
       if (!res.ok) {
         setError(data.error || 'Error al calcular la dosis');
+        addToast({
+          title: 'Error',
+          description: data.error || 'Error al calcular la dosis',
+          variant: 'destructive',
+        });
         return;
       }
 
@@ -171,8 +207,17 @@ export default function MedicationCalculator({ onOpenNotes }: MedicationCalculat
         timestamp: Date.now(),
         summary: `${data.medication.name} | ${animalType} ${data.weightKg}kg | ${data.calculatedDose.recommended}${unit}`,
       });
+      addToast({
+        title: 'Dosis calculada',
+        description: `${selectedMedication.name} calculada exitosamente`,
+      });
     } catch {
       setError('Error de conexión. Intente de nuevo.');
+      addToast({
+        title: 'Error de conexión',
+        description: 'No se pudo conectar al servidor. Intente de nuevo.',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }

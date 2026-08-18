@@ -1,23 +1,26 @@
 import { NextResponse } from 'next/server';
-import { calculateFoodAmount, type PetType, type WeightUnit, type ActivityLevel } from '@/lib/food-data';
+import { calculateFoodAmount, type PetType, type WeightUnit, type DogCondition, type DogAge, type CatCondition, type CatAge } from '@/lib/food-data';
 
 interface FoodCalcRequest {
   petType: PetType;
   weight: number;
   weightUnit: WeightUnit;
   mealsPerDay: number;
-  activity: ActivityLevel;
+  dogCondition?: DogCondition;
+  dogAge?: DogAge;
+  catCondition?: CatCondition;
+  catAge?: CatAge;
 }
 
 export async function POST(request: Request) {
   try {
     const body: FoodCalcRequest = await request.json();
-    const { petType, weight, weightUnit, mealsPerDay, activity } = body;
+    const { petType, weight, weightUnit, mealsPerDay, dogCondition, dogAge, catCondition, catAge } = body;
 
     // Validate required fields
-    if (!petType || weight === undefined || !weightUnit || !mealsPerDay || !activity) {
+    if (!petType || weight === undefined || !weightUnit || !mealsPerDay) {
       return NextResponse.json(
-        { error: 'Faltan campos requeridos: petType, weight, weightUnit, mealsPerDay, activity' },
+        { error: 'Faltan campos requeridos: petType, weight, weightUnit, mealsPerDay' },
         { status: 400 }
       );
     }
@@ -54,16 +57,48 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate activity level
-    const validActivities: ActivityLevel[] = ['bajo', 'normal', 'alto'];
-    if (!validActivities.includes(activity)) {
-      return NextResponse.json(
-        { error: 'activity debe ser "bajo", "normal" o "alto"' },
-        { status: 400 }
-      );
+    // Validate dog-specific fields
+    if (petType === 'perro') {
+      if (dogAge && !['adulto', 'cachorro_menor_4m', 'cachorro_mayor_4m'].includes(dogAge)) {
+        return NextResponse.json(
+          { error: 'dogAge debe ser "adulto", "cachorro_menor_4m" o "cachorro_mayor_4m"' },
+          { status: 400 }
+        );
+      }
+      if (dogCondition && !['entero', 'castrado', 'obeso'].includes(dogCondition)) {
+        return NextResponse.json(
+          { error: 'dogCondition debe ser "entero", "castrado" u "obeso"' },
+          { status: 400 }
+        );
+      }
     }
 
-    const result = calculateFoodAmount(petType, weight, weightUnit, mealsPerDay, activity);
+    // Validate cat-specific fields
+    if (petType === 'gato') {
+      if (catAge && !['adulto', 'gatito'].includes(catAge)) {
+        return NextResponse.json(
+          { error: 'catAge debe ser "adulto" o "gatito"' },
+          { status: 400 }
+        );
+      }
+      if (catCondition && !['entero', 'castrado', 'obeso'].includes(catCondition)) {
+        return NextResponse.json(
+          { error: 'catCondition debe ser "entero", "castrado" u "obeso"' },
+          { status: 400 }
+        );
+      }
+    }
+
+    const result = calculateFoodAmount(
+      petType,
+      weight,
+      weightUnit,
+      mealsPerDay,
+      dogCondition,
+      dogAge,
+      catCondition,
+      catAge
+    );
 
     return NextResponse.json(result);
   } catch {
